@@ -1,0 +1,298 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "windows", "darwin-arm64"]
+}
+
+generator client_frontend {
+  provider      = "prisma-client-js"
+  output        = "../../../apps/frontend/src/lib/prisma-client"
+  binaryTargets = ["native", "windows", "darwin-arm64"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                  String            @id @default(cuid())
+  email               String            @unique
+  password            String
+  name                String
+  role                UserRole
+  branchId            String?
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  appointments        Appointment[]     @relation("StaffAppointments")
+  cashRegisterActions CashRegisterLog[]
+  commissions         StaffCommission[]
+  services            StaffService[]
+  branch              Branch?           @relation(fields: [branchId], references: [id], onDelete: Restrict)
+}
+
+model Branch {
+  id               String            @id @default(cuid())
+  name             String
+  address          String?
+  phone            String?
+  description      String?
+  parentBranchId   String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  appointments     Appointment[]
+  parentBranch     Branch?           @relation("SubBranches", fields: [parentBranchId], references: [id], onDelete: Restrict)
+  subBranches      Branch[]          @relation("SubBranches")
+  cashRegisterLogs CashRegisterLog[]
+  customers        Customer[]
+  invoices         Invoice[]
+  packages         Package[]
+  services         Service[]
+  users            User[]
+}
+
+model Tag {
+  id        String        @id @default(cuid())
+  name      String        @unique
+  color     String        @default("#000000")
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  customers CustomerTag[]
+}
+
+model CustomerTag {
+  customerId String
+  tagId      String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  tag        Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([customerId, tagId])
+}
+
+model Customer {
+  id               String            @id @default(cuid())
+  name             String
+  phone            String            @unique
+  email            String?
+  notes            String?
+  discountRate     Float             @default(0)
+  creditBalance    Float             @default(0)
+  branchId         String
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  appointments     Appointment[]
+  branch           Branch            @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  customerPackages CustomerPackage[]
+  tags             CustomerTag[]
+  invoices         Invoice[]
+}
+
+model ServiceCategory {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  description String?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @default(now())
+  services    Service[]
+}
+
+model Service {
+  id              String           @id @default(cuid())
+  name            String
+  duration        Int?
+  price           Float
+  categoryId      String
+  branchId        String
+  createdAt       DateTime         @default(now())
+  isActive        Boolean          @default(true)
+  updatedAt       DateTime         @default(now()) @updatedAt
+  type            ServiceType      @default(TIME_BASED)
+  commissionFixed Float?
+  commissionRate  Float?
+  appointments    Appointment[]
+  packages        PackageService[]
+  branch          Branch           @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  category        ServiceCategory  @relation(fields: [categoryId], references: [id])
+  staff           StaffService[]
+}
+
+model StaffService {
+  userId    String
+  serviceId String
+  service   Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, serviceId])
+}
+
+model Package {
+  id               String            @id @default(cuid())
+  name             String
+  description      String?
+  price            Float
+  validityDays     Int
+  commissionRate   Float?
+  commissionFixed  Float?
+  branchId         String?
+  isActive         Boolean           @default(true)
+  type             PackageType       @default(SESSION)
+  totalSessions    Int?
+  totalMinutes     Int?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  branch           Branch?           @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  customerPackages CustomerPackage[]
+  services         PackageService[]
+}
+
+model PackageService {
+  packageId String
+  serviceId String
+  quantity  Int
+  package   Package @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  service   Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@id([packageId, serviceId])
+}
+
+model CustomerPackage {
+  id                String                @id @default(cuid())
+  purchaseDate      DateTime              @default(now())
+  expiryDate        DateTime
+  remainingSessions Json
+  customerId        String
+  packageId         String
+  customer          Customer              @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  package           Package               @relation(fields: [packageId], references: [id])
+  usageHistory      PackageUsageHistory[]
+}
+
+model PackageUsageHistory {
+  id                String          @id @default(cuid())
+  usedAt            DateTime        @default(now())
+  customerPackageId String
+  appointmentId     String          @unique
+  appointment       Appointment     @relation(fields: [appointmentId], references: [id])
+  customerPackage   CustomerPackage @relation(fields: [customerPackageId], references: [id], onDelete: Cascade)
+}
+
+model Appointment {
+  id           String               @id @default(cuid())
+  startTime    DateTime
+  endTime      DateTime
+  status       AppointmentStatus    @default(SCHEDULED)
+  notes        String?
+  customerId   String
+  staffId      String
+  branchId     String
+  serviceId    String
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+  branch       Branch               @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  customer     Customer             @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  service      Service              @relation(fields: [serviceId], references: [id])
+  staff        User                 @relation("StaffAppointments", fields: [staffId], references: [id])
+  invoice      Invoice?
+  packageUsage PackageUsageHistory?
+}
+
+model Invoice {
+  id            String           @id @default(cuid())
+  totalAmount   Float
+  amountPaid    Float            @default(0)
+  debt          Float
+  status        PaymentStatus    @default(UNPAID)
+  customerId    String
+  branchId      String
+  appointmentId String?          @unique
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  appointment   Appointment?     @relation(fields: [appointmentId], references: [id])
+  branch        Branch           @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  customer      Customer         @relation(fields: [customerId], references: [id])
+  payments      Payment[]
+  commission    StaffCommission?
+}
+
+model Payment {
+  id                String           @id @default(cuid())
+  amount            Float
+  method            PaymentMethod
+  paymentDate       DateTime         @default(now())
+  invoiceId         String
+  cashRegisterLogId String?
+  cashRegisterLog   CashRegisterLog? @relation(fields: [cashRegisterLogId], references: [id])
+  invoice           Invoice          @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+}
+
+model StaffCommission {
+  id         String   @id @default(cuid())
+  amount     Float
+  isReversed Boolean  @default(false)
+  staffId    String
+  invoiceId  String   @unique
+  createdAt  DateTime @default(now())
+  invoice    Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  staff      User     @relation(fields: [staffId], references: [id])
+}
+
+model CashRegisterLog {
+  id          String      @id @default(cuid())
+  type        CashLogType
+  amount      Float
+  description String?
+  branchId    String
+  userId      String
+  createdAt   DateTime    @default(now())
+  branch      Branch      @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  user        User        @relation(fields: [userId], references: [id])
+  payments    Payment[]
+}
+
+enum UserRole {
+  ADMIN
+  SUPER_BRANCH_MANAGER
+  BRANCH_MANAGER
+  RECEPTION
+  STAFF
+}
+
+enum ServiceType {
+  TIME_BASED
+  UNIT_BASED
+}
+
+enum PackageType {
+  SESSION
+  TIME
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  ARRIVED
+  COMPLETED
+  NO_SHOW
+  CANCELED
+}
+
+enum PaymentStatus {
+  PAID
+  UNPAID
+  PARTIALLY_PAID
+}
+
+enum PaymentMethod {
+  CASH
+  CREDIT_CARD
+  BANK_TRANSFER
+  CUSTOMER_CREDIT
+}
+
+enum CashLogType {
+  OPENING
+  CLOSING
+  INCOME
+  OUTCOME
+  MANUAL_IN
+  MANUAL_OUT
+}

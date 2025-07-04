@@ -1,0 +1,389 @@
+// Bu, veritabanı bağlantı bilgilerini içeren bölümdür.
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Backend için Prisma istemcisi
+generator client {
+  provider      = "prisma-client-js"
+  output        = "../src/prisma/client"
+  binaryTargets = ["native", "windows", "darwin-arm64"]
+}
+
+// Frontend için Prisma istemcisi
+generator client_frontend {
+  provider      = "prisma-client-js"
+  output        = "../../../apps/frontend/src/lib/prisma-client"
+  binaryTargets = ["native", "windows", "darwin-arm64"]
+}
+
+//-----------------------------------------------------
+// ENUMLAR (ENUMERATIONS)
+//-----------------------------------------------------
+
+// Sistemdeki kullanıcı rollerini tanımlar.
+enum UserRole {
+  ADMIN // Sistem Yöneticisi
+  SUPER_BRANCH_MANAGER // Birden fazla şubeyi yöneten yönetici
+  BRANCH_MANAGER // Tek bir şubeyi yöneten yönetici
+  RECEPTION // Danışma personeli
+  STAFF // Hizmet veren personel (Güzellik Uzmanı)
+}
+
+// Hizmetlerin tipini belirler.
+enum ServiceType {
+  TIME_BASED // Süreye dayalı (örn: 60 dakika masaj)
+  UNIT_BASED // Adete dayalı (örn: 1 seans lazer)
+}
+
+// Bir randevunun durumunu takip eder.
+enum AppointmentStatus {
+  SCHEDULED // Planlandı
+  ARRIVED // Müşteri Geldi
+  COMPLETED // Tamamlandı
+  NO_SHOW // Müşteri Gelmedi
+  CANCELED // İptal Edildi
+}
+
+// Bir faturanın ödeme durumunu takip eder.
+enum PaymentStatus {
+  PAID // Ödendi
+  UNPAID // Ödenmedi
+  PARTIALLY_PAID // Kısmen Ödendi
+}
+
+// Ödemenin ne şekilde yapıldığını belirtir.
+enum PaymentMethod {
+  CASH // Nakit
+  CREDIT_CARD // Kredi Kartı
+  BANK_TRANSFER // Banka Transferi
+  CUSTOMER_CREDIT // Müşterinin mevcut kredisinden ödeme
+}
+
+// Kasadaki para hareketlerinin türünü belirtir.
+enum CashLogType {
+  OPENING // Kasa Açılışı
+  CLOSING // Kasa Kapanışı
+  INCOME // Gelir (Ödeme alındığında)
+  OUTCOME // Gider (İade yapıldığında)
+  MANUAL_IN // Manuel Para Girişi
+  MANUAL_OUT // Manuel Para Çıkışı
+}
+
+//-----------------------------------------------------
+// MODELLER (TABLES)
+//-----------------------------------------------------
+
+// Kullanıcılar ve sisteme giriş yapan personelleri temsil eder.
+model User {
+  id       String   @id @default(cuid())
+  email    String   @unique
+  password String // Hash'lenmiş parola
+  name     String
+  role     UserRole
+
+  // ADMIN hariç tüm kullanıcılar bir şubeye bağlıdır.
+  branchId String?
+  branch   Branch? @relation(fields: [branchId], references: [id], onDelete: Restrict)
+
+  // Personel olarak atandığı randevular
+  appointments Appointment[]  @relation("StaffAppointments")
+  services     StaffService[] // Personelin verebildiği hizmetler
+
+  // Bu personele ait prim kayıtları
+  commissions StaffCommission[]
+
+  // Bu kullanıcının yaptığı kasa işlemleri
+  cashRegisterActions CashRegisterLog[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Güzellik salonu şubelerini temsil eder. Süper şube yapısını destekler.
+model Branch {
+  id          String  @id @default(cuid())
+  name        String
+  address     String?
+  phone       String?
+  description String? @db.Text // Bu satır sorunu çözüyor
+
+  // Süper şube - alt şube hiyerarşisi için
+  parentBranchId String?
+  parentBranch   Branch?  @relation("SubBranches", fields: [parentBranchId], references: [id], onDelete: Restrict)
+  subBranches    Branch[] @relation("SubBranches")
+
+  // Şubeye ait diğer veriler
+  users            User[]
+  services         Service[]
+  serviceCategories ServiceCategory[]
+  customers        Customer[]
+  appointments     Appointment[]
+  invoices         Invoice[]
+  cashRegisterLogs CashRegisterLog[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Etiket modeli - müşterileri kategorize etmek için kullanılır
+model Tag {
+  id    String @id @default(cuid())
+  name  String
+  color String @default("#000000") // Etiketin rengi (hex formatında)
+
+  // İlişkiler
+  customers CustomerTag[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([name])
+}
+
+// Müşteri-Etiket ilişkisi için ara tablo
+model CustomerTag {
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  tagId      String
+  tag        Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([customerId, tagId])
+}
+
+// Müşteri bilgilerini içerir.
+model Customer {
+  id            String  @id @default(cuid())
+  name          String
+  phone         String  @unique
+  email         String?
+  notes         String? // Müşteriye özel notlar
+  discountRate  Float   @default(0) // Müşteriye özel indirim oranı (örn: 0.10, %10 indirim)
+  creditBalance Float   @default(0) // Müşterinin fazla ödemelerinden doğan kredisi
+
+  // Müşterinin kayıtlı olduğu şube
+  branchId String
+  branch   Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  // Müşteriye ait veriler
+  appointments     Appointment[]
+  customerPackages CustomerPackage[]
+  invoices         Invoice[]
+  tags             CustomerTag[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Hizmet kategorilerini gruplamak için kullanılır (örn: Cilt Bakımı, Epilasyon).
+model ServiceCategory {
+  id          String    @id @default(cuid())
+  name        String
+  description String?   @db.Text
+  isActive    Boolean   @default(true)
+  
+  // Kategorinin hangi şubeye ait olduğu
+  branchId    String?
+  branch      Branch?   @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  
+  services    Service[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+  
+  // Name ve branchId birlikte benzersiz olmalı, null branchId değerleri de kabul edilir
+  @@unique([name, branchId])
+}
+
+// Şubelerde sunulan hizmetleri tanımlar.
+model Service {
+  id       String      @id @default(cuid())
+  name     String
+  type     ServiceType @default(TIME_BASED) // Hizmetin tipini belirtir (örn: süreye dayalı, seans bazlı)
+  duration Int? // Hizmet süresi (dakika), seans bazlı hizmetler için null olabilir
+  price    Float
+  isActive Boolean     @default(true)
+
+  // Hizmet satışı için prim tanımları (paketten bağımsız)
+  commissionRate  Float? // Yüzdesel prim oranı (örn: 0.10)
+  commissionFixed Float? // Sabit prim tutarı
+
+  // İlişkiler
+  categoryId   String
+  category     ServiceCategory  @relation(fields: [categoryId], references: [id])
+  branchId     String
+  branch       Branch           @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  staff        StaffService[] // Bu hizmeti verebilecek personeller
+  packages     PackageService[] // Bu hizmetin dahil olduğu paketler
+  appointments Appointment[] // Bu hizmete ait randevular
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
+// Personel ve Hizmetler arasındaki çok-a-çok ilişkiyi kurar.
+model StaffService {
+  userId    String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  serviceId String
+  service   Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@id([userId, serviceId])
+}
+
+// Birden fazla hizmeti içeren satış paketlerini tanımlar.
+model Package {
+  id           String @id @default(cuid())
+  name         String
+  price        Float
+  validityDays Int // Paketin geçerlilik süresi (gün olarak)
+
+  // Paket satışı için prim tanımları
+  commissionRate  Float?
+  commissionFixed Float?
+
+  // İlişkiler
+  services         PackageService[]
+  customerPackages CustomerPackage[]
+}
+
+// Paketler ve hizmetler arasındaki çok-a-çok ilişkiyi kurar.
+model PackageService {
+  packageId String
+  package   Package @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  serviceId String
+  service   Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  quantity  Int // Bu hizmetin pakette kaç adet/seans olduğunu belirtir.
+
+  @@id([packageId, serviceId]) // Bileşik anahtar
+}
+
+// Bir müşterinin satın aldığı spesifik bir paketi temsil eder.
+model CustomerPackage {
+  id                String   @id @default(cuid())
+  purchaseDate      DateTime @default(now())
+  expiryDate        DateTime
+  // Kalan seansları JSON formatında tutar: { "serviceId1": 8, "serviceId2": 3 }
+  remainingSessions Json
+
+  // İlişkiler
+  customerId   String
+  customer     Customer              @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  packageId    String
+  package      Package               @relation(fields: [packageId], references: [id], onDelete: Restrict)
+  usageHistory PackageUsageHistory[]
+}
+
+// Bir müşterinin paketindeki bir seansı ne zaman kullandığını kaydeder.
+model PackageUsageHistory {
+  id     String   @id @default(cuid())
+  usedAt DateTime @default(now())
+
+  // İlişkiler
+  customerPackageId String
+  customerPackage   CustomerPackage @relation(fields: [customerPackageId], references: [id], onDelete: Cascade)
+  appointmentId     String          @unique // Bir kullanım sadece bir randevuya ait olabilir.
+  appointment       Appointment     @relation(fields: [appointmentId], references: [id])
+}
+
+// Randevu kayıtlarını tutar.
+model Appointment {
+  id        String            @id @default(cuid())
+  startTime DateTime
+  endTime   DateTime
+  status    AppointmentStatus @default(SCHEDULED)
+  notes     String? // Randevuya özel notlar
+
+  // İlişkiler
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  staffId    String
+  staff      User     @relation("StaffAppointments", fields: [staffId], references: [id], onDelete: Restrict)
+  branchId   String
+  branch     Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  serviceId  String
+  service    Service  @relation(fields: [serviceId], references: [id], onDelete: Restrict)
+
+  // Finansal ve paket kullanımı ilişkileri
+  invoice      Invoice?
+  packageUsage PackageUsageHistory?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Her randevu veya paket satışı için oluşturulan fatura kaydı.
+model Invoice {
+  id          String        @id @default(cuid())
+  totalAmount Float // Faturanın toplam tutarı
+  amountPaid  Float         @default(0) // Ödenen tutar
+  debt        Float // Kalan borç (totalAmount - amountPaid)
+  status      PaymentStatus @default(UNPAID)
+
+  // İlişkiler
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  branchId   String
+  branch     Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  // Bir fatura bir randevuya veya bir paket satışına ait olabilir. 
+  // Paket satışı için `appointmentId` null olacaktır.
+  appointmentId String?      @unique
+  appointment   Appointment? @relation(fields: [appointmentId], references: [id])
+
+  payments   Payment[]
+  commission StaffCommission?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Bir faturaya yapılan tek bir ödeme işlemini temsil eder.
+model Payment {
+  id          String        @id @default(cuid())
+  amount      Float
+  method      PaymentMethod
+  paymentDate DateTime      @default(now())
+
+  // İlişkiler
+  invoiceId String
+  invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  // Eğer ödeme nakit ise, kasa kaydına bağlanır.
+  cashRegisterLogId String?
+  cashRegisterLog   CashRegisterLog? @relation(fields: [cashRegisterLogId], references: [id])
+}
+
+// Personele ödenen veya ödenecek primleri kaydeder.
+model StaffCommission {
+  id         String  @id @default(cuid())
+  amount     Float // Prim tutarı
+  isReversed Boolean @default(false) // İade durumunda prim geri alındı mı?
+
+  // İlişkiler
+  staffId   String
+  staff     User    @relation(fields: [staffId], references: [id], onDelete: Restrict)
+  invoiceId String  @unique // Bir fatura için tek bir prim kaydı olur.
+  invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+}
+
+// Şubenin kasasındaki tüm para hareketlerini loglar.
+model CashRegisterLog {
+  id          String      @id @default(cuid())
+  type        CashLogType
+  amount      Float // Giren (+) veya çıkan (-) tutar
+  description String?
+
+  // İlişkiler
+  branchId String
+  branch   Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  userId   String // İşlemi yapan kullanıcı
+  user     User   @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  payments Payment[] // Bu kasa hareketine bağlı ödemeler (sadece nakit olanlar)
+
+  createdAt DateTime @default(now())
+}
