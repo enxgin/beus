@@ -67,3 +67,4 @@ salonflow/
 │   └── common/          # Paylaşılan kod ve bileşenler
 └── package.json         # Root package.json
 ```
+# beus
