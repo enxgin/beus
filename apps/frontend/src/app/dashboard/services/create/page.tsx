@@ -14,7 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { api } from "@/lib/api";
+import api from "@/lib/api";
 import { ServiceCategory, Branch } from "@/types/service";
 import { User, UserRole } from "@/types/user";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";

@@ -40,16 +40,16 @@ export function useAuth() {
   const router = useRouter();
   
   // Zustand store'dan auth bilgilerini al
-  const { user, accessToken, login: storeLogin, logout: storeLogout, isHydrated } = useAuthStore();
+  const { user, token, login: storeLogin, logout: storeLogout, isHydrated } = useAuthStore();
 
   // API interceptor - token ile istekleri gönder
   useEffect(() => {
-    if (accessToken) {
-      api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+    if (token) {
+      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     } else {
       delete api.defaults.headers.common['Authorization'];
     }
-  }, [accessToken]);
+  }, [token]);
 
   // Sayfa yüklenirken token kontrolü
   useEffect(() => {
@@ -60,7 +60,7 @@ export function useAuth() {
         if (!isHydrated) return; // Store yüklenene kadar bekle
         
         // Token varsa kontrol et
-        if (accessToken) {
+        if (token) {
           try {
             // Token'in geçerliliğini kontrol et (istek atarak)
             // Backend'de /auth/profile endpoint'i kullanılıyor
@@ -81,7 +81,7 @@ export function useAuth() {
     };
 
     checkAuth();
-  }, [isHydrated, accessToken, storeLogout]);
+  }, [isHydrated, token, storeLogout]);
 
   // Login fonksiyonu
   const login = async (email: string, password: string) => {
@@ -91,25 +91,41 @@ export function useAuth() {
       const response = await api.post('/auth/login', { email, password });
       console.log('Login yanıtı alındı:', response.data);
       
-      // Backend'den dönen yanıt formatını kontrol et
-      const { accessToken, user: userData } = response.data;
-      
-      if (!accessToken) {
+      // Token bilgilerini extract et ve token formatını kontrol et
+      // Backend'den accessToken adıyla gelse de biz token olarak kullanıyoruz
+      const { accessToken: token, user: userData } = response.data;
+
+      if (!token) {
         throw new Error('Token bulunamadı');
       }
-      
+
       // Token'ı decode et
-      const decoded = jwtDecode<JWTPayload>(accessToken);
+      const decoded = jwtDecode<JWTPayload>(token);
       console.log('JWT token decode edildi:', decoded);
-      
+
+      // Login işleminin debug bilgisi
+      console.log('Login işlemi başarılı, store güncellemeden önce durumu:', {
+        storeState: useAuthStore.getState(),
+        userData,
+        token: token?.substring(0, 10) + '...',
+      });
+
       // Zustand store'a kullanıcı ve token bilgilerini kaydet
-      storeLogin(userData || {
-        id: decoded.sub,
-        name: decoded.name,
-        email: decoded.email,
-        role: decoded.role,
-        branch: decoded.branch
-      }, accessToken);
+      storeLogin(
+        userData || {
+          id: decoded.sub,
+          name: decoded.name,
+          email: decoded.email,
+          role: decoded.role,
+          branch: decoded.branch,
+        },
+        token
+      );
+      
+      // Login işleminin debug bilgisi - store güncellemeden sonra
+      console.log('Login işlemi tamamlandı, güncel store durumu:', {
+        storeState: useAuthStore.getState()
+      });
       
       return true;
     } catch (error: any) {
@@ -144,7 +160,7 @@ export function useAuth() {
     user,
     loading: loading || !isHydrated, // Store henüz yüklenmemişse yükleniyor olarak göster
     error,
-    isAuthenticated: !!user && !!accessToken,
+    isAuthenticated: !!user && !!token,
     login,
     logout
   };

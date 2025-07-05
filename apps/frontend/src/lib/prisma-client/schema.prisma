@@ -28,26 +28,46 @@ model User {
   commissions         StaffCommission[]
   services            StaffService[]
   branch              Branch?           @relation(fields: [branchId], references: [id], onDelete: Restrict)
+  workHours           WorkHour[]
+}
+
+model WorkHour {
+  id        String   @id @default(cuid())
+  staffId   String
+  branchId  String
+  dayOfWeek Int // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+  startTime String // Format "HH:mm"
+  endTime   String // Format "HH:mm"
+  isOff     Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  staff  User   @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  branch Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  @@unique([staffId, branchId, dayOfWeek])
 }
 
 model Branch {
-  id               String            @id @default(cuid())
-  name             String
-  address          String?
-  phone            String?
-  description      String?
-  parentBranchId   String?
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
-  appointments     Appointment[]
-  parentBranch     Branch?           @relation("SubBranches", fields: [parentBranchId], references: [id], onDelete: Restrict)
-  subBranches      Branch[]          @relation("SubBranches")
-  cashRegisterLogs CashRegisterLog[]
-  customers        Customer[]
-  invoices         Invoice[]
-  packages         Package[]
-  services         Service[]
-  users            User[]
+  id                String            @id @default(cuid())
+  name              String
+  address           String?
+  phone             String?
+  description       String?
+  parentBranchId    String?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  appointments      Appointment[]
+  parentBranch      Branch?           @relation("SubBranches", fields: [parentBranchId], references: [id], onDelete: Restrict)
+  subBranches       Branch[]          @relation("SubBranches")
+  cashRegisterLogs  CashRegisterLog[]
+  customers         Customer[]
+  invoices          Invoice[]
+  packages          Package[]
+  services          Service[]
+  serviceCategories ServiceCategory[]
+  users             User[]
+  workHours         WorkHour[]
 }
 
 model Tag {
@@ -88,12 +108,14 @@ model Customer {
 
 model ServiceCategory {
   id          String    @id @default(cuid())
-  name        String    @unique
+  name        String
   description String?
   isActive    Boolean   @default(true)
   createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @default(now())
+  updatedAt   DateTime  @default(now()) @updatedAt
+  branchId    String?
   services    Service[]
+  branch      Branch?   @relation(fields: [branchId], references: [id])
 }
 
 model Service {
@@ -128,20 +150,19 @@ model StaffService {
 model Package {
   id               String            @id @default(cuid())
   name             String
-  description      String?
   price            Float
   validityDays     Int
   commissionRate   Float?
   commissionFixed  Float?
   branchId         String?
-  isActive         Boolean           @default(true)
-  type             PackageType       @default(SESSION)
-  totalSessions    Int?
-  totalMinutes     Int?
   createdAt        DateTime          @default(now())
+  description      String?
+  totalMinutes     Int?
+  totalSessions    Int?
+  type             PackageType       @default(SESSION)
   updatedAt        DateTime          @updatedAt
-  branch           Branch?           @relation(fields: [branchId], references: [id], onDelete: SetNull)
   customerPackages CustomerPackage[]
+  branch           Branch?           @relation(fields: [branchId], references: [id])
   services         PackageService[]
 }
 
@@ -180,7 +201,8 @@ model Appointment {
   id           String               @id @default(cuid())
   startTime    DateTime
   endTime      DateTime
-  status       AppointmentStatus    @default(SCHEDULED)
+  duration     Int?
+  status       AppointmentStatus    @default(CONFIRMED)
   notes        String?
   customerId   String
   staffId      String
@@ -255,6 +277,7 @@ enum UserRole {
   BRANCH_MANAGER
   RECEPTION
   STAFF
+  CUSTOMER
 }
 
 enum ServiceType {
@@ -270,9 +293,11 @@ enum PackageType {
 enum AppointmentStatus {
   SCHEDULED
   ARRIVED
-  COMPLETED
-  NO_SHOW
   CANCELED
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
 }
 
 enum PaymentStatus {

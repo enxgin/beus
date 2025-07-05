@@ -26,7 +26,7 @@ import {
 import { useEffect, useState } from "react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
-import { api } from "@/lib/api"
+import api from "@/lib/api"
 import {
   Select,
   SelectContent,
@@ -75,19 +75,21 @@ export function EditCustomerDialog({ customer, isOpen, onOpenChange }: EditCusto
   const [tagColor, setTagColor] = useState('#3b82f6')
   
   // Şube listesini çek
-  const { data: branches } = useQuery({
+  const { data: branchesData } = useQuery({
     queryKey: ["branches"],
     queryFn: async () => {
       try {
-        const response = await api.get("/branches")
-        return response.data
+        const response = await api.get("/branches");
+        return response.data; // Returns { data: [], total: 0 }
       } catch (error) {
-        console.error("Failed to fetch branches:", error)
-        return []
+        console.error("Failed to fetch branches:", error);
+        return { data: [], total: 0 }; // Return the correct structure on error
       }
     },
     enabled: isOpen, // Sadece dialog açıkken çalışsın
-  })
+  });
+
+  const branches = branchesData?.data || [];
   
   // Artık etiketleri API'den çekmiyoruz, kullanıcı yeni etiket ekleyebilecek
   

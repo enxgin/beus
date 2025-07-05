@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/form"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { api } from "@/lib/api"
+import api from "@/lib/api"
 import { useAuth } from "@/hooks/use-auth"
 import { Badge } from "@/components/ui/badge"
 import { X, Plus } from "lucide-react"

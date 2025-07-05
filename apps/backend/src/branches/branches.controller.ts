@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, Req } from '@nestjs/common';
 import { BranchesService } from './branches.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -28,12 +28,14 @@ export class BranchesController {
   @ApiQuery({ name: 'skip', required: false, type: Number })
   @ApiQuery({ name: 'take', required: false, type: Number })
   findAll(
+    @Req() req: any, // Express request object'ini almak için
     @Query('skip') skip?: string,
     @Query('take') take?: string,
   ) {
     return this.branchesService.findAll({
       skip: skip ? parseInt(skip) : undefined,
       take: take ? parseInt(take) : undefined,
+      user: req.user, // JWT'den decode edilen kullanıcı bilgisini service'e gönder
     });
   }
 

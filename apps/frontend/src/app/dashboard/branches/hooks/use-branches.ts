@@ -1,16 +1,21 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { api } from '@/lib/api'
+import api from '@/lib/api'
 import { type Branch } from '../components/columns'
 import { type BranchFormValues } from '../components/branch-form'
+import { useAuthStore } from '@/stores/auth.store'
+import { useState, useEffect } from 'react'
 
 // Tüm şubeleri getiren hook
 export function useBranches() {
-  return useQuery<Branch[], Error>({
-    queryKey: ['branches'],
+  const token = useAuthStore((state) => state.token)
+
+  return useQuery<any, Error>({
+    queryKey: ['branches', token],
     queryFn: async () => {
       const response = await api.get('/branches')
       return response.data
     },
+    enabled: !!token,
   })
 }
 

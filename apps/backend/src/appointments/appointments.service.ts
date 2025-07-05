@@ -1,165 +1,210 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { UpdateAppointmentDto } from './dto/update-appointment.dto';
-import { AppointmentStatus } from '../prisma/prisma-types';
+import {
+  addMinutes,
+  endOfDay,
+  setHours,
+  setMinutes,
+  startOfDay,
+  parse,
+} from 'date-fns';
 import { UpdateAppointmentStatusDto } from './dto/update-appointment-status.dto';
-import { FindAppointmentsDto } from './dto/find-appointments.dto';
+import { RescheduleAppointmentDto } from './dto/reschedule-appointment.dto';
+import { Appointment, AppointmentStatus } from '@prisma/client';
 
 @Injectable()
 export class AppointmentsService {
   constructor(private prisma: PrismaService) {}
 
-  async create(createAppointmentDto: CreateAppointmentDto) {
-    // Hizmetin süresini kontrol et
-    const service = await this.prisma.service.findUnique({
-      where: { id: createAppointmentDto.serviceId },
-    });
+  async create(
+    createAppointmentDto: CreateAppointmentDto,
+  ): Promise<Appointment> {
+    const { startTime, endTime, staffId } = createAppointmentDto;
 
-    if (!service) {
-      throw new NotFoundException(`Hizmet bulunamadı: ID ${createAppointmentDto.serviceId}`);
-    }
-
-    // Hizmetin süresini kontrol et ve bitiş zamanını hesapla
-    const startTime = new Date(createAppointmentDto.startTime);
-    let endTime: Date;
-
-    // Başlangıç zamanı service.duration kadar ilerletilir
-    if (service.duration) {
-      endTime = new Date(startTime);
-      endTime.setMinutes(endTime.getMinutes() + service.duration);
-    } else if (createAppointmentDto.endTime) {
-      // Eğer hizmetin süresi yoksa endTime değerini al
-      endTime = new Date(createAppointmentDto.endTime);
-    } else {
-      // Süre yoksa varsayılan olarak 60 dakika ekle
-      endTime = new Date(startTime);
-      endTime.setMinutes(endTime.getMinutes() + 60);
-    }
-
-    // Personelin o saatte müsait olup olmadığını kontrol et
-    const staffConflict = await this.prisma.appointment.findFirst({
+    const existingAppointment = await this.prisma.appointment.findFirst({
       where: {
-        staffId: createAppointmentDto.staffId,
-        status: { in: [AppointmentStatus.SCHEDULED, AppointmentStatus.ARRIVED] },
-        AND: [
-          { startTime: { lt: endTime } },
-          { endTime: { gt: startTime } }
+        staffId,
+        status: {
+          notIn: [AppointmentStatus.CANCELLED, AppointmentStatus.COMPLETED],
+        },
+        OR: [
+          {
+            startTime: { lt: new Date(endTime) },
+            endTime: { gt: new Date(startTime) },
+          },
         ],
       },
     });
 
-    if (staffConflict) {
-      throw new BadRequestException(`Personel bu zaman diliminde başka bir randevu için rezerve edilmiş.`);
-    }
-
-    // Randevuyu oluştur
-    // Check if branchId is provided
-    if (!createAppointmentDto.branchId) {
-      throw new BadRequestException('Branch ID is required for appointment creation');
+    if (existingAppointment) {
+      throw new BadRequestException('Personel bu saat aralığında meşgul.');
     }
 
     return this.prisma.appointment.create({
-      data: {
-        customerId: createAppointmentDto.customerId,
-        staffId: createAppointmentDto.staffId,
-        serviceId: createAppointmentDto.serviceId,
-        branchId: createAppointmentDto.branchId,
-        startTime: createAppointmentDto.startTime,
-        endTime,
-        status: AppointmentStatus.SCHEDULED,
-        notes: createAppointmentDto.notes || '',
-      },
-      include: {
-        customer: true,
-        staff: true,
-        service: true,
-        branch: true,
-      },
+      data: createAppointmentDto,
     });
   }
 
-  async findAll(params: FindAppointmentsDto) {
-    const { 
-      startDate, 
-      endDate, 
-      customerId, 
-      staffId, 
-      branchId, 
-      serviceId,
-      status,
-      skip,
-      take,
-      orderBy
-    } = params;
+  async findAll(
+    branchId?: string,
+    startDate?: Date,
+    endDate?: Date,
+    search?: string,
+    page = 1,
+    limit = 10,
+  ) {
+    const skip = (page - 1) * limit;
+    const take = limit;
 
-    // Filtreleri oluştur
-    const where: any = {};
-    
-    if (startDate) {
-      where.startTime = { gte: new Date(startDate) };
-    }
-    
-    if (endDate) {
-      where.endTime = { lte: new Date(endDate) };
-    }
-    
-    if (customerId) {
-      where.customerId = customerId;
-    }
-    
-    if (staffId) {
-      where.staffId = staffId;
-    }
-    
+    const where: any = {
+      status: {
+        notIn: [AppointmentStatus.CANCELLED],
+      },
+    };
+
     if (branchId) {
       where.branchId = branchId;
     }
-    
-    if (serviceId) {
-      where.serviceId = serviceId;
+
+    if (startDate && endDate) {
+      where.startTime = { lt: endOfDay(endDate) };
+      where.endTime = { gt: startOfDay(startDate) };
+    } else if (startDate) {
+      where.startTime = { gte: startOfDay(startDate) };
+    } else if (endDate) {
+      where.endTime = { lte: endOfDay(endDate) };
     }
 
-    if (status) {
-      where.status = status;
+    if (search) {
+      where.OR = [
+        {
+          customer: {
+            name: {
+              contains: search,
+              mode: 'insensitive',
+            },
+          },
+        },
+        {
+          customer: {
+            phone: {
+              contains: search,
+            },
+          },
+        },
+      ];
     }
 
-    // Varsayılan sıralama
-    let orderByOption = orderBy || { startTime: 'asc' };
-
-    // Toplam randevu sayısı
-    const total = await this.prisma.appointment.count({ where });
-
-    // Sayfalama ile randevuları getir
-    const appointments = await this.prisma.appointment.findMany({
-      where,
-      skip: skip ? Number(skip) : undefined,
-      take: take ? Number(take) : undefined,
-      orderBy: orderByOption,
-      include: {
-        customer: true,
-        staff: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            role: true,
-          },
+    const [data, totalCount] = await this.prisma.$transaction([
+      this.prisma.appointment.findMany({
+        where,
+        skip,
+        take,
+        include: {
+          customer: true,
+          staff: true,
+          service: true,
         },
-        service: true,
-        branch: {
-          select: {
-            id: true,
-            name: true,
-            address: true,
-            phone: true,
-          },
+        orderBy: {
+          startTime: 'desc',
         },
-        packageUsage: true,
+      }),
+      this.prisma.appointment.count({ where }),
+    ]);
+
+    return { data, totalCount };
+  }
+
+
+  async getAvailableSlots(
+    staffId: string,
+    serviceId: string,
+    date: string,
+    branchId: string,
+  ) {
+    const service = await this.prisma.service.findUnique({
+      where: { id: serviceId },
+    });
+
+    if (!service) {
+      throw new NotFoundException('Hizmet bulunamadı.');
+    }
+    const duration = service.duration;
+
+    const targetDate = parse(date, 'yyyy-MM-dd', new Date());
+    const dayStart = startOfDay(targetDate);
+    const dayEnd = endOfDay(targetDate);
+
+    const staff = await this.prisma.user.findUnique({
+      where: { id: staffId },
+    });
+
+    if (!staff) {
+      throw new NotFoundException('Personel bulunamadı.');
+    }
+
+    const workHours = await this.prisma.workHour.findMany({
+      where: {
+        staffId: staffId,
+        branchId: branchId,
       },
     });
 
-    return { data: appointments, total };
+    if (!workHours.length) {
+      return [];
+    }
+
+    const dayOfWeek = targetDate.getDay();
+    const workHour = workHours.find((wh) => wh.dayOfWeek === dayOfWeek);
+
+    if (!workHour) {
+      return [];
+    }
+
+    const existingAppointments = await this.prisma.appointment.findMany({
+      where: {
+        staffId,
+        startTime: { gte: dayStart },
+        endTime: { lte: dayEnd },
+        status: {
+          notIn: [AppointmentStatus.CANCELLED, AppointmentStatus.NO_SHOW],
+        },
+      },
+    });
+
+    const availableSlots = [];
+    const [startHour, startMinute] = workHour.startTime.split(':').map(Number);
+    const [endHour, endMinute] = workHour.endTime.split(':').map(Number);
+
+    let currentTime = setMinutes(
+      setHours(dayStart, startHour),
+      startMinute,
+    );
+    const endTime = setMinutes(setHours(dayStart, endHour), endMinute);
+
+    while (addMinutes(currentTime, duration) <= endTime) {
+      const slotEnd = addMinutes(currentTime, duration);
+
+      const isOverlapping = existingAppointments.some(
+        (appointment) =>
+          (currentTime < appointment.endTime && slotEnd > appointment.startTime) ||
+          (currentTime >= appointment.startTime && currentTime < appointment.endTime),
+      );
+
+      if (!isOverlapping) {
+        availableSlots.push(currentTime);
+      }
+
+      currentTime = addMinutes(currentTime, 15); // Slotları 15 dakikalık aralıklarla kontrol et
+    }
+
+    return availableSlots;
   }
 
   async findOne(id: string) {
@@ -167,198 +212,261 @@ export class AppointmentsService {
       where: { id },
       include: {
         customer: true,
-        staff: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            role: true,
-          },
-        },
+        staff: true,
         service: true,
-        branch: {
-          select: {
-            id: true,
-            name: true,
-            address: true,
-            phone: true,
-          },
-        },
-        packageUsage: true,
       },
     });
-
     if (!appointment) {
-      throw new NotFoundException(`Randevu bulunamadı: ID ${id}`);
+      throw new NotFoundException('Randevu bulunamadı');
     }
-
     return appointment;
   }
 
   async update(id: string, updateAppointmentDto: UpdateAppointmentDto) {
-    const existingAppointment = await this.prisma.appointment.findUnique({
-      where: { id },
-    });
+    const { startTime, staffId, serviceId } = updateAppointmentDto;
 
-    if (!existingAppointment) {
-      throw new NotFoundException(`Randevu bulunamadı: ID ${id}`);
+    const service = await this.prisma.service.findUnique({ where: { id: serviceId } });
+    if (!service) {
+      throw new NotFoundException('Hizmet bulunamadı.');
     }
 
-    // Güncelleme verilerini hazırla
-    const updateData: any = { ...updateAppointmentDto };
-    let endTime = existingAppointment.endTime;
+    const endTime = addMinutes(new Date(startTime), service.duration);
 
-    // Servis veya başlangıç zamanı değişmişse endTime'ı güncelle
-    if (updateAppointmentDto.serviceId || updateAppointmentDto.startTime) {
-      // Yeni servisi veya mevcut servisi al
-      const serviceId = updateAppointmentDto.serviceId || existingAppointment.serviceId;
-      const service = await this.prisma.service.findUnique({
-        where: { id: serviceId },
-      });
-
-      if (!service) {
-        throw new NotFoundException(`Hizmet bulunamadı: ID ${serviceId}`);
-      }
-
-      // Yeni başlangıç zamanını veya mevcut başlangıç zamanını kullan
-      const startTime = updateAppointmentDto.startTime 
-        ? new Date(updateAppointmentDto.startTime)
-        : existingAppointment.startTime;
-
-      // Bitiş zamanını güncelle
-      if (service.duration) {
-        endTime = new Date(startTime);
-        endTime.setMinutes(endTime.getMinutes() + service.duration);
-        updateData.endTime = endTime;
-      } else if (updateAppointmentDto.endTime) {
-        endTime = new Date(updateAppointmentDto.endTime);
-        updateData.endTime = endTime;
-      }
-
-      // Personelin o saatte müsait olup olmadığını kontrol et
-      const staffId = updateAppointmentDto.staffId || existingAppointment.staffId;
-      const staffConflict = await this.prisma.appointment.findFirst({
-        where: {
-          id: { not: id }, // Mevcut randevu hariç
-          staffId: staffId,
-          status: { in: [AppointmentStatus.SCHEDULED, AppointmentStatus.ARRIVED] },
-          AND: [
-            { startTime: { lt: endTime } },
-            { endTime: { gt: startTime } }
-          ],
+    const existingAppointment = await this.prisma.appointment.findFirst({
+      where: {
+        id: { not: id },
+        staffId,
+        status: {
+          notIn: [AppointmentStatus.CANCELLED, AppointmentStatus.COMPLETED],
         },
-      });
-
-      if (staffConflict) {
-        throw new BadRequestException(`Personel bu zaman diliminde başka bir randevu için rezerve edilmiş.`);
-      }
-    }
-
-    // Randevuyu güncelle
-    return this.prisma.appointment.update({
-      where: { id },
-      data: updateData,
-      include: {
-        customer: true,
-        staff: true,
-        service: true,
-        branch: true,
-        packageUsage: true,
+        OR: [
+          {
+            startTime: { lt: endTime },
+            endTime: { gt: new Date(startTime) },
+          },
+        ],
       },
     });
-  }
 
-  async updateStatus(id: string, updateStatusDto: UpdateAppointmentStatusDto) {
-    const { status } = updateStatusDto;
-    
-    const existingAppointment = await this.prisma.appointment.findUnique({
-      where: { id },
-    });
-
-    if (!existingAppointment) {
-      throw new NotFoundException(`Randevu bulunamadı: ID ${id}`);
+    if (existingAppointment) {
+      throw new BadRequestException('Personel bu saat aralığında meşgul.');
     }
 
     return this.prisma.appointment.update({
       where: { id },
-      data: { status },
-      include: {
-        customer: true,
-        staff: true,
-        service: true,
-        branch: true,
+      data: {
+        ...updateAppointmentDto,
+        endTime: endTime,
       },
     });
   }
 
   async remove(id: string) {
-    const existingAppointment = await this.prisma.appointment.findUnique({
+    const appointment = await this.prisma.appointment.findUnique({ where: { id } });
+    if (!appointment) {
+      throw new NotFoundException('Randevu bulunamadı');
+    }
+    return this.prisma.appointment.delete({ where: { id } });
+  }
+
+  async rescheduleAppointment(
+    id: string,
+    rescheduleAppointmentDto: RescheduleAppointmentDto,
+  ) {
+    const { startTime, staffId } = rescheduleAppointmentDto;
+
+    const appointment = await this.prisma.appointment.findUnique({
       where: { id },
+      include: { service: true },
     });
 
-    if (!existingAppointment) {
-      throw new NotFoundException(`Randevu bulunamadı: ID ${id}`);
+    if (!appointment) {
+      throw new NotFoundException('Randevu bulunamadı');
     }
 
-    return this.prisma.appointment.delete({
+    const endTime = addMinutes(new Date(startTime), appointment.service.duration);
+
+    const conflictingAppointment = await this.prisma.appointment.findFirst({
+      where: {
+        id: { not: id },
+        staffId: staffId || appointment.staffId,
+        status: {
+          notIn: [AppointmentStatus.CANCELLED, AppointmentStatus.COMPLETED],
+        },
+        OR: [
+          {
+            startTime: { lt: endTime },
+            endTime: { gt: new Date(startTime) },
+          },
+        ],
+      },
+    });
+
+    if (conflictingAppointment) {
+      throw new BadRequestException(
+        'Seçilen personel bu saatte başka bir randevuya sahip.',
+      );
+    }
+
+    return this.prisma.appointment.update({
       where: { id },
-      include: {
-        customer: true,
-        staff: true,
-        service: true,
+      data: {
+        startTime,
+        endTime,
+        staffId: staffId || appointment.staffId,
       },
     });
   }
 
-  // Tarih aralığına göre personelin randevularını getir
-  async findByStaffAndDateRange(staffId: string, startDate: Date, endDate: Date) {
+  async updateStatus(id: string, updateStatusDto: UpdateAppointmentStatusDto) {
+    const appointment = await this.prisma.appointment.findUnique({
+      where: { id },
+    });
+    if (!appointment) {
+      throw new NotFoundException('Randevu bulunamadı');
+    }
+
+    return this.prisma.appointment.update({
+      where: { id },
+      data: {
+        status: updateStatusDto.status,
+      },
+    });
+  }
+
+  findByStaffAndDateRange(staffId: string, startDate: Date, endDate: Date) {
     return this.prisma.appointment.findMany({
       where: {
         staffId,
         startTime: { gte: startDate },
         endTime: { lte: endDate },
       },
-      include: {
-        customer: true,
-        service: true,
-      },
-      orderBy: {
-        startTime: 'asc',
-      },
     });
   }
 
-  // Tarih aralığına göre müşterinin randevularını getir
-  async findByCustomerAndDateRange(customerId: string, startDate: Date, endDate: Date) {
+  findByCustomerAndDateRange(
+    customerId: string,
+    startDate: Date,
+    endDate: Date,
+  ) {
     return this.prisma.appointment.findMany({
       where: {
         customerId,
         startTime: { gte: startDate },
         endTime: { lte: endDate },
       },
-      include: {
-        staff: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-        service: true,
-        branch: {
-          select: {
-            id: true,
-            name: true,
-            address: true,
-          },
-        },
-      },
-      orderBy: {
-        startTime: 'asc',
-      },
     });
   }
+
+  async getCalendarData(branchId: string, start: Date, end: Date) {
+    // 1. Şubedeki personeli (kaynakları) getir
+    const staff = await this.prisma.user.findMany({
+      where: {
+        branchId: branchId,
+        role: { in: ['STAFF', 'BRANCH_MANAGER', 'RECEPTION'] },
+      },
+    });
+
+    const resources = staff.map((user) => ({
+      id: user.id,
+      title: user.name, // Hata düzeltildi: `surname` alanı User modelinde yok.
+    }));
+
+    // 2. Tarih aralığındaki randevuları (etkinlikleri) getir
+    const appointments = await this.prisma.appointment.findMany({
+      where: {
+        branchId: branchId,
+        status: {
+          notIn: [AppointmentStatus.CANCELLED],
+        },
+        startTime: { lt: end },
+        endTime: { gt: start },
+      },
+      include: {
+        customer: true,
+        service: true,
+        staff: true,
+      },
+    });
+
+    const events = appointments.map((appointment) => ({
+      id: appointment.id,
+      resourceId: appointment.staffId,
+      start: appointment.startTime,
+      end: appointment.endTime,
+      title: `${appointment.customer.name} - ${appointment.service.name}`,
+      backgroundColor: this.getEventColor(appointment.status),
+      borderColor: this.getEventColor(appointment.status),
+      extendedProps: {
+        staffName: appointment.staff.name,
+        customerName: appointment.customer.name,
+        serviceName: appointment.service.name,
+        status: appointment.status,
+      },
+    }));
+
+    return { resources, events };
+  }
+
+  private getEventColor(status: AppointmentStatus): string {
+    switch (status) {
+      case AppointmentStatus.CONFIRMED:
+        return '#3498db'; // Mavi
+      case AppointmentStatus.COMPLETED:
+        return '#2ecc71'; // Yeşil
+      case AppointmentStatus.SCHEDULED: // Hata düzeltildi: PENDING -> SCHEDULED
+        return '#f1c40f'; // Sarı
+      case AppointmentStatus.NO_SHOW: // Hata düzeltildi: NOSHOW -> NO_SHOW
+        return '#e74c3c'; // Kırmızı
+      case AppointmentStatus.CANCELLED:
+        return '#bdc3c7'; // Gri
+      default:
+        return '#95a5a6'; // Diğer durumlar için Gri
+    }
+  }
+
+  async getDashboardMetrics(
+    branchId: string,
+    period: 'day' | 'week' | 'month',
+  ) {
+    const now = new Date();
+    let startDate: Date;
+
+    if (period === 'day') {
+      startDate = startOfDay(now);
+    } else if (period === 'week') {
+      startDate = startOfDay(new Date(now.setDate(now.getDate() - now.getDay())));
+    } else {
+      startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+    }
+
+    const completedAppointments = await this.prisma.appointment.findMany({
+      where: {
+        branchId,
+        status: 'COMPLETED',
+        startTime: { gte: startDate },
+      },
+      include: { service: true },
+    });
+
+    const totalRevenue = completedAppointments.reduce(
+      (sum, app) => sum + (app.service?.price || 0),
+      0,
+    );
+    const totalAppointments = completedAppointments.length;
+
+    const upcomingAppointments = await this.prisma.appointment.count({
+      where: {
+        branchId,
+        status: AppointmentStatus.CONFIRMED,
+        startTime: { gte: new Date() },
+      },
+    });
+
+    return {
+      totalRevenue,
+      totalAppointments,
+      upcomingAppointments,
+    };
+  }
 }
-
-
-

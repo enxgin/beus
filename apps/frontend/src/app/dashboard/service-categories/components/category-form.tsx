@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { useToast } from "@/components/ui/use-toast"
-import { api } from "@/lib/api"
+import api from "@/lib/api"
+import { useQueryClient } from "@tanstack/react-query"
 import { ServiceCategory } from "../data/schema"
 import { useAuthStore } from "@/stores/auth.store"
 import {
@@ -37,13 +38,14 @@ type Branch = {
 export function CategoryForm({ category, isEdit = false }: CategoryFormProps) {
   const { toast } = useToast()
   const router = useRouter()
+  const queryClient = useQueryClient()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isAuthReady, setIsAuthReady] = useState(false)
   const [branches, setBranches] = useState<Branch[]>([])
   const [loadingBranches, setLoadingBranches] = useState(false)
   
   // Auth store'dan token, kullanıcı rolü ve hydration durumunu al
-  const { accessToken, user, isHydrated } = useAuthStore()
+  const { token, user, isHydrated } = useAuthStore()
   const userRole = user?.role
   
   // Yönetici rolü kontrolü
@@ -57,7 +59,7 @@ export function CategoryForm({ category, isEdit = false }: CategoryFormProps) {
   
   // Şubeleri getir
   const fetchBranches = async () => {
-    if (!accessToken) return
+    if (!token) return
     
     try {
       setLoadingBranches(true)
@@ -79,7 +81,7 @@ export function CategoryForm({ category, isEdit = false }: CategoryFormProps) {
   useEffect(() => {
     // Store hydrate edildiğinde ve token varsa hazır olarak işaretle
     if (isHydrated) {
-      if (!accessToken) {
+      if (!token) {
         toast({
           title: "Oturum hatası",
           description: "Oturumunuz sonlanmış. Lütfen tekrar giriş yapın.",
@@ -95,7 +97,7 @@ export function CategoryForm({ category, isEdit = false }: CategoryFormProps) {
         }
       }
     }
-  }, [isHydrated, accessToken, router, toast, isAdmin])
+  }, [isHydrated, token, router, toast, isAdmin])
   
   // Form gönderimi
   const handleSubmit = async (e: React.FormEvent) => {
@@ -151,7 +153,7 @@ export function CategoryForm({ category, isEdit = false }: CategoryFormProps) {
         console.log("Güncelleme verisi:", JSON.stringify(updateData, null, 2))
         
         // API endpoint doğru formatta kullanılıyor
-        const response = await api.patch(`/services/categories/${category.id}`, updateData)
+                const response = await api.patch(`/service-categories/${category.id}`, updateData)
         console.log("Güncelleme yanıtı:", response.data)
         
         toast({
@@ -190,9 +192,11 @@ export function CategoryForm({ category, isEdit = false }: CategoryFormProps) {
         })
       }
       
-      // Başarılı işlem sonrasında listeye dön
+      // Veriyi yenile ve listeye dön
+      queryClient.invalidateQueries({
+        queryKey: ["service-categories"],
+      })
       router.push("/dashboard/service-categories")
-      router.refresh()
     } catch (error: any) {
       console.error("API Error:", error)
       const errorDetail = error.response?.data?.message || error.message || "Bilinmeyen hata";

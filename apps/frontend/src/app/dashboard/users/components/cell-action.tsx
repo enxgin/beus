@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Copy, Edit, MoreHorizontal, Trash } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { useParams, useRouter } from "next/navigation";
-import axios from "axios";
+import api from "@/lib/api"; // Cache-busting comment
 
 import { Button } from "@/components/ui/button";
 import {
@@ -34,7 +34,7 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
   const onDelete = async () => {
     try {
       setLoading(true);
-      await axios.delete(`/api/v1/users/${data.id}`);
+      await api.delete(`/users/${data.id}`);
       router.refresh();
       toast.success("Personel silindi.");
     } catch (error) {

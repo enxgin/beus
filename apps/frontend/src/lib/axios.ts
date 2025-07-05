@@ -16,7 +16,7 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       // Token geçersiz, kullanıcıyı çıkış yap
       if (typeof window !== 'undefined') {
-        localStorage.removeItem('auth_token');
+        localStorage.removeItem('token');
         window.location.href = '/login';
       }
     }
@@ -27,7 +27,7 @@ api.interceptors.response.use(
 // Request interceptor - her istekte Authorization header'ı eklemek için
 api.interceptors.request.use((config) => {
   if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('auth_token');
+    const token = localStorage.getItem('token');
     if (token) {
       config.headers = config.headers || {};
       config.headers.Authorization = `Bearer ${token}`;

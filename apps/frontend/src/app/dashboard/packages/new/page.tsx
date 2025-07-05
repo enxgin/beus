@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm, SubmitHandler, UseFormReturn } from "react-hook-form";
+import { useForm, SubmitHandler } from "react-hook-form";
 import * as z from "zod";
 import { useRouter } from "next/navigation";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -18,6 +18,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import {
   Select,
   SelectContent,
@@ -28,11 +29,11 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/components/ui/use-toast";
-import { api } from "@/lib/api";
+import api from "@/lib/api";
 import { useAuthStore } from "@/stores/auth.store";
 import { UserRole } from "@/types/user";
 import { PackageType } from "@/types/package";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, HomeIcon } from "lucide-react";
 
 // Form şeması
 const formSchema = z.object({
@@ -46,6 +47,9 @@ const formSchema = z.object({
   price: z.coerce.number().min(0, {
     message: "Fiyat 0 veya daha büyük olmalıdır.",
   }),
+  validityDays: z.coerce.number().min(1, {
+    message: "Geçerlilik süresi en az 1 gün olmalıdır.",
+  }),
   type: z.enum([PackageType.SESSION, PackageType.TIME], {
     required_error: "Paket türü seçimi zorunludur.",
   }),
@@ -54,658 +58,422 @@ const formSchema = z.object({
     .min(1, {
       message: "Seans sayısı en az 1 olmalıdır.",
     })
-    .optional()
-    .refine((val) => val === undefined || val >= 1, {
-      message: "Seans sayısı en az 1 olmalıdır.",
-    }),
+    .optional(),
   totalMinutes: z.coerce
     .number()
     .min(1, {
       message: "Toplam dakika en az 1 olmalıdır.",
     })
-    .optional()
-    .refine((val) => val === undefined || val >= 1, {
-      message: "Toplam dakika en az 1 olmalıdır.",
-    }),
-  validityDays: z.coerce.number().min(1, {
-    message: "Geçerlilik süresi en az 1 gün olmalıdır.",
-  }),
-  isActive: z.boolean().default(true),
-  serviceIds: z.array(z.string()).min(1, {
-    message: "En az bir hizmet seçilmelidir.",
-  }),
+    .optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
-
-// Yardımcı fonksiyon - kullanıcı rolüne göre varsayılan şubeyi belirler
-const getBranchDefault = (user: any): string => {
-  if (!user) return "";
-  
-  if (user.role === UserRole.ADMIN || user.role === "SUPER_BRANCH_ADMIN") {
-    return "";
-  } else if (user.branch?.id) {
-    return user.branch.id;
-  }
-  return "";
-};
-
-// Service türü tanımları
-interface Service {
-  id: string;
-  name: string;
-  description?: string;
-  price: number;
-  duration?: number;
-  categoryId?: string;
-  category?: {
-    id: string;
-    name: string;
-  };
-}
 
 interface Branch {
   id: string;
   name: string;
 }
 
-// Form veri tipi ve query sonuç tipi
-interface FormData {
-  branches: Branch[];
-  services: Service[];
-  servicesByCategory?: Record<string, Service[]>;
+interface Service {
+  id: string;
+  name: string;
+  price: number;
 }
 
-type FormDataQueryResult = {
-  data: FormData | undefined;
-  isLoading: boolean;
-};
-
-const fetchFormData = async (): Promise<FormData> => {
-  try {
-    // Paralel istekler yap
-    const [branchesResponse, servicesResponse] = await Promise.all([
-      api.get("/branches"),
-      api.get("/services"),
-    ]);
-
-    const branches: Branch[] = branchesResponse.data || [];
-    const services: Service[] = servicesResponse.data || [];
-
-    // Hizmetleri kategorilere göre grupla
-    const servicesByCategory = services.reduce<Record<string, Service[]>>((acc, service) => {
-      const categoryName = service.category?.name || "Diğer";
-      if (!acc[categoryName]) {
-        acc[categoryName] = [];
-      }
-      acc[categoryName].push(service);
-      return acc;
-    }, {});
-
-    return { branches, services, servicesByCategory };
-  } catch (error) {
-    console.error("Veri çekme hatası:", error);
-    return { branches: [], services: [], servicesByCategory: {} };
-  }
-};
-
 export default function NewPackagePage() {
-  const { toast } = useToast();
   const router = useRouter();
-  const user = useAuthStore((state) => state.user);
+  const { toast } = useToast();
+  const { user } = useAuthStore();
   const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
-  const [packageType, setPackageType] = useState<PackageType>(PackageType.SESSION);
+  const [manualServices, setManualServices] = useState<Service[]>([]);
+  const [manualServicesLoading, setManualServicesLoading] = useState(false);
 
-  // Form verilerini çek
-  const { data: formData, isLoading: isFormDataLoading }: FormDataQueryResult = useQuery({ 
-    queryKey: ["package-form-data"],
-    queryFn: fetchFormData,
-  });
-
-  // Form tanımı
+  // Form başlangıç değerleri için şube ID'yi kullanıcı rolüne göre belirle
+  const isRoleWithFixedBranch = user?.role === UserRole.BRANCH_MANAGER || 
+                               user?.role === UserRole.RECEPTION || 
+                               user?.role === UserRole.STAFF ||
+                               user?.role === UserRole.BRANCH_ADMIN;
+  
+  const initialBranchId = isRoleWithFixedBranch && user?.branchId ? user.branchId : "";
+  console.log("Başlangıç şube ID'si:", initialBranchId, "Rol:", user?.role);
+  
   const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema) as any, // Type uyumsuzluğu nedeniyle 'as any' kullanıyoruz
+    resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
       description: "",
-      branchId: getBranchDefault(user),
+      branchId: initialBranchId,
       price: 0,
+      validityDays: 365, // Varsayılan olarak 1 yıl
       type: PackageType.SESSION,
-      totalSessions: 10,
-      totalMinutes: 0,
-      validityDays: 180, // 6 ay varsayılan
-      isActive: true,
-      serviceIds: [],
+      totalSessions: 1,
+      totalMinutes: 60,
     },
-  }) as UseFormReturn<FormValues>; // Form tipini kesin olarak belirtiyoruz
+  });
 
-  // Form değerlerini izle
-  const watchType = form.watch("type");
+  const { data: branches, isLoading: branchesLoading } = useQuery<Branch[]>({
+    queryKey: ["branches"],
+    queryFn: () => api.get("/branches").then((res) => res.data),
+    enabled: user?.role === UserRole.SUPER_ADMIN,
+  });
 
-  // Paket oluşturma mutasyonu
+  const selectedBranchId = form.watch("branchId");
+
+  const { data: services, isLoading: servicesLoading } = useQuery<Service[]>({
+    queryKey: ["services", selectedBranchId],
+    queryFn: () =>
+      api.get(`/services?branchId=${selectedBranchId}`).then((res) => res.data),
+    enabled: !!selectedBranchId,
+  });
+
   const createPackageMutation = useMutation({
-    mutationFn: async (data: FormValues) => {
-      console.log("Mutasyon fonksiyonu başlatılıyor, gönderilen veriler:", data);
-      
-      try {
-        // Formda seçilen hizmetleri kontrol et
-        if (!Array.isArray(data.serviceIds) || data.serviceIds.length === 0) {
-          throw new Error("En az bir hizmet seçilmelidir");
-        }
-        
-        // Hizmet seçimlerini düzenle
-        const selectedServices = formData?.services
-          ?.filter((service) => selectedServiceIds.includes(service.id))
-          ?.map((service) => ({
-            serviceId: service.id,
-            quantity: data.type === PackageType.SESSION ? 1 : service.duration || 60,
-          })) || [];
-          
-        console.log("Seçilen hizmetler:", selectedServices);
-
-        // Backend'e gönderilecek veri
-        const packageData = {
-          name: data.name,
-          description: data.description,
-          price: data.price,
-          branchId: data.branchId,
-          type: data.type,
-          validityDays: data.validityDays,
-          isActive: data.isActive,
-          totalSessions: data.type === PackageType.SESSION ? data.totalSessions : undefined,
-          totalMinutes: data.type === PackageType.TIME ? data.totalMinutes : undefined,
-          services: selectedServices,
-        };
-
-        console.log("API'ye gönderilecek veri:", packageData);
-        return await api.post("/packages", packageData);
-      } catch (err) {
-        console.error("Mutasyon içinde hata oluştu:", err);
-        throw err; // Hata fırlat
-      }
-    },
-    onSuccess: (data) => {
-      console.log("Paket başarıyla oluşturuldu, sunucu yanıtı:", data);
+    mutationFn: (newPackage: any) => api.post("/packages", newPackage),
+    onSuccess: () => {
       toast({
-        title: "Başarılı!",
+        title: "Başarılı",
         description: "Paket başarıyla oluşturuldu.",
       });
-      // Kısa bir gecikme ekleyerek yönlendirme öncesi toast gösteriminin tamamlanmasını sağla
-      setTimeout(() => {
-        router.push("/dashboard/packages");
-      }, 1000);
+      router.push("/dashboard/packages");
     },
     onError: (error: any) => {
-      console.error("Paket oluşturulurken hata:", error);
-      let errorMessage = "Paket oluşturulurken bir hata oluştu.";
-      
-      // Hata mesajını çıkarmaya çalış
-      if (error.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      
+      console.error("Paket oluşturma hatası:", error);
       toast({
         variant: "destructive",
-        title: "Hata!",
-        description: errorMessage,
+        title: "Hata",
+        description:
+          error.response?.data?.message || "Paket oluşturulurken bir hata oluştu.",
       });
     },
   });
 
-  // Seçili hizmetleri form ile senkronize et
-  const updateFormServiceIds = (selectedIds: string[]) => {
-    form.setValue("serviceIds", selectedIds);
-  };
-
-  // Form gönderimi
-  const onSubmit: SubmitHandler<FormValues> = async (data) => {
-    try {
-      console.log("Form submit edildi:", data);
-      console.log("Form hataları:", form.formState.errors);
-      console.log("Seçilen hizmetler:", selectedServiceIds);
+  useEffect(() => {
+    const fetchServices = async () => {
+      const branchId = form.getValues('branchId');
+      console.log("Şube ID değeri:", branchId);
       
-      // Son seçilen hizmet ID'lerini form state'ine aktar
-      const submissionData = { ...data, serviceIds: [...selectedServiceIds] };
-      
-      // Form validasyonu geçerli mi?
-      if (Object.keys(form.formState.errors).length > 0) {
-        console.error("Form geçerli değil:", form.formState.errors);
-        toast({
-          variant: "destructive",
-          title: "Form Hatası!",
-          description: "Lütfen form alanlarını kontrol ediniz.",
-        });
-        return;
+      if (branchId) {
+        setManualServicesLoading(true);
+        setManualServices([]); // Önceki hizmetleri temizle
+        setSelectedServiceIds([]); // Seçili hizmetleri de temizle
+        try {
+          console.log(`API isteği yapılıyor: /services?branchId=${branchId}&take=1000`);
+          const token = useAuthStore.getState().token;
+          console.log("Token var mı:", !!token);
+          const response = await api.get(`/services?branchId=${branchId}&take=1000`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          console.log("API yanıtı alındı:", response.data);
+          
+          // Gelen verinin paginated yapıya uygun olup olmadığını kontrol et
+          if (response.data && Array.isArray(response.data.data)) {
+            console.log(`${response.data.data.length} adet hizmet bulundu`);
+            setManualServices(response.data.data);
+          } else {
+            console.warn("Hizmetler API'sinden beklenen format gelmedi:", response.data);
+            setManualServices([]);
+          }
+        } catch (error) {
+          console.error("Hizmetler getirilirken hata oluştu:", error);
+          toast({
+            variant: "destructive",
+            title: "Hata",
+            description: "Hizmetler getirilirken bir hata oluştu.",
+          });
+          setManualServices([]);
+        } finally {
+          setManualServicesLoading(false);
+        }
+      } else {
+        console.log("Şube seçilmediği için hizmetler listelenemedi.");
+        // Şube seçilmediyse hizmet listesini boşalt
+        setManualServices([]);
+        setSelectedServiceIds([]);
       }
+    };
 
-      if (selectedServiceIds.length === 0) {
-        console.error("Hizmet seçilmedi!");
-        toast({
-          variant: "destructive",
-          title: "Hata!",
-          description: "En az bir hizmet seçilmelidir.",
-        });
-        return;
-      }
+    fetchServices();
+  }, [form.watch('branchId'), toast]);
 
-      // Tür kontrolü
-      if (data.type === PackageType.SESSION && (!data.totalSessions || data.totalSessions <= 0)) {
-        console.error("Seans sayısı belirtilmedi veya geçersiz!");
-        toast({
-          variant: "destructive",
-          title: "Hata!",
-          description: "Geçerli bir seans sayısı belirtilmelidir.",
-        });
-        return;
-      }
-
-      if (data.type === PackageType.TIME && (!data.totalMinutes || data.totalMinutes <= 0)) {
-        console.error("Toplam dakika belirtilmedi veya geçersiz!");
-        toast({
-          variant: "destructive",
-          title: "Hata!",
-          description: "Geçerli bir toplam dakika belirtilmelidir.",
-        });
-        return;
-      }
-
-      console.log("Mutasyon başlatılıyor...", submissionData);
-      createPackageMutation.mutate(submissionData);
-    } catch (error) {
-      console.error("onSubmit fonksiyonunda beklenmeyen hata:", error);
-      toast({
-        variant: "destructive",
-        title: "Beklenmeyen Hata!",
-        description: "Form gönderiminde bir hata oluştu. Lütfen tekrar deneyiniz.",
-      });
-    }
-  };
-
-  // Hizmet seçimi işleyicisi
-  const handleServiceToggle = (serviceId: string) => {
-    setSelectedServiceIds((prev) => {
-      const newIds = prev.includes(serviceId)
-        ? prev.filter((id) => id !== serviceId)
-        : [...prev, serviceId];
-
-      // Form state güncelle
-      form.setValue("serviceIds", newIds, { shouldValidate: true });
-      return newIds;
-    });
-  };
-
-  // Yükleniyor durumu
-  if (isFormDataLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
-  // Hizmetleri kategorilerine göre render et
-  const renderServicesByCategory = () => {
-    if (!formData || !formData.services || formData.services.length === 0) {
-      return <div>Hizmetler yükleniyor...</div>;
-    }
+  const onSubmit: SubmitHandler<FormValues> = (data) => {
+    // Backend'in beklediği services formatını oluştur
+    const services = selectedServiceIds.map(serviceId => ({
+      serviceId,
+      quantity: data.type === PackageType.SESSION ? Number(data.totalSessions) || 1 : 1
+    }));
     
-    // Hizmetleri kategorilere göre grupla (eğer servicesByCategory yoksa)
-    const servicesByCat = formData.servicesByCategory || formData.services.reduce<Record<string, Service[]>>((acc, service) => {
-      const categoryName = service.category?.name || "Diğer";
-      if (!acc[categoryName]) {
-        acc[categoryName] = [];
-      }
-      acc[categoryName].push(service);
-      return acc;
-    }, {});
+    // Tüm sayısal değerleri Number tipine çevirelim
+    const payload = {
+      name: data.name,
+      description: data.description || "",
+      branchId: data.branchId,
+      price: Number(data.price),
+      validityDays: Number(data.validityDays),
+      type: data.type,
+      services: services // Backend'in beklediği services array formatı
+    };
 
-    return Object.entries(servicesByCat).map(([category, services]) => (
-      <div key={category} className="mb-4">
-        <h4 className="font-medium mb-2">{category}</h4>
-        <div className="pl-2">
-          {Array.isArray(services) && services.map((service) => (
-              <div
-                key={service.id}
-                className="flex items-center space-x-2 border p-2 rounded-md"
-              >
-                <Checkbox
-                  checked={selectedServiceIds.includes(service.id)}
-                  onCheckedChange={() => handleServiceToggle(service.id)}
-                />
-                <span>{service.name}</span>
-                <span className="text-xs text-muted-foreground ml-auto">
-                  {new Intl.NumberFormat("tr-TR", {
-                    style: "currency",
-                    currency: "TRY",
-                  }).format(service.price)}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )
-    );
+    // Paket tipine göre totalSessions veya totalMinutes ekleyelim
+    if (data.type === PackageType.SESSION) {
+      payload.totalSessions = Number(data.totalSessions);
+      // totalMinutes alanını göndermeyelim
+    } else if (data.type === PackageType.TIME) {
+      payload.totalMinutes = Number(data.totalMinutes);
+      // totalSessions alanını göndermeyelim
+    }
+
+    console.log("Gönderilen paket verisi:", payload);
+    createPackageMutation.mutate(payload);
   };
 
   return (
-    <div className="container mx-auto py-10">
-      <div className="mb-6">
-        <Button variant="outline" onClick={() => router.push("/dashboard/packages")}>
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Paketlere Dön
-        </Button>
-      </div>
-
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-3xl font-bold">Yeni Paket</h1>
-          <p className="text-muted-foreground mt-1">Yeni paket tanımı oluşturun</p>
+    <div className="space-y-6">
+      <div>
+        <Breadcrumb>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/dashboard">
+              <HomeIcon className="h-4 w-4 mr-1" />
+              Ana Sayfa
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/dashboard/packages">Paketler</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem isCurrentPage>
+            <BreadcrumbLink>Yeni Paket</BreadcrumbLink>
+          </BreadcrumbItem>
+        </Breadcrumb>
+        <div className="flex justify-between items-center mt-2">
+          <h1 className="text-3xl font-bold tracking-tight">Yeni Paket Oluştur</h1>
+          <Button variant="outline" onClick={() => router.back()}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Geri Dön
+          </Button>
         </div>
+        <p className="text-muted-foreground mt-1">
+          Yeni bir paket oluşturun ve sisteme hizmetler ekleyin.
+        </p>
       </div>
-
       <Card>
         <CardHeader>
           <CardTitle>Paket Bilgileri</CardTitle>
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form 
-              onSubmit={(e) => {
-                e.preventDefault(); // Tarayıcının default davranışını engelle
-                console.log("Form submit eventi tetiklendi");
-                // Son seçilen servisleri form state'ine aktar
-                updateFormServiceIds(selectedServiceIds);
-                
-                form.handleSubmit((data) => {
-                  console.log("handleSubmit callback çalıştı", data);
-                  onSubmit(data);
-                })(e);
-              }} 
-              className="space-y-6"
-            >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Sol Kolon */}
-                <div className="space-y-6">
-                  <div>
-                    <h3 className="text-lg font-medium mb-4">Temel Bilgiler</h3>
-
-                    {/* Şube Seçimi */}
+            <form className="space-y-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Paket Adı</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Örn: 10 Seanslık Pilates Paketi" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Açıklama</FormLabel>
+                        <FormControl>
+                          <Textarea placeholder="Paket hakkında detaylı bilgi" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  {user?.role === UserRole.SUPER_ADMIN && (
                     <FormField
                       control={form.control}
                       name="branchId"
                       render={({ field }) => (
-                        <FormItem className="mb-4">
+                        <FormItem>
                           <FormLabel>Şube</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                            disabled={user?.role === UserRole.BRANCH_MANAGER}
-                          >
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Şube seçiniz" />
+                                <SelectValue placeholder="Bir şube seçin" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {formData?.branches.map((branch: Branch) => (
-                                <SelectItem key={branch.id} value={branch.id}>
-                                  {branch.name}
-                                </SelectItem>
-                              ))}
+                              {branchesLoading ? (
+                                <SelectItem value="loading" disabled>Yükleniyor...</SelectItem>
+                              ) : (
+                                branches?.map((branch) => (
+                                  <SelectItem key={branch.id} value={branch.id}>
+                                    {branch.name}
+                                  </SelectItem>
+                                ))
+                              )}
                             </SelectContent>
                           </Select>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-
-                    {/* Paket Adı */}
-                    <FormField
-                      control={form.control}
-                      name="name"
-                      render={({ field }) => (
-                        <FormItem className="mb-4">
-                          <FormLabel>Paket Adı</FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="Örn: 10 Seans Lazer Epilasyon"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    {/* Açıklama */}
-                    <FormField
-                      control={form.control}
-                      name="description"
-                      render={({ field }) => (
-                        <FormItem className="mb-4">
-                          <FormLabel>Açıklama</FormLabel>
-                          <FormControl>
-                            <Textarea
-                              placeholder="Paket hakkında detaylı bilgi..."
-                              className="resize-none h-24"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  {/* Paket Türü */}
-                  <div>
-                    <h3 className="text-lg font-medium mb-4">Paket Türü</h3>
-
-                    <FormField
-                      control={form.control}
-                      name="type"
-                      render={({ field }) => (
-                        <FormItem className="mb-4 space-y-3">
-                          <FormLabel>Paket Türü</FormLabel>
-                          <FormControl>
-                            <RadioGroup
-                              onValueChange={field.onChange}
-                              defaultValue={field.value}
-                              className="flex flex-col space-y-2"
-                            >
-                              <FormItem className="flex items-center space-x-3 space-y-0">
-                                <FormControl>
-                                  <RadioGroupItem value={PackageType.SESSION} />
-                                </FormControl>
-                                <FormLabel className="font-normal">
-                                  Adet Bazlı (Seans sayısı)
-                                </FormLabel>
-                              </FormItem>
-                              <FormItem className="flex items-center space-x-3 space-y-0">
-                                <FormControl>
-                                  <RadioGroupItem value={PackageType.TIME} />
-                                </FormControl>
-                                <FormLabel className="font-normal">
-                                  Dakika Bazlı (Toplam süre)
-                                </FormLabel>
-                              </FormItem>
-                            </RadioGroup>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    {/* Seans Sayısı (Adet bazlı) */}
-                    {watchType === PackageType.SESSION && (
-                      <FormField
-                        control={form.control}
-                        name="totalSessions"
-                        render={({ field }) => (
-                          <FormItem className="mb-4">
-                            <FormLabel>Toplam Seans Sayısı</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="number"
-                                min={1}
-                                placeholder="Örn: 10"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                  )}
+                  <FormField
+                    control={form.control}
+                    name="price"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Fiyat (TL)</FormLabel>
+                        <FormControl>
+                          <Input type="number" placeholder="Örn: 1500" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
                     )}
-
-                    {/* Dakika (Süre bazlı) */}
-                    {watchType === PackageType.TIME && (
-                      <FormField
-                        control={form.control}
-                        name="totalMinutes"
-                        render={({ field }) => (
-                          <FormItem className="mb-4">
-                            <FormLabel>Toplam Dakika</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="number"
-                                min={1}
-                                placeholder="Örn: 300"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="validityDays"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Geçerlilik Süresi (Gün)</FormLabel>
+                        <FormControl>
+                          <Input type="number" placeholder="Örn: 365" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
                     )}
-                  </div>
+                  />
                 </div>
-
-                {/* Sağ Kolon */}
-                <div className="space-y-6">
-                  {/* Fiyat ve Geçerlilik */}
-                  <div>
-                    <h3 className="text-lg font-medium mb-4">Fiyat ve Geçerlilik</h3>
-
-                    {/* Fiyat */}
-                    <FormField
-                      control={form.control}
-                      name="price"
-                      render={({ field }) => (
-                        <FormItem className="mb-4">
-                          <FormLabel>Fiyat (₺)</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              min={0}
-                              step="0.01"
-                              placeholder="0.00"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    {/* Geçerlilik Süresi */}
-                    <FormField
-                      control={form.control}
-                      name="validityDays"
-                      render={({ field }) => (
-                        <FormItem className="mb-4">
-                          <FormLabel>Geçerlilik Süresi (Gün)</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              min={1}
-                              placeholder="180"
-                              {...field}
-                            />
-                          </FormControl>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Satın alımdan itibaren kaç gün geçerli olacak
-                          </p>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    {/* Durum */}
-                    <FormField
-                      control={form.control}
-                      name="isActive"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 mb-4">
-                          <FormControl>
-                            <Checkbox
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                          </FormControl>
-                          <div className="space-y-1 leading-none">
-                            <FormLabel>Aktif</FormLabel>
-                            <p className="text-xs text-muted-foreground">
-                              Paketi aktif olarak kullanıma aç
-                            </p>
-                          </div>
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  {/* Kapsanan Hizmetler */}
-                  <div>
-                    <h3 className="text-lg font-medium mb-4">Kapsanan Hizmetler</h3>
-                    <div className="max-h-64 overflow-y-auto border rounded-md p-3">
-                      {renderServicesByCategory()}
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      Bu paket hangi hizmetler için kullanılabilir?
-                    </p>
-                    {form.formState.errors.serviceIds && (
-                      <p className="text-sm text-destructive mt-1">
-                        {form.formState.errors.serviceIds.message}
-                      </p>
+                <div className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="type"
+                    render={({ field }) => (
+                      <FormItem className="space-y-3">
+                        <FormLabel>Paket Türü</FormLabel>
+                        <FormControl>
+                          <RadioGroup
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                            className="flex flex-col space-y-1"
+                          >
+                            <FormItem className="flex items-center space-x-3 space-y-0">
+                              <FormControl>
+                                <RadioGroupItem value={PackageType.SESSION} />
+                              </FormControl>
+                              <FormLabel className="font-normal">Seans Bazlı</FormLabel>
+                            </FormItem>
+                            <FormItem className="flex items-center space-x-3 space-y-0">
+                              <FormControl>
+                                <RadioGroupItem value={PackageType.TIME} />
+                              </FormControl>
+                              <FormLabel className="font-normal">Süre Bazlı</FormLabel>
+                            </FormItem>
+                          </RadioGroup>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
                     )}
-                  </div>
+                  />
+                  {form.watch("type") === PackageType.SESSION && (
+                    <FormField
+                      control={form.control}
+                      name="totalSessions"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Toplam Seans</FormLabel>
+                          <FormControl>
+                            <Input type="number" placeholder="Örn: 10" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
+                  {form.watch("type") === PackageType.TIME && (
+                    <FormField
+                      control={form.control}
+                      name="totalMinutes"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Toplam Dakika</FormLabel>
+                          <FormControl>
+                            <Input type="number" placeholder="Örn: 600" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
                 </div>
               </div>
 
-              {/* Form Butonları */}
-              <div className="flex justify-end space-x-3 mt-8 pt-6 border-t">
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium">Hizmetler</h3>
+                {manualServicesLoading ? (
+                  <p>Hizmetler yükleniyor...</p>
+                ) : manualServices && manualServices.length > 0 ? (
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {manualServices.map((service) => (
+                      <div key={service.id} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={service.id}
+                          checked={selectedServiceIds.includes(service.id)}
+                          onCheckedChange={(checked) => {
+                            return checked
+                              ? setSelectedServiceIds([...selectedServiceIds, service.id])
+                              : setSelectedServiceIds(
+                                  selectedServiceIds.filter((id) => id !== service.id)
+                                );
+                          }}
+                        />
+                        <label
+                          htmlFor={service.id}
+                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        >
+                          {service.name}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p>Bu şubeye ait hizmet bulunamadı veya şube seçilmedi.</p>
+                )}
+              </div>
+
+              <div className="flex justify-end">
                 <Button
                   type="button"
-                  variant="outline"
-                  onClick={() => router.push("/dashboard/packages")}
-                >
-                  İptal
-                </Button>
-                <Button 
-                  type="button"
-                  onClick={() => {
+                  onClick={async () => {
                     try {
-                      console.log("Submit butonu tıklandı");
-                      // Son seçilen servisleri form state'ine aktar
-                      form.setValue("serviceIds", [...selectedServiceIds]);
+                      // Önce form doğrulamasını çalıştır
+                      const formValid = await form.trigger();
+                      if (!formValid) {
+                        toast({
+                          variant: "destructive",
+                          title: "Form Hatası",
+                          description: "Lütfen form alanlarını kontrol ediniz."
+                        });
+                        return;
+                      }
                       
-                      // Tüm kontrolleri manuel yapalım
                       const data = form.getValues();
                       let hasError = false;
-                      
-                      // Alan kontrolleri
-                      if (!data.name) {
+
+                      if (user?.role === UserRole.SUPER_ADMIN && !data.branchId) {
                         toast({
                           variant: "destructive",
                           title: "Hata",
-                          description: "Paket adı gereklidir"
+                          description: "Şube seçimi zorunludur"
                         });
                         hasError = true;
                       }
                       
+                      // Hizmet seçimi kontrolü
                       if (selectedServiceIds.length === 0) {
                         toast({
                           variant: "destructive",
@@ -715,7 +483,8 @@ export default function NewPackagePage() {
                         hasError = true;
                       }
                       
-                      if (data.type === PackageType.SESSION && (!data.totalSessions || data.totalSessions <= 0)) {
+                      // Seans sayısı kontrolü
+                      if (data.type === PackageType.SESSION && (!data.totalSessions || Number(data.totalSessions) <= 0)) {
                         toast({
                           variant: "destructive",
                           title: "Hata",
@@ -724,7 +493,8 @@ export default function NewPackagePage() {
                         hasError = true;
                       }
                       
-                      if (data.type === PackageType.TIME && (!data.totalMinutes || data.totalMinutes <= 0)) {
+                      // Dakika kontrolü
+                      if (data.type === PackageType.TIME && (!data.totalMinutes || Number(data.totalMinutes) <= 0)) {
                         toast({
                           variant: "destructive",
                           title: "Hata",
@@ -739,6 +509,11 @@ export default function NewPackagePage() {
                       }
                     } catch (error) {
                       console.error("Buton tıklama işleminde hata:", error);
+                      toast({
+                        variant: "destructive",
+                        title: "Hata",
+                        description: "Beklenmeyen bir hata oluştu: " + (error instanceof Error ? error.message : String(error))
+                      });
                     }
                   }}
                   disabled={createPackageMutation.isPending}

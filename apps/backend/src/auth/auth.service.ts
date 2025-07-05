@@ -87,12 +87,15 @@ export class AuthService {
 
   async register(email: string, password: string, name: string) {
     const hashedPassword = await this.hashPassword(password);
-    return this.usersService.create({
-      email,
-      password: hashedPassword,
-      name,
-      role: UserRole.STAFF, // Default role for new users
-    });
+    return this.usersService.create(
+      {
+        email,
+        password: hashedPassword,
+        name,
+        role: UserRole.STAFF, // Default role for new users
+      },
+      { role: UserRole.CUSTOMER, branchId: null }, // Simulate a 'guest' or 'system' user performing the action
+    );
   }
 
   private async hashPassword(password: string): Promise<string> {

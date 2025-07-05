@@ -9,6 +9,7 @@ import {
   Query,
   UseGuards,
   BadRequestException,
+  Req,
 } from '@nestjs/common';
 import { PackagesService } from './packages.service';
 import { CreatePackageDto } from './dto/create-package.dto';
@@ -41,10 +42,10 @@ export class PackagesController {
   @ApiResponse({ status: 201, description: 'Paket başarıyla oluşturuldu' })
   @ApiResponse({ status: 400, description: 'Geçersiz veri' })
   @ApiResponse({ status: 403, description: 'Erişim reddedildi' })
-  @Roles(UserRole.ADMIN, UserRole.SUPER_BRANCH_MANAGER)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_BRANCH_MANAGER, UserRole.BRANCH_MANAGER, UserRole.RECEPTION, UserRole.STAFF)
   @Post()
-  createPackage(@Body() createPackageDto: CreatePackageDto) {
-    return this.packagesService.createPackage(createPackageDto);
+  createPackage(@Body() createPackageDto: CreatePackageDto, @Req() req) {
+    return this.packagesService.createPackage(createPackageDto, req.user);
   }
 
   @ApiOperation({ summary: 'Tüm paketleri listele' })
@@ -58,9 +59,10 @@ export class PackagesController {
   })
   @Get()
   findAllPackages(
+    @Req() req,
     @Query('skip') skip?: string,
     @Query('take') take?: string,
-    @Query('name') name?: string,
+    @Query('name') name?: string
   ) {
     const params: any = {};
     
@@ -75,6 +77,9 @@ export class PackagesController {
         },
       };
     }
+    
+    // Rol bazlı filtreleme için kullanıcı bilgisi ekle
+    params.user = req.user;
 
     return this.packagesService.findAllPackages(params);
   }
@@ -94,7 +99,7 @@ export class PackagesController {
   @ApiResponse({ status: 400, description: 'Geçersiz veri' })
   @ApiResponse({ status: 403, description: 'Erişim reddedildi' })
   @ApiParam({ name: 'id', description: 'Paket ID' })
-  @Roles(UserRole.ADMIN, UserRole.SUPER_BRANCH_MANAGER)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_BRANCH_MANAGER, UserRole.BRANCH_MANAGER, UserRole.STAFF)
   @Patch(':id')
   updatePackage(@Param('id') id: string, @Body() updatePackageDto: UpdatePackageDto) {
     return this.packagesService.updatePackage(id, updatePackageDto);

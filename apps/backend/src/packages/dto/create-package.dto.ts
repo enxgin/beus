@@ -34,11 +34,25 @@ export class CreatePackageDto {
   @IsString()
   @IsOptional()
   description?: string;
+  
+  @ApiProperty({ description: 'Şube ID', example: 'cmcmglc8t001mvjojggc0vzrm' })
+  @IsString()
+  @IsOptional()
+  branchId?: string;
 
   @ApiProperty({ description: 'Paket fiyatı', example: 2500 })
   @IsNumber({}, { message: 'Fiyat bir sayı olmalıdır' })
   @IsPositive({ message: 'Fiyat pozitif bir sayı olmalıdır' })
   price: number;
+  
+  @ApiProperty({ description: 'Paket tipi (session veya time)', example: 'session', enum: ['session', 'time'] })
+  @IsString()
+  @IsOptional()
+  type?: string;
+  
+  @ApiProperty({ description: 'Paket aktif mi?', example: true, default: true })
+  @IsOptional()
+  isActive?: boolean;
 
   @ApiProperty({ description: 'İndirimli fiyat (opsiyonel)', example: 2000, required: false })
   @IsNumber({}, { message: 'İndirimli fiyat bir sayı olmalıdır' })
@@ -50,6 +64,24 @@ export class CreatePackageDto {
   @IsNumber({}, { message: 'Geçerlilik süresi bir sayı olmalıdır' })
   @IsPositive({ message: 'Geçerlilik süresi pozitif bir sayı olmalıdır' })
   validityDays: number;
+  
+  @ApiProperty({ description: 'Toplam seans sayısı (session tipi paketler için)', example: 10, required: false })
+  @IsNumber({}, { message: 'Seans sayısı bir sayı olmalıdır' })
+  @IsPositive({ message: 'Seans sayısı pozitif bir sayı olmalıdır' })
+  @IsOptional()
+  totalSessions?: number;
+  
+  @ApiProperty({ description: 'Toplam dakika (time tipi paketler için)', example: 300, required: false })
+  @IsNumber({}, { message: 'Toplam dakika bir sayı olmalıdır' })
+  @IsPositive({ message: 'Toplam dakika pozitif bir sayı olmalıdır' })
+  @IsOptional()
+  totalMinutes?: number;
+  
+  @ApiProperty({ description: 'Seçilen hizmet ID\'leri listesi', example: ['id1', 'id2'], required: false })
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  serviceIds?: string[];
 
   @ApiProperty({ description: 'Satış primi yüzdesi (opsiyonel)', example: 10, required: false })
   @IsNumber({}, { message: 'Prim yüzdesi bir sayı olmalıdır' })

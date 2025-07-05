@@ -8,7 +8,7 @@ import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import { EditCustomerDialog } from "./edit-customer-dialog"
 
-import { api } from "@/lib/api"
+import api from "@/lib/api"
 import { Button } from "@/components/ui/button"
 import {
   AlertDialog,

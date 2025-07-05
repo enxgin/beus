@@ -1,16 +1,9 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal, ArrowUpDown } from "lucide-react";
+import { ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { DataTableRowActions } from "./data-table-row-actions";
 import { Service } from "@/types/service"; // Bu tipi daha sonra oluşturacağız
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
@@ -86,31 +79,7 @@ export const getColumns = (userRole: UserRole | null): ColumnDef<Service>[] => {
     },
     {
       id: "actions",
-      cell: ({ row }) => {
-        const service = row.original;
-
-        return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">Menüyü aç</span>
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>İşlemler</DropdownMenuLabel>
-              <DropdownMenuItem asChild>
-                <Link href={`/dashboard/services/${service.id}`}>Görüntüle</Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link href={`/dashboard/services/${service.id}/edit`}>Düzenle</Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem>Sil</DropdownMenuItem> 
-            </DropdownMenuContent>
-          </DropdownMenu>
-        );
-      },
+      cell: ({ row }) => <DataTableRowActions row={row} />,
     },
   ];
 

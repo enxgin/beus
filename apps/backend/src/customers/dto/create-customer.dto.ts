@@ -1,26 +1,14 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsNotEmpty, IsNumber, IsOptional, IsPhoneNumber, IsString, Min, ValidateNested, IsArray } from 'class-validator';
-import { Type } from 'class-transformer';
-
-class TagDto {
-  @ApiProperty({
-    description: 'Etiket adı',
-    example: 'VIP',
-    required: true,
-  })
-  @IsNotEmpty({ message: 'Etiket adı boş olamaz' })
-  @IsString({ message: 'Etiket adı metin formatında olmalıdır' })
-  name!: string;
-
-  @ApiProperty({
-    description: 'Etiket rengi (hex formatında)',
-    example: '#FF5733',
-    required: true,
-  })
-  @IsNotEmpty({ message: 'Etiket rengi boş olamaz' })
-  @IsString({ message: 'Etiket rengi metin formatında olmalıdır' })
-  color!: string;
-}
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsPhoneNumber,
+  IsString,
+  Min,
+  IsArray,
+} from 'class-validator';
 
 export class CreateCustomerDto {
   @ApiProperty({
@@ -84,20 +72,20 @@ export class CreateCustomerDto {
   @ApiProperty({
     description: 'Müşterinin kayıtlı olduğu şube ID',
     example: 'clg2sdj8c000008l56ryo3f0z',
-    required: false,
+    required: true,
   })
-  @IsOptional() // Kullanıcının şubesi otomatik atanabilir
+  @IsNotEmpty({ message: 'Şube ID boş olamaz' })
   @IsString({ message: 'Şube ID metin formatında olmalıdır' })
-  branchId?: string;
+  branchId!: string;
 
   @ApiProperty({
-    description: 'Müşteri etiketleri',
-    type: [TagDto],
+    description: 'Müşteriye atanacak etiketlerin IDleri',
+    type: [String],
     required: false,
+    example: ['clg2sdj8c000008l56ryo3f0z', 'clg2sdj8c000008l56ryo3f1a']
   })
   @IsOptional()
   @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => TagDto)
-  tags?: TagDto[];
+  @IsString({ each: true })
+  tagIds?: string[];
 }

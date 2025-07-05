@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { api } from "@/lib/api"
+import api from "@/lib/api"
 import { CategoryForm } from "../../components/category-form"
 import { ServiceCategory } from "../../data/schema"
 import { useRouter } from "next/navigation"
@@ -19,7 +19,7 @@ export default function EditCategoryPage() {
   const { toast } = useToast()
   
   // Auth store'dan token ve hydration durumunu al
-  const { accessToken, isHydrated } = useAuthStore()
+  const { token, isHydrated } = useAuthStore()
 
   useEffect(() => {
     const controller = new AbortController()
@@ -53,7 +53,7 @@ export default function EditCategoryPage() {
     }
 
     if (isHydrated) {
-      if (!accessToken) {
+      if (!token) {
         toast({
           title: "Oturum hatası",
           description: "Oturumunuz sonlanmış. Lütfen tekrar giriş yapın.",
@@ -68,7 +68,7 @@ export default function EditCategoryPage() {
     return () => {
       controller.abort()
     }
-  }, [isHydrated, accessToken, router, toast, id])
+  }, [isHydrated, token, router, toast, id])
 
   if (loading) {
     return (

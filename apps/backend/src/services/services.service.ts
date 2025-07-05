@@ -36,55 +36,84 @@ export class ServicesService {
     });
   }
 
-  async findAll(params: {
-    skip?: number;
-    take?: number;
-    where?: any;
-    orderBy?: any;
-  }) {
-    const { skip, take, where, orderBy } = params;
-    // 1. Get services without staff
-    const services = await this.prisma.service.findMany({
-      skip,
-      take,
-      where,
-      orderBy,
-      include: {
-        category: true,
-        branch: true,
-      },
-    });
+  async findAll(
+    user: any,
+    params: {
+      skip?: number;
+      take?: number;
+      branchId?: string;
+      categoryId?: string;
+      search?: string;
+      orderBy?: any;
+    },
+  ) {
+    const { skip, take, branchId, categoryId, search, orderBy } = params;
 
-    const serviceIds = services.map((s) => s.id);
+    const where: any = {
+      isActive: true,
+    };
 
-    // 2. Get all relevant staff links
-    const staffLinks = await this.prisma.staffService.findMany({
-      where: { serviceId: { in: serviceIds } },
-      select: { userId: true, serviceId: true },
-    });
+    // Role-based branch filtering
+    if (user.role === 'ADMIN') {
+      if (branchId) {
+        where.branchId = branchId;
+      }
+    } else if (user.role === 'SUPER_BRANCH_MANAGER') {
+      const managedBranchIds = user.branches?.map((b) => b.id) || [];
+      if (branchId && managedBranchIds.includes(branchId)) {
+        where.branchId = branchId;
+      } else {
+        where.branchId = { in: managedBranchIds };
+      }
+    } else {
+      // STAFF, BRANCH_MANAGER, RECEPTION
+      if (user.branchId) {
+        where.branchId = user.branchId;
+      } else {
+        // If user has no branch, they see no services.
+        return { data: [], totalCount: 0 };
+      }
+    }
 
-    const userIds = [...new Set(staffLinks.map((sl) => sl.userId))];
+    if (categoryId) {
+      where.categoryId = categoryId;
+    }
 
-    // 3. Get all relevant users
-    const users = await this.prisma.user.findMany({
-      where: { id: { in: userIds } },
-      select: { id: true, name: true, email: true },
-    });
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { category: { name: { contains: search, mode: 'insensitive' } } },
+      ];
+    }
 
-    const usersMap = new Map(users.map((u) => [u.id, u]));
+    const [services, totalCount] = await this.prisma.$transaction([
+      this.prisma.service.findMany({
+        skip,
+        take,
+        where,
+        orderBy,
+        include: {
+          category: true,
+          branch: true,
+          staff: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+            },
+          },
+        },
+      }),
+      this.prisma.service.count({ where }),
+    ]);
 
-    // 4. Manually combine the data
-    const servicesWithStaff = services.map((service) => {
-      const relevantLinks = staffLinks.filter(
-        (sl) => sl.serviceId === service.id,
-      );
-      const staff = relevantLinks
-        .map((rl) => usersMap.get(rl.userId))
-        .filter(Boolean);
-      return { ...service, staff };
-    });
-
-    return servicesWithStaff;
+    return {
+      data: services,
+      totalCount,
+    };
   }
 
   async findOne(id: string) {
@@ -122,33 +151,77 @@ export class ServicesService {
   async update(id: string, updateServiceDto: UpdateServiceDto) {
     const { staffIds, ...serviceData } = updateServiceDto;
 
-    const updatePayload: any = { ...serviceData };
+    return this.prisma.$transaction(async (prisma) => {
+      // 1. Hizmetin kendi alanlarını güncelle
+      if (Object.keys(serviceData).length > 0) {
+        await prisma.service.update({
+          where: { id },
+          data: serviceData,
+        });
+      }
 
-    if (staffIds) {
-      updatePayload.staff = {
-        // Önce mevcut ilişkileri sil
-        deleteMany: {},
-        // Sonra yeni ilişkileri oluştur
-        create: staffIds.map((staffId) => ({
-          user: {
-            connect: { id: staffId },
-          },
-        })),
-      };
-    }
+      // 2. Personel ID'leri gönderildiyse, ilişkileri senkronize et
+      if (staffIds !== undefined) {
+        const currentStaffLinks = await prisma.staffService.findMany({
+          where: { serviceId: id },
+          select: { userId: true },
+        });
+        const currentStaffIds = currentStaffLinks.map((link) => link.userId);
 
-    return this.prisma.service.update({
-      where: { id },
-      data: updatePayload,
-      include: {
-        category: true,
-        branch: true,
-        staff: {
-          include: {
-            user: true,
-          },
+        const staffToConnect = staffIds.filter(
+          (sid) => !currentStaffIds.includes(sid),
+        );
+        const staffToDisconnect = currentStaffIds.filter(
+          (sid) => !staffIds.includes(sid),
+        );
+
+        // 3. Artık atanmamış personeli kaldır
+        if (staffToDisconnect.length > 0) {
+          await prisma.staffService.deleteMany({
+            where: {
+              serviceId: id,
+              userId: { in: staffToDisconnect },
+            },
+          });
+        }
+
+        // 4. Yeni atanan personeli ekle
+        if (staffToConnect.length > 0) {
+          await prisma.staffService.createMany({
+            data: staffToConnect.map((userId) => ({
+              serviceId: id,
+              userId: userId,
+            })),
+          });
+        }
+      }
+
+      // 5. Güncellenmiş hizmeti ve ilişkilerini döndür (findOne ile aynı mantık)
+      const service = await prisma.service.findUnique({
+        where: { id },
+        include: {
+          category: true,
+          branch: true,
         },
-      },
+      });
+
+      if (!service) {
+        throw new NotFoundException(`Hizmet bulunamadı: ID ${id}`);
+      }
+
+      const staffLinks = await prisma.staffService.findMany({
+        where: { serviceId: service.id },
+        select: { userId: true },
+      });
+
+      const userIds = staffLinks.map((sl) => sl.userId);
+
+      const staff = await prisma.user.findMany({
+        where: { id: { in: userIds } },
+        select: { id: true, name: true, email: true },
+      });
+
+      return { ...service, staff };
     });
   }
 

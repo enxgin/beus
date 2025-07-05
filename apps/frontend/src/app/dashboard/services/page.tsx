@@ -1,46 +1,49 @@
 "use client";
 
+import { useMemo, useState } from "react";
+import Link from "next/link";
+import { useDebounce } from "use-debounce";
+import { PlusCircle, Search } from "lucide-react";
+
 import { getColumns } from "./components/columns";
 import { DataTable } from "./components/data-table";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
-import { PlusCircle, Search } from "lucide-react";
-import { useAuthStore } from "@/stores/auth.store";
-import { Service } from "@/types/service";
-import { useMemo, useState, useEffect } from "react";
-import { useServices } from "./hooks/use-services";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useAuthStore } from "@/stores/auth.store";
+import { useServices } from "./hooks/use-services";
+import { useBranches } from "@/hooks/use-branches";
+import { UserRole } from "@/types/user";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const ServicesPage = () => {
   const { user, isHydrated } = useAuthStore();
-  const { data: services = [], isLoading, isError, error } = useServices();
-  
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filteredData, setFilteredData] = useState<Service[]>([]);
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm] = useDebounce(searchTerm, 500);
+  const [selectedBranch, setSelectedBranch] = useState<string | undefined>(
+    user?.role !== UserRole.ADMIN && user?.role !== UserRole.SUPER_BRANCH_MANAGER
+      ? user?.branchId
+      : undefined
+  );
 
-  // useMemo, kullanıcı rolü değişmediği sürece kolonların yeniden hesaplanmasını engeller.
+  const { data: branchesData, isLoading: isLoadingBranches } = useBranches(user);
+
+  const servicesQuery = useServices({
+    page: pagination.pageIndex + 1,
+    limit: pagination.pageSize,
+    search: debouncedSearchTerm,
+    branchId: selectedBranch,
+  });
+
+  const { data, isLoading, isError, error } = servicesQuery;
+  const { data: services = [], totalCount = 0 } = data || {};
+
   const columns = useMemo(() => getColumns(user?.role || null), [user]);
 
-  // Arama filtrelemesi
-  useEffect(() => {
-    if (!services) return;
-    
-    let filtered = services;
-    
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase().trim();
-      filtered = filtered.filter((service: Service) => {
-        return (
-          service.name.toLowerCase().includes(query) ||
-          service.category?.name.toLowerCase().includes(query) ||
-          service.branch?.name.toLowerCase().includes(query)
-        );
-      });
-    }
-    
-    setFilteredData(filtered);
-  }, [searchQuery, services]);
+  const pageCount = Math.ceil(totalCount / pagination.pageSize);
+
+  const showBranchFilter = user?.role === UserRole.ADMIN || user?.role === UserRole.SUPER_BRANCH_MANAGER;
 
   if (!isHydrated || isLoading) {
     return (
@@ -73,45 +76,43 @@ const ServicesPage = () => {
           </Link>
         </Button>
       </div>
-      
-      {/* Arama barı */}
+
       <div className="flex items-center space-x-2 mb-6">
         <div className="relative flex-1">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             type="search"
-            placeholder="Hizmet adı, kategori veya şube ile arama yapın..."
+            placeholder="Hizmet adı veya kategori ile arayın..."
             className="pl-8"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
+        {showBranchFilter && (
+          <Select onValueChange={setSelectedBranch} value={selectedBranch}>
+            <SelectTrigger className="w-[280px]">
+              <SelectValue placeholder="Şube Seçin" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tüm Şubeler</SelectItem>
+              {branchesData?.map((branch) => (
+                <SelectItem key={branch.id} value={branch.id}>
+                  {branch.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
       </div>
-      
-      {/* Hizmetlerin sonuç sayısı */}
-      {searchQuery && (
-        <p className="text-sm text-muted-foreground mb-4">
-          <span className="font-medium">{filteredData.length}</span> hizmet bulundu.
-        </p>
-      )}
-      
-      {/* Sonuç yoksa bilgi mesajı */}
-      {filteredData.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-12 text-center">
-          <p className="text-lg font-medium mb-2">Hiç hizmet bulunamadı</p>
-          {searchQuery ? (
-            <p className="text-sm text-muted-foreground">
-              Arama kriterlerinize uygun hizmet bulunamadı. Lütfen farklı bir arama yapmayı deneyin.
-            </p>
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              Henüz hiç hizmet eklenmemiş. Yeni bir hizmet eklemek için "Yeni Hizmet Ekle" butonunu kullanın.
-            </p>
-          )}
-        </div>
-      ) : (
-        <DataTable columns={columns} data={filteredData} />
-      )}
+
+      <DataTable
+        columns={columns}
+        data={services}
+        pageCount={pageCount}
+        pagination={pagination}
+        setPagination={setPagination}
+        isLoading={isLoading}
+      />
     </div>
   );
 };

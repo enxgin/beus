@@ -131,6 +131,18 @@ exports.Prisma.UserScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.WorkHourScalarFieldEnum = {
+  id: 'id',
+  staffId: 'staffId',
+  branchId: 'branchId',
+  dayOfWeek: 'dayOfWeek',
+  startTime: 'startTime',
+  endTime: 'endTime',
+  isOff: 'isOff',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.BranchScalarFieldEnum = {
   id: 'id',
   name: 'name',
@@ -174,7 +186,8 @@ exports.Prisma.ServiceCategoryScalarFieldEnum = {
   description: 'description',
   isActive: 'isActive',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  branchId: 'branchId'
 };
 
 exports.Prisma.ServiceScalarFieldEnum = {
@@ -200,17 +213,16 @@ exports.Prisma.StaffServiceScalarFieldEnum = {
 exports.Prisma.PackageScalarFieldEnum = {
   id: 'id',
   name: 'name',
-  description: 'description',
   price: 'price',
   validityDays: 'validityDays',
   commissionRate: 'commissionRate',
   commissionFixed: 'commissionFixed',
   branchId: 'branchId',
-  isActive: 'isActive',
-  type: 'type',
-  totalSessions: 'totalSessions',
-  totalMinutes: 'totalMinutes',
   createdAt: 'createdAt',
+  description: 'description',
+  totalMinutes: 'totalMinutes',
+  totalSessions: 'totalSessions',
+  type: 'type',
   updatedAt: 'updatedAt'
 };
 
@@ -240,6 +252,7 @@ exports.Prisma.AppointmentScalarFieldEnum = {
   id: 'id',
   startTime: 'startTime',
   endTime: 'endTime',
+  duration: 'duration',
   status: 'status',
   notes: 'notes',
   customerId: 'customerId',
@@ -320,7 +333,8 @@ exports.UserRole = exports.$Enums.UserRole = {
   SUPER_BRANCH_MANAGER: 'SUPER_BRANCH_MANAGER',
   BRANCH_MANAGER: 'BRANCH_MANAGER',
   RECEPTION: 'RECEPTION',
-  STAFF: 'STAFF'
+  STAFF: 'STAFF',
+  CUSTOMER: 'CUSTOMER'
 };
 
 exports.ServiceType = exports.$Enums.ServiceType = {
@@ -336,9 +350,11 @@ exports.PackageType = exports.$Enums.PackageType = {
 exports.AppointmentStatus = exports.$Enums.AppointmentStatus = {
   SCHEDULED: 'SCHEDULED',
   ARRIVED: 'ARRIVED',
+  CANCELED: 'CANCELED',
+  CONFIRMED: 'CONFIRMED',
   COMPLETED: 'COMPLETED',
-  NO_SHOW: 'NO_SHOW',
-  CANCELED: 'CANCELED'
+  CANCELLED: 'CANCELLED',
+  NO_SHOW: 'NO_SHOW'
 };
 
 exports.PaymentStatus = exports.$Enums.PaymentStatus = {
@@ -365,6 +381,7 @@ exports.CashLogType = exports.$Enums.CashLogType = {
 
 exports.Prisma.ModelName = {
   User: 'User',
+  WorkHour: 'WorkHour',
   Branch: 'Branch',
   Tag: 'Tag',
   CustomerTag: 'CustomerTag',

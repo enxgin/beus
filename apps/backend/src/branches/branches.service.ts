@@ -45,22 +45,41 @@ export class BranchesService {
     take?: number;
     where?: BranchWhereInput;
     orderBy?: BranchOrderByWithRelationInput;
-  }): Promise<Branch[]> {
-    const { skip, take, where, orderBy } = params;
-    return this.prisma.branch.findMany({
-      skip,
-      take,
-      where,
-      orderBy,
-      include: {
-        _count: {
-          select: {
-            services: true,
-            users: true, // staff yerine users kullanıldı (prisma şemasında users olarak tanımlanmış olmalı)
+    user: any; // JWT payload'ından gelen kullanıcı bilgisi
+  }): Promise<{ data: Branch[]; total: number }> {
+    const { skip, take, where, orderBy, user } = params;
+    const queryWhere = where || {};
+
+    // Eğer kullanıcı BRANCH_MANAGER ise, sadece kendi şubesini görmeli
+    if (user.role === 'BRANCH_MANAGER') {
+      if (!user.branchId) {
+        // Şubesi olmayan bir şube yöneticisi için boş sonuç
+        return { data: [], total: 0 };
+      }
+      queryWhere['id'] = user.branchId;
+    }
+
+    const [data, total] = await this.prisma.$transaction([
+      this.prisma.branch.findMany({
+        skip,
+        take,
+        where: queryWhere,
+        orderBy,
+        include: {
+          _count: {
+            select: {
+              services: true,
+              users: true,
+            },
           },
         },
-      },
-    });
+      }),
+      this.prisma.branch.count({
+        where: queryWhere,
+      }),
+    ]);
+
+    return { data, total };
   }
 
   async findOne(id: string): Promise<Branch> {

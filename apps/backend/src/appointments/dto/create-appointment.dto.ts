@@ -1,42 +1,53 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString, IsNumber, IsDate, IsOptional, IsUUID } from 'class-validator';
 import { Type } from 'class-transformer';
+import {
+  IsDate,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
 export class CreateAppointmentDto {
-  @ApiProperty({ description: 'Müşteri ID' })
+  @ApiProperty()
+  @IsString()
   @IsNotEmpty()
-  @IsUUID()
+  branchId: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
   customerId: string;
 
-  @ApiProperty({ description: 'Personel ID' })
+  @ApiProperty()
+  @IsString()
   @IsNotEmpty()
-  @IsUUID()
   staffId: string;
 
-  @ApiProperty({ description: 'Hizmet ID' })
+  @ApiProperty()
+  @IsString()
   @IsNotEmpty()
-  @IsUUID()
   serviceId: string;
 
-  @ApiProperty({ description: 'Randevu başlangıç tarihi ve saati' })
+  @ApiProperty()
+  @IsNumber()
   @IsNotEmpty()
-  @Type(() => Date)
+  duration: number;
+
+  @ApiProperty()
   @IsDate()
+  @Type(() => Date)
+  @IsNotEmpty()
   startTime: Date;
 
-  @ApiProperty({ description: 'Randevu bitiş tarihi ve saati' })
-  @IsNotEmpty()
-  @Type(() => Date)
+  @ApiProperty()
   @IsDate()
+  @Type(() => Date)
+  @IsNotEmpty()
   endTime: Date;
 
-  @ApiProperty({ description: 'Randevu notu', required: false })
-  @IsOptional()
+  @ApiProperty({ required: false })
   @IsString()
-  notes?: string;
-
-  @ApiProperty({ description: 'Şube ID', required: false })
   @IsOptional()
-  @IsUUID()
-  branchId?: string;
+  notes?: string;
 }

@@ -1,58 +1,37 @@
 "use client";
 
 import * as z from "zod";
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "react-hot-toast";
-import axios from "axios";
 import { useParams, useRouter } from "next/navigation";
+import { isAxiosError } from "axios";
 
+import { useCreateUser, useUpdateUser } from "../../hooks/use-users";
+import { useAuthStore } from "@/stores/auth.store";
 import { Heading } from "@/components/ui/heading";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-// API'den gelen veriler için kendi tiplerimi tanımlıyorum
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  branchId?: string | null;
-  branch?: { id: string; name: string } | null;
-  createdAt: string;
-  updatedAt: string;
-}
+import { UserRole, User } from "@/types/user";
 
+// Merkezi tiplerden bağımsız lokal tipler
 interface Branch {
   id: string;
   name: string;
-  address?: string | null;
-  phone?: string | null;
-  description?: string | null;
-  parentBranchId?: string | null;
-  createdAt?: string | Date;
-  updatedAt?: string | Date;
-}
-
-// UserRole enum API formatına uygun olarak tanımlıyoruz
-enum UserRole {
-  ADMIN = 'ADMIN',
-  SUPER_BRANCH_MANAGER = 'SUPER_BRANCH_MANAGER',
-  BRANCH_MANAGER = 'BRANCH_MANAGER',
-  RECEPTION = 'RECEPTION',
-  STAFF = 'STAFF',
-  CUSTOMER = 'CUSTOMER',
 }
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "İsim en az 2 karakter olmalıdır." }),
   email: z.string().email({ message: "Geçerli bir e-posta adresi giriniz." }),
-  password: z.string().min(6, { message: "Şifre en az 6 karakter olmalıdır." }).optional().or(z.literal('')) ,
-  role: z.nativeEnum(UserRole, { message: "Lütfen bir rol seçiniz." }),
-  branchId: z.string().min(1, { message: "Lütfen bir şube seçiniz." }),
+  password: z.string().min(6, { message: "Şifre en az 6 karakter olmalıdır." }).optional().or(z.literal('')),
+  // Backend role değerleri string olarak geliyor, enum olarak doğrulama yapıyoruz
+  role: z.string().refine(val => Object.values(UserRole).includes(val as UserRole), {
+    message: "Lütfen geçerli bir rol seçiniz."
+  }),
+  branchId: z.string().optional(),
 });
 
 type UserFormValues = z.infer<typeof formSchema>;
@@ -66,118 +45,90 @@ interface UserFormProps {
 export const UserForm: React.FC<UserFormProps> = ({ initialData, branches, roles }) => {
   const params = useParams();
   const router = useRouter();
+  const { user: currentUser } = useAuthStore();
 
-  const [loading, setLoading] = useState(false);
+  const createUser = useCreateUser();
+  const updateUser = useUpdateUser(params.userId as string);
+
+  const isPending = createUser.isPending || updateUser.isPending;
 
   const title = initialData ? "Personeli Düzenle" : "Yeni Personel Oluştur";
-  const description = initialData
-    ? "Mevcut bir personelin bilgilerini düzenleyin."
-    : "Yeni bir personel ekleyin.";
+  const description = initialData ? "Mevcut bir personelin bilgilerini düzenleyin." : "Yeni bir personel ekleyin.";
   const toastMessage = initialData ? "Personel güncellendi." : "Personel oluşturuldu.";
-  const action = initialData ? "Değişiklikleri Kaydet" : "Oluştur";
+  const action = initialData ? "Güncelle" : "Oluştur";
 
+  // Form için gerekli değerleri ayarla
+  const defaultValues = initialData ? {
+    name: initialData.name,
+    email: initialData.email,
+    password: "", // Düzenleme durumunda şifre boş bırakılabilir
+    role: initialData.role,
+    branchId: initialData.branchId || undefined,
+  } : {
+    name: "",
+    email: "",
+    password: "",
+    role: "" as UserRole,
+    branchId: "",
+  };
+  
   const form = useForm<UserFormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: initialData
-      ? {
-          name: initialData.name,
-          email: initialData.email,
-          branchId: initialData.branchId || '',
-          role: initialData?.role || UserRole.STAFF,
-          password: '',
-        }
-      : {
-          name: "",
-          email: "",
-          password: "",
-          role: UserRole.STAFF,
-          branchId: "",
-        },
+    defaultValues
   });
 
-  // Artık UUID kontrolüne gerek yok, backend CUID'leri kabul ediyor
-
-  const onSubmit = async (data: UserFormValues) => {
+  const onSubmit = (data: UserFormValues) => {
     try {
-      setLoading(true);
-      
-      // Veri formatını backend'in beklediği şekilde düzenle
-      const payload = {
+      // API'nin beklediği formatta bir payload hazırla
+      const payload: any = {
         name: data.name,
         email: data.email,
-        // Boş şifre varsa gönderme
-        ...(data.password && data.password !== '' ? { password: data.password } : {}),
-        // Role değerini doğru formatta gönder (enum string olarak)
         role: data.role,
-        // branchId boşsa gönderme
-        ...(data.branchId && data.branchId !== '' ? { branchId: data.branchId } : {})
+        // branchId seçilmişse kullan, aksi halde null gönder
+        branchId: data.branchId || null
       };
       
+      // Şifre kontrolü
+      if (!initialData) {
+        // Yeni kullanıcı durumunda şifre zorunludur
+        if (!data.password) {
+          toast.error("Yeni kullanıcı için şifre zorunludur.");
+          return;
+        }
+        payload.password = data.password;
+      } else if (data.password) {
+        // Düzenlemede şifre varsa ekle, yoksa hiç gönderme
+        payload.password = data.password;
+      }
+
+      const handleSuccess = () => {
+        toast.success(toastMessage);
+        router.push("/dashboard/users");
+      };
+      
+      const handleError = (error: any) => {
+        if (isAxiosError(error) && error.response) {
+          const responseData = error.response.data;
+          const message = Array.isArray(responseData.message)
+            ? responseData.message.join(', ')
+            : responseData.message || "Bir hata oluştu.";
+          toast.error(`Hata: ${message}`);
+        } else {
+          toast.error("Bilinmeyen bir hata oluştu.");
+        }
+      };
+
       if (initialData) {
-        // Şifre alanını kontrol et - boşsa payload'dan çıkar
-        if (!payload.password || payload.password === '') {
-          delete payload.password;
-        } else if (payload.password && payload.password.length < 6) {
-          // Şifre 6 karakterden kısaysa hata göster
-          toast.error('Şifre en az 6 karakter olmalıdır');
-          setLoading(false);
-          return;
-        }
-        
-        try {
-          const response = await axios.patch(`http://localhost:3001/api/v1/users/${initialData.id}`, payload);
-          
-          router.refresh();
-          router.push(`/dashboard/users`);
-          toast.success(toastMessage);
-        } catch (error) {
-          throw error; // Hata yakalama blokundaki genel hata işleyicisine gönder
-        }
+        updateUser.mutate(payload, { onSuccess: handleSuccess, onError: handleError });
       } else {
-        // Yeni kullanıcı oluşturma
-        // Şifre alanını kontrol et - yeni kullanıcı için şifre zorunlu
-        if (!payload.password || payload.password === '') {
-          toast.error('Yeni kullanıcı için şifre zorunludur');
-          setLoading(false);
-          return;
-        } else if (payload.password && payload.password.length < 6) {
-          toast.error('Şifre en az 6 karakter olmalıdır');
-          setLoading(false);
+        if (!payload.password) {
+          toast.error("Yeni kullanıcı için şifre zorunludur.");
           return;
         }
-        
-        try {
-          const response = await axios.post(`http://localhost:3001/api/v1/users`, payload);
-          
-          router.refresh();
-          router.push(`/dashboard/users`);
-          toast.success(toastMessage);
-        } catch (error) {
-          throw error; // Hata yakalama blokundaki genel hata işleyicisine gönder
-        }
+        createUser.mutate(payload, { onSuccess: handleSuccess, onError: handleError });
       }
     } catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-        
-        // Hata mesajını ayrıştır
-        let errorMessage = "Bir şeyler ters gitti.";
-        if (error.response.data) {
-          if (Array.isArray(error.response.data.message)) {
-            errorMessage = `Hata: ${error.response.data.message.join(', ')}`;
-          } else if (typeof error.response.data.message === 'string') {
-            errorMessage = `Hata: ${error.response.data.message}`;
-          } else if (typeof error.response.data === 'string') {
-            errorMessage = `Hata: ${error.response.data}`;
-          }
-        }
-        
-        toast.error(errorMessage);
-      } else {
-        console.error('Bilinmeyen hata:', error);
-        toast.error("Bir şeyler ters gitti.");
-      }
-      
-      setLoading(false);
+      console.error(error);
     }
   };
 
@@ -189,15 +140,15 @@ export const UserForm: React.FC<UserFormProps> = ({ initialData, branches, roles
       <Separator />
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 w-full">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
             <FormField
               control={form.control}
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>İsim Soyisim</FormLabel>
+                  <FormLabel>İsim</FormLabel>
                   <FormControl>
-                    <Input disabled={loading} placeholder="Personelin adı ve soyadı" {...field} />
+                    <Input disabled={isPending} placeholder="Ad Soyad" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -208,9 +159,9 @@ export const UserForm: React.FC<UserFormProps> = ({ initialData, branches, roles
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>E-posta</FormLabel>
+                  <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input type="email" disabled={loading} placeholder="E-posta adresi" {...field} />
+                    <Input disabled={isPending} placeholder="ornek@email.com" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -221,56 +172,77 @@ export const UserForm: React.FC<UserFormProps> = ({ initialData, branches, roles
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Şifre</FormLabel>
+                  <FormLabel>{initialData ? "Şifre (Değiştirmek için girin)" : "Şifre"}</FormLabel>
                   <FormControl>
-                    <Input type="password" disabled={loading} placeholder={initialData ? "Değiştirmek için yeni şifre girin" : "Yeni şifre"} {...field} />
+                    <Input disabled={isPending} type="password" placeholder="********" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="branchId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Şube</FormLabel>
-                  <Select disabled={loading} onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Bir şube seçin" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {branches.map((branch) => (
-                        <SelectItem key={branch.id} value={branch.id}>
-                          {branch.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {/* Şube alanı - sadece admin ve üst şube yöneticileri için */}
+            {(currentUser?.role === UserRole.ADMIN || currentUser?.role === UserRole.SUPER_BRANCH_MANAGER) && (
+              <FormField
+                control={form.control}
+                name="branchId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Şube</FormLabel>
+                    <Select disabled={isPending} onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Bir şube seçin" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {branches.map((branch) => (
+                          <SelectItem key={branch.id} value={branch.id}>
+                            {branch.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
             <FormField
               control={form.control}
               name="role"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Rol</FormLabel>
-                  <Select disabled={loading} onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
+                  <Select disabled={isPending} onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Bir rol seçin" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {roles.map((role) => (
-                        <SelectItem key={role.id} value={role.id}>
-                          {role.name}
-                        </SelectItem>
-                      ))}
+                      {roles
+                        .filter(role => {
+                          // İzin kontrolleri: Sadece kullanıcının yetkisi dahilindeki rolleri göster
+                          
+                          // ADMIN ve SUPER_BRANCH_MANAGER rollerini sadece ADMIN ekleyebilir
+                          if (role.id === UserRole.ADMIN || role.id === UserRole.SUPER_BRANCH_MANAGER) {
+                            return currentUser?.role === UserRole.ADMIN;
+                          }
+                          
+                          // BRANCH_MANAGER rolünü ADMIN ve SUPER_BRANCH_MANAGER ekleyebilir
+                          if (role.id === UserRole.BRANCH_MANAGER) {
+                            return currentUser?.role === UserRole.ADMIN || 
+                                  currentUser?.role === UserRole.SUPER_BRANCH_MANAGER;
+                          }
+                          
+                          // Diğer tüm rolleri herkes ekleyebilir (RECEPTION, STAFF, CUSTOMER)
+                          return true;
+                        })
+                        .map((role) => (
+                          <SelectItem key={role.id} value={role.id}>
+                            {role.name}
+                          </SelectItem>
+                        ))}
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -278,7 +250,7 @@ export const UserForm: React.FC<UserFormProps> = ({ initialData, branches, roles
               )}
             />
           </div>
-          <Button disabled={loading} className="ml-auto" type="submit">
+          <Button disabled={isPending} className="ml-auto" type="submit">
             {action}
           </Button>
         </form>

@@ -1,10 +1,19 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { PrismaClient } from '@prisma/client';
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
-  constructor() {
+  constructor(configService: ConfigService) {
+    const dbUrl = configService.get<string>('DATABASE_URL') || process.env.DATABASE_URL;
+    // eslint-disable-next-line no-console
+    console.log('[PrismaService] DATABASE_URL:', dbUrl);
     super({
+      datasources: {
+        db: {
+          url: dbUrl,
+        },
+      },
       log: process.env.NODE_ENV === 'development' ? ['query', 'info', 'warn', 'error'] : ['error'],
     });
   }

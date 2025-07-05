@@ -10,42 +10,274 @@ export class PackagesService {
   constructor(private prisma: PrismaService) {}
 
   // Paket Tanımlamaları İşlemleri
-  async createPackage(createPackageDto: CreatePackageDto) {
-    const { services, ...packageData } = createPackageDto;
+  async createPackage(createPackageDto: CreatePackageDto, user: any) {
+    try {
+      console.log('Gelen DTO verisi:', JSON.stringify(createPackageDto, null, 2));
+      
+      const { services, type, totalSessions, totalMinutes, ...packageData } = createPackageDto;
+      
+      // Prisma için temiz bir data objesi oluşturuyoruz
+      const prismaPackageData: Record<string, any> = {
+        ...packageData,
+        price: typeof packageData.price === 'number' ? packageData.price : parseFloat(packageData.price as unknown as string),
+        validityDays: typeof packageData.validityDays === 'number' ? packageData.validityDays : parseInt(packageData.validityDays as unknown as string),
+      };
+      
+      // Boş string ise değer atanmamalı
+      if (prismaPackageData.description === '') {
+        delete prismaPackageData.description;
+      }
+      
+      // Opsiyonel alanları dönüştür
+      if (packageData.discountedPrice !== undefined) {
+        prismaPackageData.discountedPrice = typeof packageData.discountedPrice === 'number'
+          ? packageData.discountedPrice
+          : parseFloat(packageData.discountedPrice as unknown as string);
+      }
+      
+      if (packageData.branchId && packageData.branchId.trim() !== '') {
+        prismaPackageData.branchId = packageData.branchId;
+      }
+      
+      // Tip alanını Prisma enum'a dönüştür (session -> SESSION, time -> TIME)
+      if (type) {
+        console.log('Paket tipi dönüştürülüyor:', type);
+        if (type === 'session') {
+          prismaPackageData.type = 'SESSION';
+        } else if (type === 'time') {
+          prismaPackageData.type = 'TIME';
+        } else {
+          console.log('Geçersiz paket tipi:', type);
+          throw new BadRequestException(`Geçersiz paket tipi: ${type}. 'session' veya 'time' olmalıdır.`);
+        }
+      }
+      
+      // Sayısal alanları dönüştür ve kontrol et
+      if (packageData.price !== undefined) {
+        const price = Number(packageData.price);
+        if (isNaN(price)) {
+          throw new BadRequestException('Fiyat geçerli bir sayı olmalıdır.');
+        }
+        prismaPackageData.price = price;
+      }
+      
+      if (packageData.validityDays !== undefined) {
+        const validityDays = Number(packageData.validityDays);
+        if (isNaN(validityDays)) {
+          throw new BadRequestException('Geçerlilik günleri sayı olmalıdır.');
+        }
+        prismaPackageData.validityDays = validityDays;
+      }
+      
+      if (packageData.discountedPrice !== undefined) {
+        const discountedPrice = Number(packageData.discountedPrice);
+        if (isNaN(discountedPrice)) {
+          throw new BadRequestException('İndirimli fiyat geçerli bir sayı olmalıdır.');
+        }
+        prismaPackageData.discountedPrice = discountedPrice;
+      }
+      
+      if (packageData.commissionRate !== undefined) {
+        const commissionRate = Number(packageData.commissionRate);
+        if (isNaN(commissionRate)) {
+          throw new BadRequestException('Komisyon oranı geçerli bir sayı olmalıdır.');
+        }
+        prismaPackageData.commissionRate = commissionRate;
+      }
+      
+      if (packageData.commissionFixed !== undefined) {
+        const commissionFixed = Number(packageData.commissionFixed);
+        if (isNaN(commissionFixed)) {
+          throw new BadRequestException('Sabit komisyon tutarı geçerli bir sayı olmalıdır.');
+        }
+        prismaPackageData.commissionFixed = commissionFixed;
+      }
+      
+      // totalSessions ve totalMinutes işlemleri
+      if (totalSessions !== undefined) {
+        const sessions = Number(totalSessions);
+        if (isNaN(sessions)) {
+          throw new BadRequestException('Toplam seans sayısı geçerli bir sayı olmalıdır.');
+        }
+        prismaPackageData.totalSessions = sessions;
+      }
+      
+      if (totalMinutes !== undefined) {
+        const minutes = Number(totalMinutes);
+        if (isNaN(minutes)) {
+          throw new BadRequestException('Toplam dakika geçerli bir sayı olmalıdır.');
+        }
+        prismaPackageData.totalMinutes = minutes;
+      }
+      
+      // Zorunlu alanların kontrolü
+      if (!packageData.name) {
+        throw new BadRequestException('Paket adı zorunludur.');
+      }
+      prismaPackageData.name = packageData.name;
 
-    // Tüm hizmetlerin var olduğundan emin ol
-    for (const serviceItem of services) {
-      const service = await this.prisma.service.findUnique({
-        where: { id: serviceItem.serviceId },
-      });
+      if (packageData.price === undefined) {
+        throw new BadRequestException('Paket fiyatı zorunludur.');
+      }
+      
+      if (packageData.validityDays === undefined) {
+        throw new BadRequestException('Paket geçerlilik gün sayısı zorunludur.');
+      }
+      
+      console.log('Prisma paket verisi:', JSON.stringify(prismaPackageData, null, 2));
+      
+      // Hizmetler kontrolü
+      if (!services || !Array.isArray(services) || services.length === 0) {
+        throw new BadRequestException('En az bir hizmet eklenmelidir.');
+      }
+      
+      // Hizmetleri hazırla
+      const packageServices = [];
+      
+      // Tüm hizmetlerin var olduğundan emin ol
+      for (const serviceItem of services) {
+        if (!serviceItem.serviceId) {
+          throw new BadRequestException('Her hizmet için serviceId gereklidir.');
+        }
+        
+        const service = await this.prisma.service.findUnique({
+          where: { id: serviceItem.serviceId },
+        });
 
-      if (!service) {
-        throw new NotFoundException(`Hizmet bulunamadı: ID ${serviceItem.serviceId}`);
+        if (!service) {
+          throw new NotFoundException(`Hizmet bulunamadı: ID ${serviceItem.serviceId}`);
+        }
+        
+        // Miktar kontrol
+        if (serviceItem.quantity === undefined || serviceItem.quantity === null) {
+          throw new BadRequestException(`Hizmet için miktar belirtilmelidir: ${serviceItem.serviceId}`);
+        }
+        
+        // Miktar sayıya dönüştürülüyor
+        const quantity = Number(serviceItem.quantity);
+        if (isNaN(quantity) || quantity <= 0) {
+          throw new BadRequestException(`Geçersiz hizmet miktarı: ${serviceItem.serviceId} için ${quantity}`);
+        }
+        
+        packageServices.push({
+          quantity: quantity,
+          service: {
+            connect: { id: serviceItem.serviceId }
+          }
+        });
+      }
+      
+      console.log('Hizmetler doğrulandı, paket oluşturuluyor...');
+      
+      try {
+        // ÖNEMLİ: Frontend'den gelen ismi gelen tüm alanları kontrol et
+        // 1. Frontend'den gelen `isActive` alanını yok say, bu artık Prisma modelinde yok
+        // 2. Frontend'den gelen `type` alanının büyük harfe dönüştürülmesi gerekiyor (session -> SESSION)
+        
+        console.log('Frontend DTO detaylı inceleme:', {
+          receivedType: prismaPackageData.type,
+          typeOfReceivedType: typeof prismaPackageData.type,
+          isActiveReceived: prismaPackageData.isActive !== undefined
+        });
+        
+        // Sadece veritabanında olan bilinen alanları kullan
+        const packageData: any = {
+          // Temel zorunlu alanlar
+          name: prismaPackageData.name,
+          price: prismaPackageData.price,
+          validityDays: prismaPackageData.validityDays,
+        };
+        
+        // Type alanı dönüşümü (lowercase -> UPPERCASE)
+        // Örn: "session" -> "SESSION", "time" -> "TIME" 
+        if (prismaPackageData.type) {
+          // type değeri varsa büyük harfe dönüştür
+          packageData.type = prismaPackageData.type.toString().toUpperCase();
+        } else {
+          // Varsayılan tip SESSION
+          packageData.type = 'SESSION';
+        }
+        
+        // Şube bilgisi otomatik olarak kullanıcının rolüne göre belirlenir
+        // STAFF, RECEPTION, BRANCH_MANAGER, SUPER_BRANCH_MANAGER, ADMIN rollerinin bağlı olduğu şube otomatik eklenecek
+        if (user && user.branch && user.branch.id) {
+          // Kullanıcı bilgilerinden şube ID'sini al
+          packageData.branchId = user.branch.id;
+          console.log(`Kullanıcının şubesi otomatik eklendi: ${user.branch.id}`);
+        } 
+        // Frontend'den gönderilen şube bilgisi sadece ADMIN için geçerli (override)
+        else if (user?.role === 'ADMIN' && prismaPackageData.branchId && prismaPackageData.branchId.trim()) {
+          packageData.branchId = prismaPackageData.branchId;
+          console.log(`Admin tarafından manuel şube atandı: ${prismaPackageData.branchId}`);
+        } else {
+          console.warn('Dikkat: Paket şube bilgisi belirtilmemiş!');
+        }
+        
+        if (prismaPackageData.description && prismaPackageData.description.trim()) {
+          packageData.description = prismaPackageData.description;
+        }
+        
+        // Sayısal değerler - Sadece değer varsa ve Number() ile dönüştürerek ekle
+        ['discountedPrice', 'totalSessions', 'totalMinutes', 'commissionRate', 'commissionFixed'].forEach(field => {
+          if (prismaPackageData[field] !== undefined && prismaPackageData[field] !== null) {
+            packageData[field] = Number(prismaPackageData[field]);
+          }
+        });
+        
+        // Önemli: isActive alanını kesinlikle yok saymalıyız
+        
+        // Hizmetleri ekle
+        if (packageServices && packageServices.length > 0) {
+          packageData.services = {
+            create: packageServices.map(service => ({
+              serviceId: service.service.connect.id,
+              quantity: service.quantity
+            }))
+          };
+        }
+        
+        // Veri oluşturma öncesi son kontrol
+        console.log('Son paket verisi:', JSON.stringify(packageData, null, 2));
+        
+        // Paket oluştur - isActive alanı içermediğinden emin ol
+        // TypeScript hatasını bypass etmek için as any kullan
+        return await this.prisma.package.create({
+          data: packageData,
+          include: {
+            services: {
+              include: {
+                service: true
+              }
+            }
+          }
+        } as any);
+      } catch (err) {
+        console.error('===== Prisma paket oluşturma HATASI =====');
+        console.error(err);
+        
+        if (err.code) {
+          console.error('Prisma Hata Kodu:', err.code);
+        }
+        
+        if (err.meta) {
+          console.error('Prisma Meta Bilgisi:', err.meta);
+        }
+        
+        throw new BadRequestException(`Paket oluşturulamadı: ${err.message || 'Bilinmeyen hata'}`);
+      }
+    } catch (error) {
+      console.error('Paket oluşturma hatası:', error);
+      
+      if (error instanceof BadRequestException || error instanceof NotFoundException) {
+        throw error; // Zaten formatlanmış hatalar
+      } else {
+        // Prisma hatalarını yakala ve formatla
+        console.error('Detaylı hata bilgisi:', error);
+        throw new BadRequestException(
+          'Paket oluşturulurken bir hata oluştu: ' + (error.message || 'Bilinmeyen hata')
+        );
       }
     }
-
-    return this.prisma.package.create({
-      data: {
-        ...packageData,
-        services: {
-          create: services.map(service => ({
-            quantity: service.quantity,
-            service: {
-              connect: {
-                id: service.serviceId,
-              },
-            },
-          })),
-        },
-      },
-      include: {
-        services: {
-          include: {
-            service: true,
-          },
-        },
-      },
-    });
   }
 
   async findAllPackages(params: {
@@ -53,13 +285,56 @@ export class PackagesService {
     take?: number;
     where?: any;
     orderBy?: any;
+    user?: any; // Kullanıcı bilgisi eklendi
   }) {
-    const { skip, take, where, orderBy } = params;
+    const { skip, take, where = {}, orderBy, user } = params;
+    
+    // Rol bazlı erişim filtreleme
+    let roleBasedFilter = {};
+    
+    if (user) {
+      // Kullanıcının rolüne göre filtreleme
+      switch(user.role) {
+        case 'ADMIN':
+          // Admin tüm paketleri görür, filtre yok
+          break;
+          
+        case 'SUPER_BRANCH_MANAGER':
+          // Şube yöneticisi bağlı olduğu tüm şubelerin paketlerini görür
+          if (user.branch && user.branch.id) {
+            // Burada user.managedBranches içinde bağlı olduğu şubeler olduğunu varsayıyoruz
+            // Ya da bir servis çağırılabilir
+            const managedBranchIds = user.managedBranches?.map(branch => branch.id) || [];
+            roleBasedFilter = {
+              OR: [
+                { branchId: user.branch.id },
+                { branchId: { in: managedBranchIds } }
+              ]
+            };
+          }
+          break;
+          
+        case 'BRANCH_MANAGER':
+        case 'RECEPTION':
+        case 'STAFF':
+          // Bu roller sadece kendi şubelerine ait paketleri görür
+          if (user.branch && user.branch.id) {
+            roleBasedFilter = { branchId: user.branch.id };
+          }
+          break;
+          
+        default:
+          // Diğer roller hiçbir paket görmez - boş sonuc döner
+          roleBasedFilter = { id: 'no-access' }; // Hiçbir paket eşleşmeyecek
+      }
+      
+      console.log(`Rol bazlı filtreleme uygulanıyor: ${user.role}`, roleBasedFilter);
+    }
 
     return this.prisma.package.findMany({
       skip,
       take,
-      where,
+      where: { ...where, ...roleBasedFilter },
       orderBy,
       include: {
         services: {
@@ -67,6 +342,7 @@ export class PackagesService {
             service: true,
           },
         },
+        branch: true, // Şube bilgilerini dahil et
       },
     });
   }
@@ -80,6 +356,7 @@ export class PackagesService {
             service: true,
           },
         },
+        branch: true, // Şube bilgilerini dahil et
       },
     });
 
@@ -122,22 +399,58 @@ export class PackagesService {
         }
       }
 
-      // Yeni servisleri ekle
+      // Update için data oluştur
+      const updateData: any = {};
+      
+      // Temel alanlara öncelik ver
+      if (packageData.name !== undefined) updateData.name = packageData.name;
+      if (packageData.price !== undefined) updateData.price = Number(packageData.price);
+      if (packageData.validityDays !== undefined) updateData.validityDays = Number(packageData.validityDays);
+      // Description alanını boş string olarak kabul et
+      updateData.description = packageData.description || ""
+      
+      // branchId kontrol
+      if (packageData.branchId) {
+        if (packageData.branchId.trim() !== '') {
+          updateData.branchId = packageData.branchId;
+        }
+      }
+      
+      // Diğer alanlar
+      if (packageData.isActive !== undefined) updateData.isActive = packageData.isActive;
+      if (packageData.discountedPrice !== undefined) updateData.discountedPrice = Number(packageData.discountedPrice);
+      if (packageData.totalSessions !== undefined) updateData.totalSessions = Number(packageData.totalSessions);
+      if (packageData.totalMinutes !== undefined) updateData.totalMinutes = Number(packageData.totalMinutes);
+      if (packageData.commissionRate !== undefined) updateData.commissionRate = Number(packageData.commissionRate);
+      if (packageData.commissionFixed !== undefined) updateData.commissionFixed = Number(packageData.commissionFixed);
+      
+      // Type alanını kontrol et ve dönüştür
+      if (packageData.type) {
+        if (packageData.type === 'session') {
+          updateData.type = 'SESSION';
+        } else if (packageData.type === 'time') {
+          updateData.type = 'TIME';
+        }
+      }
+      
+      // Servisleri ekle
+      updateData.services = {
+        create: services.map(service => ({
+          quantity: Number(service.quantity),
+          service: {
+            connect: {
+              id: service.serviceId,
+            },
+          },
+        })),
+      };
+      
+      console.log('Güncellenecek paket verisi:', JSON.stringify(updateData, null, 2));
+      
+      // Paketi güncelle
       return this.prisma.package.update({
         where: { id },
-        data: {
-          ...packageData,
-          services: {
-            create: services.map(service => ({
-              quantity: service.quantity,
-              service: {
-                connect: {
-                  id: service.serviceId,
-                },
-              },
-            })),
-          },
-        },
+        data: updateData,
         include: {
           services: {
             include: {
@@ -149,9 +462,43 @@ export class PackagesService {
     }
 
     // Sadece paket bilgilerini güncelle
+    const updateData: any = {};
+    
+    // Temel alanlara öncelik ver
+    if (packageData.name !== undefined) updateData.name = packageData.name;
+    if (packageData.price !== undefined) updateData.price = Number(packageData.price);
+    if (packageData.validityDays !== undefined) updateData.validityDays = Number(packageData.validityDays);
+    // NOT: Prisma şemasında description alanı yok, bu yüzden kaldırıldı
+    
+    // branchId kontrol
+    if (packageData.branchId) {
+      if (packageData.branchId.trim() !== '') {
+        updateData.branchId = packageData.branchId;
+      }
+    }
+    
+    // Diğer alanlar
+    if (packageData.isActive !== undefined) updateData.isActive = packageData.isActive;
+    if (packageData.discountedPrice !== undefined) updateData.discountedPrice = Number(packageData.discountedPrice);
+    if (packageData.totalSessions !== undefined) updateData.totalSessions = Number(packageData.totalSessions);
+    if (packageData.totalMinutes !== undefined) updateData.totalMinutes = Number(packageData.totalMinutes);
+    if (packageData.commissionRate !== undefined) updateData.commissionRate = Number(packageData.commissionRate);
+    if (packageData.commissionFixed !== undefined) updateData.commissionFixed = Number(packageData.commissionFixed);
+    
+    // Type alanını kontrol et ve dönüştür
+    if (packageData.type) {
+      if (packageData.type === 'session') {
+        updateData.type = 'SESSION';
+      } else if (packageData.type === 'time') {
+        updateData.type = 'TIME';
+      }
+    }
+    
+    console.log('Güncellenecek paket verisi (servis olmadan):', JSON.stringify(updateData, null, 2));
+    
     return this.prisma.package.update({
       where: { id },
-      data: packageData,
+      data: updateData,
       include: {
         services: {
           include: {
@@ -230,7 +577,9 @@ export class PackagesService {
 
   // Müşteri Paketleri İşlemleri
   async createCustomerPackage(createCustomerPackageDto: CreateCustomerPackageDto) {
-    const { customerId, packageId } = createCustomerPackageDto;
+    const { customerId, packageId, salesCode, notes, startDate } = createCustomerPackageDto;
+    
+    console.log('Müşteri paketi oluşturma verileri:', createCustomerPackageDto);
 
     // Müşterinin var olduğundan emin ol
     const customer = await this.prisma.customer.findUnique({
@@ -257,15 +606,25 @@ export class PackagesService {
       throw new NotFoundException(`Paket bulunamadı: ID ${packageId}`);
     }
 
-    // Paket bitiş tarihini hesapla
-    const purchaseDate = new Date();
+    // Paket başlangıç ve bitiş tarihini hesapla
+    const purchaseDate = startDate ? new Date(startDate) : new Date();
     const expiryDate = new Date(purchaseDate);
     expiryDate.setDate(expiryDate.getDate() + packageItem.validityDays);
 
-    // Kalan seanslar için JSON oluştur
-    const remainingSessions = {};
+    // Kalan seanslar veya dakikalar için değerleri ayarla
+    let remainingSessions = null;
+    let remainingMinutes = null;
+    
+    if (packageItem.type === 'SESSION' && packageItem.totalSessions) {
+      remainingSessions = packageItem.totalSessions;
+    } else if (packageItem.type === 'TIME' && packageItem.totalMinutes) {
+      remainingMinutes = packageItem.totalMinutes;
+    }
+    
+    // Servis bazlı kalan seanslar için JSON oluştur
+    const remainingServiceSessions = {};
     packageItem.services.forEach(service => {
-      remainingSessions[service.serviceId] = service.quantity;
+      remainingServiceSessions[service.serviceId] = service.quantity;
     });
 
     // Müşteri paketini oluştur
@@ -273,7 +632,7 @@ export class PackagesService {
       data: {
         purchaseDate,
         expiryDate,
-        remainingSessions,
+        remainingSessions: remainingServiceSessions, // Prisma şemasında Json tipinde
         customerId,
         packageId,
       },

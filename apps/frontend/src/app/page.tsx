@@ -49,7 +49,9 @@ export default function LoginPage() {
     try {
       const response = await api.post('/auth/login', values);
       if (response.data && response.data.user && response.data.accessToken) {
-        login(response.data.user, response.data.accessToken);
+        const { user, accessToken: token } = response.data;
+        // Backend'den accessToken olarak gelse de store'a token olarak kaydet
+        login(user, token);
         router.push('/dashboard');
       } else {
         console.error('Invalid login response:', response.data);

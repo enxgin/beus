@@ -18,7 +18,7 @@ export class RolesGuard implements CanActivate {
       return true;
     }
     
-    const { user } = context.switchToHttp().getRequest();
+        const { user } = context.switchToHttp().getRequest();
     
     // Yönetici (ADMIN) her zaman tüm kaynaklara erişebilir
     if (user.role === 'ADMIN') {

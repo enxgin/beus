@@ -7,15 +7,15 @@ import SideMenu from '@/components/side-menu';
 import Header from '@/components/header';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { accessToken, isHydrated } = useAuthStore();
+  const { token, isHydrated } = useAuthStore();
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
-    if (isHydrated && !accessToken) {
+    if (isHydrated && !token) {
       router.push('/');
     }
-  }, [isHydrated, accessToken, router]);
+  }, [isHydrated, token, router]);
 
   if (!isHydrated) {
     return <div className="flex items-center justify-center h-screen">Yükleniyor...</div>;

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, Req } from '@nestjs/common';
 import { ServicesService } from './services.service';
 import { CreateServiceDto } from './dto/create-service.dto';
 import { UpdateServiceDto } from './dto/update-service.dto';
@@ -34,33 +34,29 @@ export class ServicesController {
   @ApiQuery({ name: 'take', required: false, type: Number })
   @ApiQuery({ name: 'branchId', required: false, type: String })
   @ApiQuery({ name: 'categoryId', required: false, type: String })
+  @ApiQuery({ name: 'search', required: false, type: String })
   @ApiQuery({ name: 'orderBy', required: false, example: '{"name":"asc"}' })
   @Get()
-  async findAll(
-    @Query('skip') skip?: string,
-    @Query('take') take?: string,
-    @Query('branchId') branchId?: string,
-    @Query('categoryId') categoryId?: string,
-    @Query('orderBy') orderByString?: string,
-  ) {
-    let orderBy = undefined;
+  async findAll(@Req() req, @Query() query: any) {
+    const { skip, take, branchId, categoryId, search, orderBy } = query;
+
+    let parsedOrderBy;
     try {
-      if (orderByString) {
-        orderBy = JSON.parse(orderByString);
+      if (orderBy) {
+        parsedOrderBy = JSON.parse(orderBy);
       }
     } catch (error) {
-      orderBy = undefined;
+      // Silently ignore parsing errors, default to undefined
+      parsedOrderBy = undefined;
     }
 
-    const where: any = {};
-    if (branchId) where.branchId = branchId;
-    if (categoryId) where.categoryId = categoryId;
-
-    return this.servicesService.findAll({
-      skip: skip ? parseInt(skip) : undefined,
-      take: take ? parseInt(take) : undefined,
-      where,
-      orderBy,
+    return this.servicesService.findAll(req.user, {
+      skip: skip ? parseInt(skip, 10) : undefined,
+      take: take ? parseInt(take, 10) : undefined,
+      branchId,
+      categoryId,
+      search,
+      orderBy: parsedOrderBy,
     });
   }
 

@@ -16,7 +16,8 @@ import { ServiceCategory } from "../data/schema"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/components/ui/use-toast"
 import { useState } from "react"
-import { api } from "@/lib/api"
+import api from "@/lib/api"
+import { useQueryClient } from "@tanstack/react-query"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 
 interface DataTableRowActionsProps<TData> {
@@ -30,17 +31,20 @@ export function DataTableRowActions<TData>({
   const router = useRouter()
   const { toast } = useToast()
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
-  const [isDeleting, setIsDeleting] = useState(false)
+    const [isDeleting, setIsDeleting] = useState(false)
+  const queryClient = useQueryClient()
 
   const handleDelete = async () => {
     try {
       setIsDeleting(true)
-      await api.delete(`/services/categories/${category.id}`)
+            await api.delete(`/service-categories/${category.id}`)
       toast({
         title: "Kategori silindi",
         description: "Hizmet kategorisi başarıyla silindi.",
       })
-      router.refresh()
+            queryClient.invalidateQueries({
+        queryKey: ["service-categories"],
+      })
     } catch (error: any) {
       toast({
         title: "Hata",

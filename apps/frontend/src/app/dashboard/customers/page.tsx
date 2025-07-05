@@ -8,7 +8,13 @@ import { columns } from "./components/columns";
 import { DataTable } from "./components/data-table";
 import { useCustomers } from "./hooks/use-customers";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search } from "lucide-react";
+import { Search, HomeIcon } from "lucide-react";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 import { Customer } from "./data/schema";
 
 // Sadece gerekli hook'u import ediyoruz
@@ -42,43 +48,48 @@ export default function CustomersPage() {
   }, [searchQuery, customers]);
 
   return (
-    <div >
-      <div className="flex items-center justify-between space-y-2">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Müşteriler</h2>
-          <p className="text-muted-foreground">
-            Mevcut müşterilerinizi burada yönetin ve yeni müşteri ekleyin.
-          </p>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Button asChild>
-            <Link href="/dashboard/customers/new">Yeni Müşteri Ekle</Link>
-          </Button>
-        </div>
+    <div className="space-y-6">
+      <div>
+        <Breadcrumb>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/dashboard">
+              <HomeIcon className="h-4 w-4" />
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem isCurrentPage>
+            <BreadcrumbLink>Müşteriler</BreadcrumbLink>
+          </BreadcrumbItem>
+        </Breadcrumb>
+        <h1 className="text-3xl font-bold tracking-tight mt-2">Müşteri Yönetimi</h1>
+        <p className="text-muted-foreground mt-1">
+          Mevcut müşterilerinizi burada yönetin ve yeni müşteri ekleyin.
+        </p>
       </div>
-      
-      <div className="flex items-center">
-        <div className="relative flex-1">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+
+      <div className="flex items-center justify-between gap-4">
+        <div className="relative flex-1 md:grow-0">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
+            type="search"
             placeholder="İsim veya telefon ile ara..."
-            className="pl-8"
+            className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[320px]"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
+        <Button asChild>
+          <Link href="/dashboard/customers/new">Yeni Müşteri Ekle</Link>
+        </Button>
       </div>
-      
+
       {isLoading ? (
         <div className="space-y-4">
-          <Skeleton className="h-8 w-full" />
-          <Skeleton className="h-8 w-full" />
-          <Skeleton className="h-8 w-full" />
-          <Skeleton className="h-8 w-full" />
-          <Skeleton className="h-8 w-full" />
+          <Skeleton className="h-12 w-full" />
+          <Skeleton className="h-64 w-full" />
         </div>
       ) : isError ? (
-        <div className="rounded-md bg-destructive/15 p-4">
+        <div className="rounded-md bg-destructive/15 p-4 text-center">
           <p className="text-destructive">
             Müşteriler yüklenirken bir hata oluştu: {error?.message || 'Bilinmeyen hata'}
           </p>

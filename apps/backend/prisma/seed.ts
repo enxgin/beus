@@ -1,178 +1,147 @@
-import { PrismaClient } from '../src/prisma/client';
-import { UserRole } from '../src/prisma/prisma-types';
+import { PrismaClient, UserRole } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
-import { fakerTR as faker } from '@faker-js/faker';
+import { faker } from '@faker-js/faker';
 
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('Başlangıç verilerini oluşturma işlemi başladı...');
+  console.log('Tohumlama işlemi başlıyor: Tüm veriler silinecek ve başlangıç verileri oluşturulacak...');
 
-  // Test kullanıcılarını kontrol et
-  const existingTestAdmin = await prisma.user.findFirst({
-    where: { email: 'test-admin@salonflow.com' },
+  // 1. Tüm verileri temizle (doğru sırada)
+  console.log('Mevcut veriler temizleniyor...');
+  // İlişkisel olarak bağımlı olanlardan başla
+  await prisma.appointment.deleteMany({});
+  await prisma.customerTag.deleteMany({});
+  // Diğer potansiyel tablolar (varsa)
+  // await prisma.Invoice.deleteMany({});
+  // await prisma.CashRegisterLog.deleteMany({});
+  // await prisma.CustomerPackage.deleteMany({});
+  await prisma.service.deleteMany({});
+  await prisma.serviceCategory.deleteMany({});
+  await prisma.customer.deleteMany({});
+  await prisma.user.deleteMany({});
+  await prisma.branch.deleteMany({});
+  console.log('Tüm eski veriler başarıyla silindi.');
+
+  // 2. Şubeleri oluştur
+  console.log('Yeni şubeler oluşturuluyor...');
+  const branch2 = await prisma.branch.create({
+    data: {
+      name: 'Şube 2',
+      address: faker.location.streetAddress(),
+      phone: faker.phone.number(),
+    },
   });
-
-  // Önceden var olan admin kullanıcısını kontrol et
-  const existingAdmin = await prisma.user.findFirst({
-    where: { role: UserRole.ADMIN, email: 'admin@salonflow.com' },
+  const branch3 = await prisma.branch.create({
+    data: {
+      name: 'Şube 3',
+      address: faker.location.streetAddress(),
+      phone: faker.phone.number(),
+    },
   });
+  console.log(`Şubeler oluşturuldu: ${branch2.name}, ${branch3.name}`);
 
-  // Eğer admin yoksa oluştur
-  if (!existingAdmin) {
-    // Admin şifresini hashle
-    const salt = await bcrypt.genSalt();
-    const hashedPassword = await bcrypt.hash('admin123', salt);
+  // 3. Kullanıcıları oluştur
+  console.log('Kullanıcılar oluşturuluyor...');
+  const password = '66666666';
+  const salt = await bcrypt.genSalt();
+  const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Ana şubeyi oluştur
-    const branch = await prisma.branch.create({
+  const usersToCreate = [
+    { email: 'test-admin@salonflow.com', name: 'Test Admin', role: UserRole.ADMIN, branchId: null },
+    { email: 'ali@a.com', name: 'Ali', role: UserRole.STAFF, branchId: branch2.id },
+    { email: 'deniz@a.com', name: 'Deniz', role: UserRole.RECEPTION, branchId: branch2.id },
+    { email: 'cansu@a.com', name: 'Cansu', role: UserRole.STAFF, branchId: branch2.id },
+    { email: 'mert@a.com', name: 'Mert', role: UserRole.BRANCH_MANAGER, branchId: branch2.id },
+    { email: 'cengiz@c.com', name: 'Cengiz', role: UserRole.STAFF, branchId: branch3.id },
+    { email: 'nergiz@c.com', name: 'Nergiz', role: UserRole.BRANCH_MANAGER, branchId: branch3.id },
+  ];
+
+  for (const userData of usersToCreate) {
+    await prisma.user.create({
       data: {
-        name: 'Ana Şube',
-        address: 'Merkez Mah. Atatürk Cad. No:1, İstanbul',
-        phone: '+905551234567',
-        // description alanı Branch modelinde bulunmuyor
-      },
-    });
-
-    console.log(`Ana şube oluşturuldu: ${branch.name}`);
-
-    // Admin kullanıcısını oluştur
-    const admin = await prisma.user.create({
-      data: {
-        email: 'admin@salonflow.com',
+        ...userData,
         password: hashedPassword,
-        name: 'Admin User', // firstName ve lastName yerine name alanı kullanılıyor
-        role: UserRole.ADMIN,
-        branchId: branch.id,
       },
     });
+  }
+  console.log(`${usersToCreate.length} kullanıcı başarıyla oluşturuldu.`);
 
-    console.log(`Admin kullanıcısı oluşturuldu: ${admin.email}`);
+  // 4. Müşterileri oluştur
+  console.log('Rastgele müşteriler oluşturuluyor...');
+  const customers = [];
+  for (let i = 0; i < 10; i++) {
+    customers.push({
+      name: faker.person.fullName(),
+      phone: `053${faker.string.numeric(8)}`,
+      branchId: branch2.id,
+    });
+    customers.push({
+      name: faker.person.fullName(),
+      phone: `054${faker.string.numeric(8)}`,
+      branchId: branch3.id,
+    });
+  }
+  await prisma.customer.createMany({ data: customers });
+  console.log(`${customers.length} rastgele müşteri oluşturuldu.`);
 
-    // Örnek bir kategori ve hizmet oluştur
+  // 5. Hizmet Kategorileri ve Hizmetleri Oluştur
+  console.log('Hizmet kategorileri ve hizmetler oluşturuluyor...');
+  const sampleCategories = ['Saç Kesim & Boya', 'Cilt Bakımı', 'El & Ayak Bakımı', 'Makyaj', 'Vücut Bakımı', 'Epilasyon'];
+
+  // Şube 2 için
+  for (let i = 0; i < 4; i++) {
     const category = await prisma.serviceCategory.create({
       data: {
-        name: 'Saç Bakımı',
+        name: `${faker.helpers.arrayElement(sampleCategories)} - Şube 2`,
+        branchId: branch2.id,
       },
     });
-
     await prisma.service.create({
       data: {
-        name: 'Saç Kesimi',
+        name: `${faker.commerce.productName()}`,
         type: 'TIME_BASED',
-        duration: 30,
-        price: 150,
+        duration: faker.helpers.arrayElement([30, 45, 60, 90]),
+        price: faker.number.int({ min: 100, max: 1500 }),
         commissionRate: 0.1,
         categoryId: category.id,
-        branchId: branch.id,
+        branchId: branch2.id,
       },
     });
-
-    console.log('Örnek kategori ve hizmet oluşturuldu');
-  } else {
-    console.log('Admin kullanıcısı zaten mevcut, seed işlemi atlanıyor');
   }
+  console.log(`Şube 2 için 4 kategori ve 4 hizmet oluşturuldu.`);
 
-  // Müşteri tohumlama kontrolü
-  const customerCount = await prisma.customer.count();
-  const desiredCustomerCount = 50;
-
-  if (customerCount < desiredCustomerCount) {
-    const customersToCreate = desiredCustomerCount - customerCount;
-    console.log(`${customersToCreate} adet yeni müşteri oluşturulacak...`);
-
-    const mainBranch = await prisma.branch.findFirst({ where: { name: 'Ana Şube' } });
-    if (!mainBranch) {
-      throw new Error('Ana Şube bulunamadı. Müşteri oluşturma işlemi başarısız.');
-    }
-
-    const customerDataList = Array.from({ length: customersToCreate }).map(() => ({
-      name: faker.person.firstName() + ' ' + faker.person.lastName(),
-      phone: faker.phone.number().replace(/\D/g, '').slice(0, 15),
-      email: faker.internet.email().toLowerCase(),
-      creditBalance: faker.number.float({ min: 0, max: 1000, fractionDigits: 2 }),
-      branchId: mainBranch.id,
-      notes: faker.lorem.sentence(),
-    }));
-
-    await prisma.customer.createMany({
-      data: customerDataList,
-      skipDuplicates: true,
+  // Şube 3 için
+  for (let i = 0; i < 4; i++) {
+    const category = await prisma.serviceCategory.create({
+      data: {
+        name: `${faker.helpers.arrayElement(sampleCategories)} - Şube 3`,
+        branchId: branch3.id,
+      },
     });
-
-    console.log(`${customersToCreate} adet müşteri başarıyla oluşturuldu.`);
-  } else {
-    console.log('Yeterli sayıda müşteri zaten mevcut, oluşturma işlemi atlanıyor.');
+    await prisma.service.create({
+      data: {
+        name: `${faker.commerce.productName()}`,
+        type: 'TIME_BASED',
+        duration: faker.helpers.arrayElement([30, 45, 60, 90]),
+        price: faker.number.int({ min: 100, max: 1500 }),
+        commissionRate: 0.1,
+        categoryId: category.id,
+        branchId: branch3.id,
+      },
+    });
   }
+  console.log(`Şube 3 için 4 kategori ve 4 hizmet oluşturuldu.`);
 
-  // Test kullanıcılarını oluştur
-  if (!existingTestAdmin) {
-    // Sabit bir test şifre kullanalım
-    const salt = await bcrypt.genSalt();
-    const testPassword = await bcrypt.hash('SalonFlow2025!', salt);
-    
-    // Ana şubeyi kullanalım
-    const mainBranch = await prisma.branch.findFirst();
-    if(!mainBranch) throw new Error('Ana şube bulunamadı');
-    
-    // Diğer şubeleri oluştur
-    const branches = [];
-    for(let i = 1; i <= 3; i++) {
-      const branch = await prisma.branch.create({
-        data: {
-          name: `Şube ${i}`,
-          address: `Test Mah. Test Cad. No:${i}, İstanbul`,
-          phone: `+9055512345${i}${i}`,
-        },
-      });
-      branches.push(branch);
-      console.log(`Şube oluşturuldu: ${branch.name}`);
-    }
-    
-    // Test kullanıcıları oluştur
-    const roles = Object.values(UserRole);
-    
-    for (const role of roles) {
-      let branchId = null;
-      
-      // Role göre şube ataması yap
-      if (role === UserRole.ADMIN) {
-        branchId = null; // Admin tüm şubelere erişebilir
-      } else if (role === UserRole.SUPER_BRANCH_MANAGER) {
-        branchId = mainBranch.id;
-      } else {
-        // Diğer roller için rastgele bir şube seç
-        const randomBranch = branches[Math.floor(Math.random() * branches.length)];
-        branchId = randomBranch.id;
-      }
-      
-      // Test kullanıcısını ekle
-      const testUser = await prisma.user.create({
-        data: {
-          email: `test-${String(role).toLowerCase()}@salonflow.com`,
-          password: testPassword,
-          name: `Test ${String(role).charAt(0) + String(role).slice(1).toLowerCase()}`,
-          role: role,
-          branchId: branchId,
-        },
-      });
-      
-      console.log(`Test kullanıcısı oluşturuldu: ${testUser.email} (${role})`);
-    }
-    
-    console.log('Tüm test kullanıcıları oluşturuldu');
-  } else {
-    console.log('Test kullanıcıları zaten mevcut, bu aşama atlanıyor');
-  }
-  
-  console.log('Başlangıç verileri başarıyla oluşturuldu');
+  console.log('Tohumlama işlemi başarıyla tamamlandı!');
 }
 
 main()
   .catch((e) => {
-    console.error('Seed işlemi sırasında hata oluştu:', e);
+    console.error('Tohumlama sırasında bir hata oluştu:', e);
     process.exit(1);
   })
   .finally(async () => {
     await prisma.$disconnect();
+    console.log('Prisma bağlantısı kesildi.');
   });

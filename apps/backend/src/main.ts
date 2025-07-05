@@ -4,16 +4,23 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
+  console.log('Starting NestJS application...');
   const app = await NestFactory.create(AppModule);
   
   // Global prefix for all routes (e.g., /api/v1/...)
   app.setGlobalPrefix('api/v1');
   
+  // Log API prefix
+  console.log(`API Prefix: api/v1`);
+  
   // Frontend'den (localhost:3002) gelen isteklere izin ver
   app.enableCors({
-    origin: ['http://localhost:3000', 'http://localhost:3002'], // Allow multiple origins
+    origin: ['http://localhost:3000', 'http://localhost:4200', '*'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
     credentials: true,
   });
+  
+  console.log('CORS enabled for frontend origins');
   
   // Global validation pipe for DTO validation
   app.useGlobalPipes(

@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { createContext, useContext, useEffect, useState } from 'react'
 import axios from 'axios'
-import { UserRole } from '@/app/dashboard/users/types'
+import { UserRole } from '@/types/user'
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1'
 
@@ -51,7 +51,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUser(data.user)
       
       // Token'ı storage'a kaydet
-      localStorage.setItem('accessToken', data.accessToken)
+      localStorage.setItem('token', data.accessToken) // Backend'den accessToken olarak gelse de token olarak kaydediyoruz
       
       // Axios varsayılan başlıklarını ayarla
       axios.defaults.headers.common['Authorization'] = `Bearer ${data.accessToken}`
@@ -72,7 +72,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       console.error('Logout error:', error)
     } finally {
       // Local storage'dan token'ı sil
-      localStorage.removeItem('accessToken')
+      localStorage.removeItem('token')
       
       // Axios başlıklarını temizle
       delete axios.defaults.headers.common['Authorization']
@@ -91,7 +91,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setIsLoading(true)
       try {
         // Local storage'dan token'ı al
-        const token = localStorage.getItem('accessToken')
+        const token = localStorage.getItem('token')
         
         if (!token) {
           setIsLoading(false)
@@ -107,7 +107,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       } catch (error) {
         console.error('Auth check error:', error)
         // Hata durumunda token'ı sil
-        localStorage.removeItem('accessToken')
+        localStorage.removeItem('token')
         delete axios.defaults.headers.common['Authorization']
       } finally {
         setIsLoading(false)

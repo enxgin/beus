@@ -1,44 +1,30 @@
 "use client";
 
-import { useEffect, useState } from 'react';
 import { useParams } from "next/navigation";
 import { UserForm } from "./components/user-form";
-import { getUserPageData, UserRole } from './data';
+import { useUser } from "../hooks/use-users";
+import { useBranches } from "@/app/dashboard/branches/hooks/use-branches";
 import { Skeleton } from "@/components/ui/skeleton";
 
-// Client Component olarak kullanıyoruz
+// Statik rol tanımlamaları - Türkçe rol isimleri kullanıldı ve UserRole enum'dan referans alındı
+const roles = [
+  { id: 'ADMIN', name: 'Admin' },
+  { id: 'SUPER_BRANCH_MANAGER', name: 'Üst Şube Yöneticisi' },
+  { id: 'BRANCH_MANAGER', name: 'Şube Yöneticisi' },
+  { id: 'RECEPTION', name: 'Resepsiyon' },
+  { id: 'STAFF', name: 'Personel' },
+];
+
 export default function UserPage() {
-  // Next.js'in useParams hook'unu kullanıyoruz
   const params = useParams();
   const userId = params.userId as string;
-  const [isLoading, setIsLoading] = useState(true);
-  const [data, setData] = useState<{
-    user: any | null;
-    roles: { id: UserRole; name: string }[];
-    branches: { id: string; name: string }[];
-  }>({ 
-    user: null, 
-    roles: [], 
-    branches: [] 
-  });
-  
-  useEffect(() => {
-    // Client tarafında veri çekme işlemi
-    const fetchData = async () => {
-      try {
-        setIsLoading(true);
-        const result = await getUserPageData(userId);
-        setData(result);
-      } catch (error) {
-        console.error("Veri çekme hatası:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    fetchData();
-  }, [userId]);
-  
+
+  // Güvenli hook'lar ile veri çekme
+  const { data: user, isLoading: isUserLoading } = useUser(userId);
+  const { data: branchesData, isLoading: areBranchesLoading } = useBranches();
+
+  const isLoading = isUserLoading || areBranchesLoading;
+
   if (isLoading) {
     return (
       <div className="flex-col">
@@ -51,13 +37,16 @@ export default function UserPage() {
     );
   }
 
+  // Şubeleri `useBranches`'dan gelen formata göre ayarla
+  const branches = branchesData?.data || [];
+
   return (
     <div className="flex-col">
       <div className="flex-1 space-y-4 p-8 pt-6">
         <UserForm 
-          initialData={data.user} 
-          roles={data.roles} 
-          branches={data.branches} 
+          initialData={user || null}
+          roles={roles}
+          branches={branches}
         />
       </div>
     </div>
