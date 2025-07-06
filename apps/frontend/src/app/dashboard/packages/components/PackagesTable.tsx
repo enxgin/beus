@@ -14,7 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from "../../../../components/ui/table";
-import { Package } from "../api";
+import type { Package } from "@/types";
 import Link from "next/link";
 import { PencilIcon, Trash2Icon, EyeIcon, PlusIcon } from "lucide-react";
 import { formatTurkishLira } from "../../../../lib/utils";

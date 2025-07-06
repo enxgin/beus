@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { DataTable } from "./components/data-table"
+import { UserRole } from "@/types/user"
 import { columns } from "./components/columns"
 import { useBranches } from "./hooks/use-branches"
 import { useAuth } from "@/hooks/use-auth"
@@ -48,7 +49,7 @@ export default function BranchesPage() {
               İşletmenize ait şubeleri buradan yönetebilirsiniz.
             </p>
           </div>
-          {user?.role === 'admin' && (
+          {user?.role === UserRole.ADMIN && (
             <div className="flex items-center space-x-2">
               <Button onClick={() => branchModal.onOpen()}>Yeni Şube Ekle</Button>
             </div>

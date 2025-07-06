@@ -95,7 +95,7 @@ export default function CustomersPage() {
           </p>
         </div>
       ) : (
-        <DataTable data={filteredData} columns={columns} />
+        <DataTable data={filteredData as any} columns={columns} />
       )}
     </div>
   );

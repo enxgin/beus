@@ -67,7 +67,11 @@ const formSchema = z.object({
     .optional(),
 });
 
-type FormValues = z.infer<typeof formSchema>;
+type FormValues = z.infer<typeof formSchema> & {
+  totalSessions?: number;
+  totalMinutes?: number;
+  services?: { serviceId: string; quantity: number }[];
+}
 
 interface Branch {
   id: string;
@@ -91,8 +95,7 @@ export default function NewPackagePage() {
   // Form başlangıç değerleri için şube ID'yi kullanıcı rolüne göre belirle
   const isRoleWithFixedBranch = user?.role === UserRole.BRANCH_MANAGER || 
                                user?.role === UserRole.RECEPTION || 
-                               user?.role === UserRole.STAFF ||
-                               user?.role === UserRole.BRANCH_ADMIN;
+                               user?.role === UserRole.STAFF;
   
   const initialBranchId = isRoleWithFixedBranch && user?.branchId ? user.branchId : "";
   console.log("Başlangıç şube ID'si:", initialBranchId, "Rol:", user?.role);
@@ -114,7 +117,7 @@ export default function NewPackagePage() {
   const { data: branches, isLoading: branchesLoading } = useQuery<Branch[]>({
     queryKey: ["branches"],
     queryFn: () => api.get("/branches").then((res) => res.data),
-    enabled: user?.role === UserRole.SUPER_ADMIN,
+    enabled: user?.role === UserRole.ADMIN || user?.role === UserRole.SUPER_BRANCH_MANAGER,
   });
 
   const selectedBranchId = form.watch("branchId");
@@ -214,10 +217,10 @@ export default function NewPackagePage() {
 
     // Paket tipine göre totalSessions veya totalMinutes ekleyelim
     if (data.type === PackageType.SESSION) {
-      payload.totalSessions = Number(data.totalSessions);
+      (payload as any).totalSessions = Number(data.totalSessions);
       // totalMinutes alanını göndermeyelim
     } else if (data.type === PackageType.TIME) {
-      payload.totalMinutes = Number(data.totalMinutes);
+      (payload as any).totalMinutes = Number(data.totalMinutes);
       // totalSessions alanını göndermeyelim
     }
 
@@ -290,7 +293,7 @@ export default function NewPackagePage() {
                       </FormItem>
                     )}
                   />
-                  {user?.role === UserRole.SUPER_ADMIN && (
+                  {(user?.role === UserRole.ADMIN || user?.role === UserRole.SUPER_BRANCH_MANAGER) && (
                     <FormField
                       control={form.control}
                       name="branchId"
@@ -464,7 +467,8 @@ export default function NewPackagePage() {
                       const data = form.getValues();
                       let hasError = false;
 
-                      if (user?.role === UserRole.SUPER_ADMIN && !data.branchId) {
+                      const showBranchSelect = user?.role === UserRole.ADMIN || user?.role === UserRole.SUPER_BRANCH_MANAGER;
+                      if (showBranchSelect && !data.branchId) {
                         toast({
                           variant: "destructive",
                           title: "Hata",

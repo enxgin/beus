@@ -6,51 +6,65 @@ import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-quer
 import { useAuthStore } from '@/stores/auth.store';
 import api from '@/lib/api';
 import { toast } from 'sonner';
-import { MoreHorizontal, PlusCircle, Calendar as CalendarIcon, Search, AlertCircle, Loader2 } from 'lucide-react';
+import {
+  MoreHorizontal,
+  PlusCircle,
+  Calendar as CalendarIcon,
+  Search,
+  AlertCircle,
+  Loader2,
+} from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from '@/components/ui/table';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuLabel, 
-  DropdownMenuTrigger 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { 
-  AlertDialog, 
-  AlertDialogAction, 
-  AlertDialogCancel, 
-  AlertDialogContent, 
-  AlertDialogDescription, 
-  AlertDialogFooter, 
-  AlertDialogHeader, 
-  AlertDialogTitle 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { UserRole } from '@prisma/client';
 
 interface Appointment {
   id: string;
-  customer: { name: string; phone: string; };
-  staff: { name: string; };
-  service: { name: string; };
+  customer: { name: string; phone: string };
+  staff: { name: string };
+  service: { name: string };
   startTime: string;
   endTime: string;
   status: string;
@@ -85,11 +99,15 @@ export default function AppointmentsList() {
 
   useEffect(() => {
     // Hydration fix: Kullanıcı verisi yüklendiğinde doğru şubenin seçili olduğundan emin ol.
-    if (user) { 
+    if (user) {
       const branchIdFromUrl = searchParams.get('branchId');
       if (branchIdFromUrl) {
         setSelectedBranchId(branchIdFromUrl);
-      } else if (user.branchId && user.role !== UserRole.ADMIN && user.role !== UserRole.SUPER_BRANCH_MANAGER) {
+      } else if (
+        user.branchId &&
+        user.role !== UserRole.ADMIN &&
+        user.role !== UserRole.SUPER_BRANCH_MANAGER
+      ) {
         setSelectedBranchId(user.branchId);
       }
     }
@@ -104,9 +122,10 @@ export default function AppointmentsList() {
     return () => clearTimeout(handler);
   }, [searchTerm]);
 
-  const canSelectBranch = user?.role === UserRole.ADMIN || user?.role === UserRole.SUPER_BRANCH_MANAGER;
+  const canSelectBranch =
+    user?.role === UserRole.ADMIN || user?.role === UserRole.SUPER_BRANCH_MANAGER;
 
-  const { data: branches, isLoading: branchesLoading } = useQuery<Branch[]>({ 
+  const { data: branches, isLoading: branchesLoading } = useQuery<Branch[]>({
     queryKey: ['branches'],
     queryFn: async () => {
       const response = await api.get('/branches', {
@@ -136,26 +155,28 @@ export default function AppointmentsList() {
     setPage(1);
   }, [selectedBranchId]);
 
-  const { data, isLoading, isError, error } = useQuery<{ data: Appointment[]; totalCount: number }>({
-    queryKey: ['appointments', selectedBranchId, debouncedSearchTerm, page, limit],
-    queryFn: async () => {
-      const skip = (page - 1) * limit;
-      const params = new URLSearchParams({
-        skip: skip.toString(),
-        take: limit.toString(),
-      });
-      if (selectedBranchId) params.append('branchId', selectedBranchId);
-      if (debouncedSearchTerm) params.append('search', debouncedSearchTerm);
-      
-      const response = await api.get(`/appointments`, {
-        params,
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      return response.data;
+  const { data, isLoading, isError, error } = useQuery<{ data: Appointment[]; totalCount: number }>(
+    {
+      queryKey: ['appointments', selectedBranchId, debouncedSearchTerm, page, limit],
+      queryFn: async () => {
+        const skip = (page - 1) * limit;
+        const params = new URLSearchParams({
+          skip: skip.toString(),
+          take: limit.toString(),
+        });
+        if (selectedBranchId) params.append('branchId', selectedBranchId);
+        if (debouncedSearchTerm) params.append('search', debouncedSearchTerm);
+
+        const response = await api.get(`/appointments`, {
+          params,
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        return response.data;
+      },
+      enabled: !!token && !!selectedBranchId && isReady,
+      placeholderData: keepPreviousData,
     },
-    enabled: !!token && !!selectedBranchId && isReady,
-    placeholderData: keepPreviousData,
-  });
+  );
 
   const handleBranchChange = (branchId: string) => {
     setSelectedBranchId(branchId);
@@ -196,16 +217,16 @@ export default function AppointmentsList() {
     }
 
     if (!selectedBranchId && canSelectBranch) {
-        return (
-          <div className="text-center py-10">
-            <CalendarIcon className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-2 text-sm font-medium text-gray-900">Şube Seçin</h3>
-            <p className="mt-1 text-sm text-gray-500">
-              Randevuları görüntülemek için lütfen bir şube seçin.
-            </p>
-          </div>
-        );
-      }
+      return (
+        <div className="text-center py-10">
+          <CalendarIcon className="mx-auto h-12 w-12 text-gray-400" />
+          <h3 className="mt-2 text-sm font-medium text-gray-900">Şube Seçin</h3>
+          <p className="mt-1 text-sm text-gray-500">
+            Randevuları görüntülemek için lütfen bir şube seçin.
+          </p>
+        </div>
+      );
+    }
 
     if (!data || !data.data || data.data.length === 0) {
       return (
@@ -244,10 +265,16 @@ export default function AppointmentsList() {
                 <TableCell>{appointment.staff.name}</TableCell>
                 <TableCell>{appointment.service.name}</TableCell>
                 <TableCell>
-                  {new Date(appointment.startTime).toLocaleDateString('tr-TR')} - {new Date(appointment.startTime).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
+                  {new Date(appointment.startTime).toLocaleDateString('tr-TR')} -{' '}
+                  {new Date(appointment.startTime).toLocaleTimeString('tr-TR', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
                 </TableCell>
                 <TableCell>
-                  <Badge variant={statusVariant[appointment.status] || 'outline'}>{appointment.status}</Badge>
+                  <Badge variant={statusVariant[appointment.status] || 'outline'}>
+                    {appointment.status}
+                  </Badge>
                 </TableCell>
                 <TableCell>
                   <DropdownMenu>
@@ -259,10 +286,17 @@ export default function AppointmentsList() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>İşlemler</DropdownMenuLabel>
-                      <DropdownMenuItem onClick={() => router.push(`/dashboard/appointments/edit/${appointment.id}`)}>
+                      <DropdownMenuItem
+                        onClick={() =>
+                          router.push(`/dashboard/appointments/edit/${appointment.id}`)
+                        }
+                      >
                         Düzenle
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setAppointmentToDelete(appointment.id)} className="text-red-600">
+                      <DropdownMenuItem
+                        onClick={() => setAppointmentToDelete(appointment.id)}
+                        className="text-red-600"
+                      >
                         Sil
                       </DropdownMenuItem>
                     </DropdownMenuContent>
@@ -273,9 +307,7 @@ export default function AppointmentsList() {
           </TableBody>
         </Table>
         <div className="flex items-center justify-between pt-4">
-          <div className="text-sm text-muted-foreground">
-            Toplam {data.totalCount} kayıt.
-          </div>
+          <div className="text-sm text-muted-foreground">Toplam {data.totalCount} kayıt.</div>
           <div className="flex items-center space-x-2">
             <Button
               variant="outline"
@@ -300,12 +332,28 @@ export default function AppointmentsList() {
   };
 
   return (
-    <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
+    <div className="p-6 space-y-6">
+      <Breadcrumb>
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/dashboard">Dashboard</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/dashboard/appointments">Randevular</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbLink className="font-medium text-foreground">Randevu Listesi</BreadcrumbLink>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+
       <div className="flex items-center">
         <h1 className="font-semibold text-lg md:text-2xl">Randevular</h1>
         <div className="ml-auto flex items-center gap-2">
-          <Button 
-            size="sm" 
+          <Button
+            size="sm"
             onClick={() => router.push(`/dashboard/appointments/create?branchId=${selectedBranchId}`)}
             disabled={!selectedBranchId}
           >
@@ -316,63 +364,57 @@ export default function AppointmentsList() {
       </div>
       <Card>
         <CardHeader>
-          <CardTitle>Randevu Listesi</CardTitle>
-          <CardDescription>Mevcut randevuları yönetin ve görüntüleyin.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center gap-4 mb-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Müşteri adı veya telefon ile ara..."
-                className="w-full rounded-lg bg-background pl-8"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            {canSelectBranch && (
-              <Select
-                onValueChange={handleBranchChange}
-                value={selectedBranchId || ''}
-                disabled={branchesLoading}
-              >
-                <SelectTrigger className="w-auto">
-                  <SelectValue placeholder="Şube Seçin" />
-                </SelectTrigger>
-                <SelectContent>
-                  {branchesLoading ? (
-                    <div className="flex items-center justify-center p-2">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    </div>
-                  ) : (
-                    branches?.map((branch: Branch) => (
+          <div className="flex flex-col md:flex-row md:items-center gap-4">
+            <CardTitle>Randevu Listesi</CardTitle>
+            <div className="flex flex-col md:flex-row gap-2 md:ml-auto">
+              <div className="flex items-center gap-2">
+                <Input
+                  placeholder="Müşteri adı veya telefon ile ara..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full md:w-[200px] lg:w-[300px]"
+                />
+                <Search className="h-4 w-4 opacity-50" />
+              </div>
+              {canSelectBranch && (
+                <Select
+                  value={selectedBranchId || ''}
+                  onValueChange={(value) => setSelectedBranchId(value || null)}
+                >
+                  <SelectTrigger className="w-full md:w-[200px]">
+                    <SelectValue placeholder="Şube seçin" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {branches?.map((branch: Branch) => (
                       <SelectItem key={branch.id} value={branch.id}>
                         {branch.name}
                       </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
-            )}
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
           </div>
-          {renderContent()}
-        </CardContent>
+        </CardHeader>
+        <CardContent>{renderContent()}</CardContent>
       </Card>
-      <AlertDialog open={!!appointmentToDelete} onOpenChange={(open) => !open && setAppointmentToDelete(null)}>
+
+      <AlertDialog open={!!appointmentToDelete} onOpenChange={() => setAppointmentToDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Emin misiniz?</AlertDialogTitle>
+            <AlertDialogTitle>Randevuyu silmek istediğinize emin misiniz?</AlertDialogTitle>
             <AlertDialogDescription>
               Bu işlem geri alınamaz. Bu randevuyu kalıcı olarak silecektir.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>İptal</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete} className="bg-red-600 hover:bg-red-700">Sil</AlertDialogAction>
+            <AlertDialogAction onClick={confirmDelete} className="bg-red-600 hover:bg-red-700">
+              Sil
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </main>
+    </div>
   );
 }
