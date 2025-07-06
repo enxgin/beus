@@ -102,7 +102,9 @@ async function main() {
         price: faker.number.int({ min: 100, max: 1500 }),
         commissionRate: 0.1,
         categoryId: category.id,
-        branchId: branch2.id,
+        branch: {
+          connect: { id: branch2.id }
+        },
       },
     });
   }
@@ -124,7 +126,9 @@ async function main() {
         price: faker.number.int({ min: 100, max: 1500 }),
         commissionRate: 0.1,
         categoryId: category.id,
-        branchId: branch3.id,
+        branch: {
+          connect: { id: branch3.id }
+        },
       },
     });
   }

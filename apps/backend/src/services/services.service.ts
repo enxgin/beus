@@ -11,11 +11,14 @@ export class ServicesService {
 
   // Hizmet İşlemleri
   async create(createServiceDto: CreateServiceDto) {
-    const { staffIds, ...serviceData } = createServiceDto;
+    const { staffIds, branchId, ...serviceData } = createServiceDto;
 
     return this.prisma.service.create({
       data: {
         ...serviceData,
+        branch: {
+          connect: { id: branchId }
+        },
         staff: {
           create: staffIds.map((staffId) => ({
             user: {
