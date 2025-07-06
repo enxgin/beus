@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { jwtDecode } from 'jwt-decode';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth.store';
-import { api } from '@/lib/api'; // Merkezi API istemcisini kullan
+import api from '@/lib/api'; // Merkezi API istemcisini kullan
 
 // Global User tipi ile tutarlı olması için buradaki arayüzü @/types/user'dan import etmek daha iyi olacaktır
 // User tipini auth.store.ts'den import et
