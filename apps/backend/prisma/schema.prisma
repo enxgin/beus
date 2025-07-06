@@ -128,7 +128,6 @@ model Service {
   price           Float
   isActive        Boolean          @default(true)
   type            ServiceType      @default(TIME_BASED)
-  serviceType     ServiceType
   maxCapacity     Int
   unitCount       Int?
   commissionFixed Float?

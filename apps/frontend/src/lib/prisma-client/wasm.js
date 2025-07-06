@@ -198,7 +198,6 @@ exports.Prisma.ServiceScalarFieldEnum = {
   price: 'price',
   isActive: 'isActive',
   type: 'type',
-  serviceType: 'serviceType',
   maxCapacity: 'maxCapacity',
   unitCount: 'unitCount',
   commissionFixed: 'commissionFixed',
