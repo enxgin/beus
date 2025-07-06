@@ -19,7 +19,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { UserRole } from "@/types/user";
 
-// Form şeması tanımı
+// Form schema definition
 const formSchema = z.object({
   name: z.string().min(2, { message: 'Hizmet adı en az 2 karakter olmalıdır.' }),
   duration: z.coerce.number().min(5, { message: 'Süre en az 5 dakika olmalıdır.' }),
@@ -30,7 +30,7 @@ const formSchema = z.object({
   isActive: z.boolean().default(true),
 });
 
-// Form için tip tanımı
+// Form type definition
 type FormValues = z.infer<typeof formSchema>;
 
 interface ApiData {
@@ -46,11 +46,9 @@ const EditServicePage = () => {
   const user = useAuthStore((state) => state.user);
   const token = useAuthStore((state) => state.token);
 
-  // Sadece ADMIN rolü şube seçebilir
   const canSelectBranch = user?.role === UserRole.ADMIN;
-  
-  // Form tanımı
-  const form = useForm({
+
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
@@ -58,99 +56,74 @@ const EditServicePage = () => {
       price: 0,
       categoryId: "",
       branchId: "",
-      staffIds: [] as string[],
+      staffIds: [],
       isActive: true,
-    } as FormValues,
+    },
   });
 
-  // Hizmet verilerini getirme
+  // Fetch service data
   const { data: service, isLoading: isServiceLoading } = useQuery({
     queryKey: ["service", id],
     queryFn: async () => {
       const response = await api.get(`/services/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
       return response.data;
     },
     enabled: !!id && !!token,
   });
 
-  // Kategori, personel ve şube verilerini getirme
-  const { data: apiData, isLoading: isApiDataLoading } = useQuery({
+  // Fetch related data (categories, staff, branches)
+  const { data: apiData, isLoading: isApiDataLoading } = useQuery<ApiData>({
     queryKey: ["service-edit-data"],
     queryFn: async () => {
       const [categoriesRes, staffRes, branchesRes] = await Promise.all([
-        api.get("/categories", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }),
-        api.get("/staff", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }),
-        api.get("/branches", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }),
+        api.get("/service-categories", { headers: { Authorization: `Bearer ${token}` } }),
+        api.get("/staff", { headers: { Authorization: `Bearer ${token}` } }),
+        api.get("/branches", { headers: { Authorization: `Bearer ${token}` } }),
       ]);
-
       return {
         categories: categoriesRes.data,
         staff: staffRes.data,
         branches: branchesRes.data,
-      } as ApiData;
+      };
     },
     enabled: !!token,
   });
 
-  // Form verilerini doldurma
+  // Populate form when both service and api data are available
   useEffect(() => {
-    if (service) {
+    if (service && apiData) {
+      const staffIds = service.staff ? service.staff.map((s: any) => s.id) : [];
       form.reset({
-        name: service.name,
-        duration: service.duration,
-        price: service.price,
-        categoryId: service.categoryId,
-        branchId: service.branchId,
-        staffIds: service.staffIds,
-        isActive: service.isActive,
-      } as FormValues);
+        ...service,
+        staffIds,
+      });
     }
-  }, [service, form]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [service, apiData]);
 
-  // Şubeye göre personel filtreleme
+  // Filter staff based on selected branch
+  const watchedBranchId = form.watch("branchId");
   const filteredStaff = useMemo(() => {
     if (!apiData?.staff) return [];
-    const branchId = form.watch("branchId");
-    if (!branchId) return [];
-    return apiData.staff.filter((staff) => staff.branchId === branchId);
-  }, [apiData?.staff, form.watch("branchId")]);
+    if (!watchedBranchId) {
+        if (canSelectBranch) return [];
+        return apiData.staff;
+    }
+    return apiData.staff.filter((s) => s.branchId === watchedBranchId);
+  }, [apiData?.staff, watchedBranchId, canSelectBranch]);
 
-  // Form gönderimi
+  // Form submission handler
   const handleSubmit = async (data: FormValues) => {
     try {
-      await api.put(
-        `/services/${id}`,
-        {
-          ...data,
-          duration: Number(data.duration),
-          price: Number(data.price),
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
+      await api.patch(`/services/${id}`, data, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       toast.success("Hizmet başarıyla güncellendi");
-      queryClient.invalidateQueries({ queryKey: ["service", id] });
+      // Invalidate queries to refetch data
       queryClient.invalidateQueries({ queryKey: ["services"] });
+      queryClient.invalidateQueries({ queryKey: ["service", id] });
       router.push("/dashboard/services");
     } catch (error) {
       console.error(error);
@@ -165,13 +138,10 @@ const EditServicePage = () => {
   return (
     <div className="p-4">
       <Button variant="ghost" onClick={() => router.back()} className="mb-4">
-        <ArrowLeft className="mr-2 h-4 w-4" />
-        Geri
+        <ArrowLeft className="mr-2 h-4 w-4" /> Geri
       </Button>
       <Card>
-        <CardHeader>
-          <CardTitle>Hizmeti Düzenle</CardTitle>
-        </CardHeader>
+        <CardHeader><CardTitle>Hizmeti Düzenle</CardTitle></CardHeader>
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
@@ -182,27 +152,26 @@ const EditServicePage = () => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Hizmet Adı</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Örn: Saç Kesimi" {...field} />
-                      </FormControl>
+                      <FormControl><Input placeholder="Örn: Saç Kesimi" {...field} /></FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+                
                 <FormField
                   control={form.control}
                   name="categoryId"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Kategori</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value || ''} key={field.value}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Kategori seçin" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {apiData?.categories?.map((category: { id: string; name: string }) => (
+                          {apiData?.categories?.map((category) => (
                             <SelectItem key={category.id} value={category.id}>
                               {category.name}
                             </SelectItem>
@@ -213,32 +182,10 @@ const EditServicePage = () => {
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={form.control}
-                  name="duration"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Süre (dakika)</FormLabel>
-                      <FormControl>
-                        <Input type="number" placeholder="Örn: 30" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="price"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Fiyat (TL)</FormLabel>
-                      <FormControl>
-                        <Input type="number" placeholder="Örn: 150" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+
+                <FormField control={form.control} name="duration" render={({ field }) => (<FormItem><FormLabel>Süre (dakika)</FormLabel><FormControl><Input type="number" {...field} value={field.value || ''} /></FormControl><FormMessage /></FormItem>)} />
+                <FormField control={form.control} name="price" render={({ field }) => (<FormItem><FormLabel>Fiyat (TL)</FormLabel><FormControl><Input type="number" {...field} value={field.value || ''} /></FormControl><FormMessage /></FormItem>)} />
+
                 {canSelectBranch && (
                   <FormField
                     control={form.control}
@@ -246,14 +193,14 @@ const EditServicePage = () => {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Şube</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value || ''} key={field.value}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Şube seçin" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {apiData?.branches?.map((branch: { id: string; name: string }) => (
+                            {apiData?.branches?.map((branch) => (
                               <SelectItem key={branch.id} value={branch.id}>
                                 {branch.name}
                               </SelectItem>
@@ -265,52 +212,45 @@ const EditServicePage = () => {
                     )}
                   />
                 )}
-                 <FormField
+
+                <FormField
                   control={form.control}
                   name="staffIds"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Bu Hizmeti Verebilecek Personeller</FormLabel>
+                      <FormLabel>Personel</FormLabel>
                       <FormControl>
                         <MultiSelect
-                          options={filteredStaff.map((s) => ({ label: s.name, value: s.id }))}
+                          options={filteredStaff.map(s => ({ value: s.id, label: s.name }))}
                           selected={field.value || []}
                           onChange={field.onChange}
                           placeholder="Personel seçin"
-                          emptyIndicator={form.watch("branchId") ? "Bu şubede personel bulunamadı." : "Önce şube seçmelisiniz."}
+                          emptyIndicator={watchedBranchId ? "Bu şubede personel bulunamadı." : "Önce şube seçmelisiniz."}
                         />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+                
                 <FormField
                   control={form.control}
                   name="isActive"
                   render={({ field }) => (
                     <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                      <FormControl>
-                        <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-                      </FormControl>
+                      <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
                       <div className="space-y-1 leading-none">
-                        <FormLabel>Hizmet Aktif</FormLabel>
-                        <FormDescription>
-                          Hizmetin randevu sisteminde görünür olup olmadığını belirler.
-                        </FormDescription>
+                        <FormLabel>Aktif</FormLabel>
+                        <FormDescription>Bu hizmetin aktif olup olmadığını belirtin.</FormDescription>
                       </div>
                     </FormItem>
                   )}
                 />
               </div>
-              <div className="flex justify-end pt-4">
-                <Button variant="outline" type="button" onClick={() => router.back()} className="mr-2">
-                  İptal
-                </Button>
-                <Button type="submit" disabled={form.formState.isSubmitting}>
-                  {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Değişiklikleri Kaydet
-                </Button>
-              </div>
+              <Button type="submit" disabled={form.formState.isSubmitting}>
+                {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Güncelle
+              </Button>
             </form>
           </Form>
         </CardContent>

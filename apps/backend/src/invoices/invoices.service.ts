@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { UpdateInvoiceDto } from './dto/update-invoice.dto';
@@ -7,12 +7,16 @@ import { FindInvoicesDto } from './dto/find-invoices.dto';
 import { CreateInvoiceFromServiceDto, InvoiceSourceType } from './dto/create-invoice-from-service.dto';
 import { PaymentStatus, CashLogType } from '../prisma/prisma-types';
 import { CashRegisterLogsService } from '../cash-register-logs/cash-register-logs.service';
+import { CommissionsService } from '../commissions/commissions.service';
 
 @Injectable()
 export class InvoicesService {
+  private readonly logger = new Logger(InvoicesService.name);
+
   constructor(
     private prisma: PrismaService,
-    private cashRegisterLogsService: CashRegisterLogsService
+    private cashRegisterLogsService: CashRegisterLogsService,
+    private commissionsService: CommissionsService
   ) {}
 
   async create(createInvoiceDto: CreateInvoiceDto) {
@@ -202,7 +206,16 @@ export class InvoicesService {
     // Faturanın var olup olmadığını kontrol et
     const existingInvoice = await this.prisma.invoice.findUnique({
       where: { id },
-      include: { payments: true },
+      include: { 
+        payments: true,
+        commission: true,
+        appointment: {
+          include: {
+            service: true,
+            staff: true
+          }
+        }
+      },
     });
 
     if (!existingInvoice) {
@@ -212,6 +225,7 @@ export class InvoicesService {
     // Eğer amountPaid veya totalAmount değiştirilecekse, borç tutarını yeniden hesapla
     let updatedDebt = existingInvoice.debt;
     let updatedStatus = existingInvoice.status;
+    let previousStatus = existingInvoice.status;
     
     if (updateInvoiceDto.totalAmount !== undefined || updateInvoiceDto.amountPaid !== undefined) {
       const totalAmount = updateInvoiceDto.totalAmount ?? existingInvoice.totalAmount;
@@ -229,22 +243,56 @@ export class InvoicesService {
       }
     }
 
+    // Status güncellemesi varsa kullan
+    if (updateInvoiceDto.status !== undefined) {
+      updatedStatus = updateInvoiceDto.status;
+    }
+
     // Faturayı güncelle
-    return this.prisma.invoice.update({
+    const updatedInvoice = await this.prisma.invoice.update({
       where: { id },
       data: {
         ...updateInvoiceDto,
         debt: updatedDebt,
-        status: updateInvoiceDto.status ?? updatedStatus,
+        status: updatedStatus,
       },
       include: {
         customer: true,
         branch: true,
-        appointment: true,
+        appointment: {
+          include: {
+            service: true,
+            staff: true
+          }
+        },
         payments: true,
         commission: true,
       },
     });
+
+    // Ödeme durumu değiştiyse ve PAID durumuna geçtiyse prim hesapla
+    if (updatedStatus === PaymentStatus.PAID && previousStatus !== PaymentStatus.PAID) {
+      try {
+        this.logger.log(`Fatura ödendi, prim hesaplanıyor: ${id}`);
+        await this.commissionsService.calculateCommissionForInvoice(id);
+      } catch (error) {
+        this.logger.error(`Prim hesaplama hatası: ${error.message}`);
+      }
+    }
+    
+    // Fatura iptal edildi veya iade edildi ise, varsa primi iptal et
+    if (updatedStatus === PaymentStatus.CANCELLED || updatedStatus === PaymentStatus.REFUNDED) {
+      try {
+        this.logger.log(`Fatura iptal edildi/iade edildi, prim iptal ediliyor: ${id}`);
+        if (existingInvoice.commission) {
+          await this.commissionsService.cancelCommissionForInvoice(id);
+        }
+      } catch (error) {
+        this.logger.error(`Prim iptal hatası: ${error.message}`);
+      }
+    }
+
+    return updatedInvoice;
   }
 
   async remove(id: string) {
@@ -285,7 +333,14 @@ export class InvoicesService {
       include: { 
         payments: true,
         branch: true,
-        customer: true 
+        customer: true,
+        commission: true,
+        appointment: {
+          include: {
+            service: true,
+            staff: true
+          }
+        }
       },
     });
 
@@ -386,14 +441,27 @@ export class InvoicesService {
       newStatus = PaymentStatus.PAID;
     }
 
-    await this.prisma.invoice.update({
+    const updatedInvoice = await this.prisma.invoice.update({
       where: { id: invoiceId },
       data: {
         amountPaid: newAmountPaid,
         debt: newDebt,
         status: newStatus,
       },
+      include: {
+        commission: true,
+      },
     });
+
+    // Eğer fatura tamamen ödendi ise ve daha önce ödenmemiş ise, prim hesapla
+    if (newStatus === PaymentStatus.PAID && invoice.status !== PaymentStatus.PAID) {
+      try {
+        this.logger.log(`Fatura ödendi, prim hesaplanıyor: ${invoiceId}`);
+        await this.commissionsService.calculateCommissionForInvoice(invoiceId);
+      } catch (error) {
+        this.logger.error(`Prim hesaplama hatası: ${error.message}`);
+      }
+    }
 
     return payment;
   }

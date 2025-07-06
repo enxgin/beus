@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateServiceDto } from './dto/create-service.dto';
 import { UpdateServiceDto } from './dto/update-service.dto';
@@ -151,44 +151,30 @@ export class ServicesService {
   async update(id: string, updateServiceDto: UpdateServiceDto) {
     const { staffIds, ...serviceData } = updateServiceDto;
 
-    return this.prisma.$transaction(async (prisma) => {
-      // 1. Hizmetin kendi alanlarını güncelle
+    // Tüm işlemleri tek bir atomik transaction içinde güvenli bir şekilde yap
+    return this.prisma.$transaction(async (tx) => {
+      // 1. Hizmetin kendi alanlarını (fiyat, süre vb.) güncelle
+      //    Eğer DTO içinde hizmetle ilgili başka alanlar varsa, onlar güncellenir.
       if (Object.keys(serviceData).length > 0) {
-        await prisma.service.update({
+        await tx.service.update({
           where: { id },
           data: serviceData,
         });
       }
 
-      // 2. Personel ID'leri gönderildiyse, ilişkileri senkronize et
+      // 2. Personel ID'leri (staffIds) DTO içinde gönderildiyse, ilişkileri senkronize et.
+      //    Eğer staffIds gönderilmediyse (undefined), personel ilişkilerine dokunulmaz.
       if (staffIds !== undefined) {
-        const currentStaffLinks = await prisma.staffService.findMany({
+        // Önce bu hizmete bağlı mevcut TÜM personel ilişkilerini sil.
+        await tx.staffService.deleteMany({
           where: { serviceId: id },
-          select: { userId: true },
         });
-        const currentStaffIds = currentStaffLinks.map((link) => link.userId);
 
-        const staffToConnect = staffIds.filter(
-          (sid) => !currentStaffIds.includes(sid),
-        );
-        const staffToDisconnect = currentStaffIds.filter(
-          (sid) => !staffIds.includes(sid),
-        );
-
-        // 3. Artık atanmamış personeli kaldır
-        if (staffToDisconnect.length > 0) {
-          await prisma.staffService.deleteMany({
-            where: {
-              serviceId: id,
-              userId: { in: staffToDisconnect },
-            },
-          });
-        }
-
-        // 4. Yeni atanan personeli ekle
-        if (staffToConnect.length > 0) {
-          await prisma.staffService.createMany({
-            data: staffToConnect.map((userId) => ({
+        // Ardından, yeni listedeki her bir personel için yeni ilişki kayıtları oluştur.
+        // Eğer staffIds boş bir array ise, kimse eklenmez ve hizmet personelsiz kalır.
+        if (staffIds.length > 0) {
+          await tx.staffService.createMany({
+            data: staffIds.map((userId) => ({
               serviceId: id,
               userId: userId,
             })),
@@ -196,32 +182,25 @@ export class ServicesService {
         }
       }
 
-      // 5. Güncellenmiş hizmeti ve ilişkilerini döndür (findOne ile aynı mantık)
-      const service = await prisma.service.findUnique({
+      // 3. Son olarak, güncellenmiş hizmeti tüm ilişkileriyle birlikte döndür.
+      return tx.service.findUnique({
         where: { id },
         include: {
           category: true,
           branch: true,
+          staff: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                },
+              },
+            },
+          },
         },
       });
-
-      if (!service) {
-        throw new NotFoundException(`Hizmet bulunamadı: ID ${id}`);
-      }
-
-      const staffLinks = await prisma.staffService.findMany({
-        where: { serviceId: service.id },
-        select: { userId: true },
-      });
-
-      const userIds = staffLinks.map((sl) => sl.userId);
-
-      const staff = await prisma.user.findMany({
-        where: { id: { in: userIds } },
-        select: { id: true, name: true, email: true },
-      });
-
-      return { ...service, staff };
     });
   }
 
@@ -293,13 +272,21 @@ export class ServicesService {
     });
 
     if (serviceCount > 0) {
-      throw new NotFoundException(
-        `Bu kategoriye ait ${serviceCount} adet hizmet bulunmaktadır. Kategoriyi silemezsiniz.`,
+      // NotFoundException yerine BadRequestException kullanıyoruz
+      throw new BadRequestException(
+        `Bu kategoriye ait ${serviceCount} adet hizmet bulunmaktadır. Önce bu hizmetleri başka bir kategoriye taşıyın veya silin.`,
       );
     }
 
-    return this.prisma.serviceCategory.delete({
-      where: { id },
-    });
+    try {
+      return await this.prisma.serviceCategory.delete({
+        where: { id },
+      });
+    } catch (error) {
+      console.error('Kategori silme hatası:', error);
+      throw new BadRequestException(
+        'Kategori silinemedi. Başka kayıtlarla ilişkili olabilir.',
+      );
+    }
   }
 }

@@ -8,6 +8,8 @@ import {
   ServiceType,
   AppointmentStatus,
   PaymentStatus,
+  CommissionType,
+  CommissionStatus,
   Prisma,
 } from '@prisma/client';
 
@@ -20,5 +22,7 @@ export {
   ServiceType,
   AppointmentStatus,
   PaymentStatus,
+  CommissionType,
+  CommissionStatus,
   Prisma,
 };

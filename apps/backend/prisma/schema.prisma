@@ -26,6 +26,7 @@ model User {
   appointments        Appointment[]     @relation("StaffAppointments")
   cashRegisterActions CashRegisterLog[]
   commissions         StaffCommission[]
+  commissionRules     CommissionRule[]  // Personele özel kurallar
   services            StaffService[]
   branch              Branch?           @relation(fields: [branchId], references: [id], onDelete: Restrict)
   workHours           WorkHour[]
@@ -120,23 +121,34 @@ model ServiceCategory {
 }
 
 model Service {
-  id              String           @id @default(cuid())
+  id              String            @id @default(cuid())
   name            String
-  duration        Int?
+  description     String?
+  duration        Int
   price           Float
-  categoryId      String
-  branchId        String
-  createdAt       DateTime         @default(now())
   isActive        Boolean          @default(true)
-  updatedAt       DateTime         @default(now()) @updatedAt
   type            ServiceType      @default(TIME_BASED)
+  serviceType     ServiceType
+  maxCapacity     Int
+  unitCount       Int?
   commissionFixed Float?
   commissionRate  Float?
-  appointments    Appointment[]
-  packages        PackageService[]
+  categoryId      String
+  branchId        String
+  
+  // İlişkiler
   branch          Branch           @relation(fields: [branchId], references: [id], onDelete: Cascade)
   category        ServiceCategory  @relation(fields: [categoryId], references: [id])
+  appointments    Appointment[]    @relation("ServiceAppointments")
+  packages        PackageService[]
   staff           StaffService[]
+  
+  // Komisyon ilişkileri
+  commissionRules CommissionRule[]  // Hizmete özel kurallar
+  commissions     StaffCommission[] // Hizmet için verilen primler
+  
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
 }
 
 model StaffService {
@@ -218,7 +230,7 @@ model Appointment {
   updatedAt         DateTime          @updatedAt
   branch            Branch            @relation(fields: [branchId], references: [id], onDelete: Cascade)
   customer          Customer          @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  service           Service           @relation(fields: [serviceId], references: [id])
+  service           Service           @relation("ServiceAppointments", fields: [serviceId], references: [id])
   staff             User              @relation("StaffAppointments", fields: [staffId], references: [id])
   customerPackage   CustomerPackage?  @relation(fields: [customerPackageId], references: [id])
   invoice           Invoice?
@@ -254,15 +266,63 @@ model Payment {
   invoice           Invoice          @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
 }
 
+// Prim Tipleri için enum
+enum CommissionType {
+  PERCENTAGE
+  FIXED_AMOUNT
+}
+
+// Prim Durumları için enum
+enum CommissionStatus {
+  PENDING
+  APPROVED
+  PAID
+  CANCELED
+}
+
+// Prim Kuralları tablosu
+model CommissionRule {
+  id             String        @id @default(cuid())
+  type           CommissionType
+  value          Float        // Yüzdelik değer veya sabit tutar
+  description    String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  // İlişkisel alanlar - kural tiplerine göre
+  isGlobal       Boolean      @default(false)  // Genel kural mı?
+  serviceId      String?      // Hizmete özel kural için
+  userId         String?      // Personele özel kural için
+  
+  // İlişkiler
+  service        Service?     @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  user           User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  // Bir kural birden fazla komisyonu tetikleyebilir
+  commissions    StaffCommission[]
+
+  @@index([userId, serviceId, isGlobal]) // Performans için indeks
+}
+
 model StaffCommission {
-  id         String   @id @default(cuid())
-  amount     Float
-  isReversed Boolean  @default(false)
-  staffId    String
-  invoiceId  String   @unique
-  createdAt  DateTime @default(now())
-  invoice    Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
-  staff      User     @relation(fields: [staffId], references: [id])
+  id              String           @id @default(cuid())
+  amount          Float            // Hesaplanan prim tutarı
+  status          CommissionStatus @default(PENDING)
+  isReversed      Boolean          @default(false) // Geriye dönük uyumluluk için
+  appliedRuleId   String?          // Uygulanan kuralın ID'si
+  staffId         String           // Primi alan personelin ID'si
+  serviceId       String?          // İlgili hizmetin ID'si
+  invoiceId       String           @unique
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  
+  // İlişkiler
+  appliedRule     CommissionRule?  @relation(fields: [appliedRuleId], references: [id], onDelete: SetNull)
+  staff           User             @relation(fields: [staffId], references: [id])
+  service         Service?         @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  invoice         Invoice          @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  
+  @@index([staffId, serviceId, status])
 }
 
 model CashRegisterLog {
@@ -311,6 +371,8 @@ enum PaymentStatus {
   PAID
   UNPAID
   PARTIALLY_PAID
+  CANCELLED
+  REFUNDED
 }
 
 enum PaymentMethod {

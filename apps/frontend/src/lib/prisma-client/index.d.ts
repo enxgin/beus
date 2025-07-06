@@ -94,6 +94,11 @@ export type Invoice = $Result.DefaultSelection<Prisma.$InvoicePayload>
  */
 export type Payment = $Result.DefaultSelection<Prisma.$PaymentPayload>
 /**
+ * Model CommissionRule
+ * 
+ */
+export type CommissionRule = $Result.DefaultSelection<Prisma.$CommissionRulePayload>
+/**
  * Model StaffCommission
  * 
  */
@@ -108,7 +113,25 @@ export type CashRegisterLog = $Result.DefaultSelection<Prisma.$CashRegisterLogPa
  * Enums
  */
 export namespace $Enums {
-  export const UserRole: {
+  export const CommissionType: {
+  PERCENTAGE: 'PERCENTAGE',
+  FIXED_AMOUNT: 'FIXED_AMOUNT'
+};
+
+export type CommissionType = (typeof CommissionType)[keyof typeof CommissionType]
+
+
+export const CommissionStatus: {
+  PENDING: 'PENDING',
+  APPROVED: 'APPROVED',
+  PAID: 'PAID',
+  CANCELED: 'CANCELED'
+};
+
+export type CommissionStatus = (typeof CommissionStatus)[keyof typeof CommissionStatus]
+
+
+export const UserRole: {
   ADMIN: 'ADMIN',
   SUPER_BRANCH_MANAGER: 'SUPER_BRANCH_MANAGER',
   BRANCH_MANAGER: 'BRANCH_MANAGER',
@@ -152,7 +175,9 @@ export type AppointmentStatus = (typeof AppointmentStatus)[keyof typeof Appointm
 export const PaymentStatus: {
   PAID: 'PAID',
   UNPAID: 'UNPAID',
-  PARTIALLY_PAID: 'PARTIALLY_PAID'
+  PARTIALLY_PAID: 'PARTIALLY_PAID',
+  CANCELLED: 'CANCELLED',
+  REFUNDED: 'REFUNDED'
 };
 
 export type PaymentStatus = (typeof PaymentStatus)[keyof typeof PaymentStatus]
@@ -180,6 +205,14 @@ export const CashLogType: {
 export type CashLogType = (typeof CashLogType)[keyof typeof CashLogType]
 
 }
+
+export type CommissionType = $Enums.CommissionType
+
+export const CommissionType: typeof $Enums.CommissionType
+
+export type CommissionStatus = $Enums.CommissionStatus
+
+export const CommissionStatus: typeof $Enums.CommissionStatus
 
 export type UserRole = $Enums.UserRole
 
@@ -493,6 +526,16 @@ export class PrismaClient<
     * ```
     */
   get payment(): Prisma.PaymentDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.commissionRule`: Exposes CRUD operations for the **CommissionRule** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more CommissionRules
+    * const commissionRules = await prisma.commissionRule.findMany()
+    * ```
+    */
+  get commissionRule(): Prisma.CommissionRuleDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.staffCommission`: Exposes CRUD operations for the **StaffCommission** model.
@@ -969,6 +1012,7 @@ export namespace Prisma {
     Appointment: 'Appointment',
     Invoice: 'Invoice',
     Payment: 'Payment',
+    CommissionRule: 'CommissionRule',
     StaffCommission: 'StaffCommission',
     CashRegisterLog: 'CashRegisterLog'
   };
@@ -989,7 +1033,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "workHour" | "branch" | "tag" | "customerTag" | "customer" | "serviceCategory" | "service" | "staffService" | "package" | "packageService" | "customerPackage" | "packageUsageHistory" | "appointment" | "invoice" | "payment" | "staffCommission" | "cashRegisterLog"
+      modelProps: "user" | "workHour" | "branch" | "tag" | "customerTag" | "customer" | "serviceCategory" | "service" | "staffService" | "package" | "packageService" | "customerPackage" | "packageUsageHistory" | "appointment" | "invoice" | "payment" | "commissionRule" | "staffCommission" | "cashRegisterLog"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -2177,6 +2221,80 @@ export namespace Prisma {
           }
         }
       }
+      CommissionRule: {
+        payload: Prisma.$CommissionRulePayload<ExtArgs>
+        fields: Prisma.CommissionRuleFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.CommissionRuleFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CommissionRulePayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.CommissionRuleFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CommissionRulePayload>
+          }
+          findFirst: {
+            args: Prisma.CommissionRuleFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CommissionRulePayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.CommissionRuleFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CommissionRulePayload>
+          }
+          findMany: {
+            args: Prisma.CommissionRuleFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CommissionRulePayload>[]
+          }
+          create: {
+            args: Prisma.CommissionRuleCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CommissionRulePayload>
+          }
+          createMany: {
+            args: Prisma.CommissionRuleCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.CommissionRuleCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CommissionRulePayload>[]
+          }
+          delete: {
+            args: Prisma.CommissionRuleDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CommissionRulePayload>
+          }
+          update: {
+            args: Prisma.CommissionRuleUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CommissionRulePayload>
+          }
+          deleteMany: {
+            args: Prisma.CommissionRuleDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.CommissionRuleUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.CommissionRuleUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CommissionRulePayload>[]
+          }
+          upsert: {
+            args: Prisma.CommissionRuleUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CommissionRulePayload>
+          }
+          aggregate: {
+            args: Prisma.CommissionRuleAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateCommissionRule>
+          }
+          groupBy: {
+            args: Prisma.CommissionRuleGroupByArgs<ExtArgs>
+            result: $Utils.Optional<CommissionRuleGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.CommissionRuleCountArgs<ExtArgs>
+            result: $Utils.Optional<CommissionRuleCountAggregateOutputType> | number
+          }
+        }
+      }
       StaffCommission: {
         payload: Prisma.$StaffCommissionPayload<ExtArgs>
         fields: Prisma.StaffCommissionFieldRefs
@@ -2425,6 +2543,7 @@ export namespace Prisma {
     appointment?: AppointmentOmit
     invoice?: InvoiceOmit
     payment?: PaymentOmit
+    commissionRule?: CommissionRuleOmit
     staffCommission?: StaffCommissionOmit
     cashRegisterLog?: CashRegisterLogOmit
   }
@@ -2524,6 +2643,7 @@ export namespace Prisma {
     appointments: number
     cashRegisterActions: number
     commissions: number
+    commissionRules: number
     services: number
     workHours: number
   }
@@ -2532,6 +2652,7 @@ export namespace Prisma {
     appointments?: boolean | UserCountOutputTypeCountAppointmentsArgs
     cashRegisterActions?: boolean | UserCountOutputTypeCountCashRegisterActionsArgs
     commissions?: boolean | UserCountOutputTypeCountCommissionsArgs
+    commissionRules?: boolean | UserCountOutputTypeCountCommissionRulesArgs
     services?: boolean | UserCountOutputTypeCountServicesArgs
     workHours?: boolean | UserCountOutputTypeCountWorkHoursArgs
   }
@@ -2566,6 +2687,13 @@ export namespace Prisma {
    */
   export type UserCountOutputTypeCountCommissionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: StaffCommissionWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountCommissionRulesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: CommissionRuleWhereInput
   }
 
   /**
@@ -2823,12 +2951,16 @@ export namespace Prisma {
     appointments: number
     packages: number
     staff: number
+    commissionRules: number
+    commissions: number
   }
 
   export type ServiceCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     appointments?: boolean | ServiceCountOutputTypeCountAppointmentsArgs
     packages?: boolean | ServiceCountOutputTypeCountPackagesArgs
     staff?: boolean | ServiceCountOutputTypeCountStaffArgs
+    commissionRules?: boolean | ServiceCountOutputTypeCountCommissionRulesArgs
+    commissions?: boolean | ServiceCountOutputTypeCountCommissionsArgs
   }
 
   // Custom InputTypes
@@ -2861,6 +2993,20 @@ export namespace Prisma {
    */
   export type ServiceCountOutputTypeCountStaffArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: StaffServiceWhereInput
+  }
+
+  /**
+   * ServiceCountOutputType without action
+   */
+  export type ServiceCountOutputTypeCountCommissionRulesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: CommissionRuleWhereInput
+  }
+
+  /**
+   * ServiceCountOutputType without action
+   */
+  export type ServiceCountOutputTypeCountCommissionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: StaffCommissionWhereInput
   }
 
 
@@ -2972,6 +3118,37 @@ export namespace Prisma {
    */
   export type InvoiceCountOutputTypeCountPaymentsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: PaymentWhereInput
+  }
+
+
+  /**
+   * Count Type CommissionRuleCountOutputType
+   */
+
+  export type CommissionRuleCountOutputType = {
+    commissions: number
+  }
+
+  export type CommissionRuleCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    commissions?: boolean | CommissionRuleCountOutputTypeCountCommissionsArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * CommissionRuleCountOutputType without action
+   */
+  export type CommissionRuleCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CommissionRuleCountOutputType
+     */
+    select?: CommissionRuleCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * CommissionRuleCountOutputType without action
+   */
+  export type CommissionRuleCountOutputTypeCountCommissionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: StaffCommissionWhereInput
   }
 
 
@@ -3201,6 +3378,7 @@ export namespace Prisma {
     appointments?: boolean | User$appointmentsArgs<ExtArgs>
     cashRegisterActions?: boolean | User$cashRegisterActionsArgs<ExtArgs>
     commissions?: boolean | User$commissionsArgs<ExtArgs>
+    commissionRules?: boolean | User$commissionRulesArgs<ExtArgs>
     services?: boolean | User$servicesArgs<ExtArgs>
     branch?: boolean | User$branchArgs<ExtArgs>
     workHours?: boolean | User$workHoursArgs<ExtArgs>
@@ -3247,6 +3425,7 @@ export namespace Prisma {
     appointments?: boolean | User$appointmentsArgs<ExtArgs>
     cashRegisterActions?: boolean | User$cashRegisterActionsArgs<ExtArgs>
     commissions?: boolean | User$commissionsArgs<ExtArgs>
+    commissionRules?: boolean | User$commissionRulesArgs<ExtArgs>
     services?: boolean | User$servicesArgs<ExtArgs>
     branch?: boolean | User$branchArgs<ExtArgs>
     workHours?: boolean | User$workHoursArgs<ExtArgs>
@@ -3265,6 +3444,7 @@ export namespace Prisma {
       appointments: Prisma.$AppointmentPayload<ExtArgs>[]
       cashRegisterActions: Prisma.$CashRegisterLogPayload<ExtArgs>[]
       commissions: Prisma.$StaffCommissionPayload<ExtArgs>[]
+      commissionRules: Prisma.$CommissionRulePayload<ExtArgs>[]
       services: Prisma.$StaffServicePayload<ExtArgs>[]
       branch: Prisma.$BranchPayload<ExtArgs> | null
       workHours: Prisma.$WorkHourPayload<ExtArgs>[]
@@ -3675,6 +3855,7 @@ export namespace Prisma {
     appointments<T extends User$appointmentsArgs<ExtArgs> = {}>(args?: Subset<T, User$appointmentsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AppointmentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     cashRegisterActions<T extends User$cashRegisterActionsArgs<ExtArgs> = {}>(args?: Subset<T, User$cashRegisterActionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CashRegisterLogPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     commissions<T extends User$commissionsArgs<ExtArgs> = {}>(args?: Subset<T, User$commissionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$StaffCommissionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    commissionRules<T extends User$commissionRulesArgs<ExtArgs> = {}>(args?: Subset<T, User$commissionRulesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CommissionRulePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     services<T extends User$servicesArgs<ExtArgs> = {}>(args?: Subset<T, User$servicesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$StaffServicePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     branch<T extends User$branchArgs<ExtArgs> = {}>(args?: Subset<T, User$branchArgs<ExtArgs>>): Prisma__BranchClient<$Result.GetResult<Prisma.$BranchPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     workHours<T extends User$workHoursArgs<ExtArgs> = {}>(args?: Subset<T, User$workHoursArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$WorkHourPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -4180,6 +4361,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: StaffCommissionScalarFieldEnum | StaffCommissionScalarFieldEnum[]
+  }
+
+  /**
+   * User.commissionRules
+   */
+  export type User$commissionRulesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CommissionRule
+     */
+    select?: CommissionRuleSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CommissionRule
+     */
+    omit?: CommissionRuleOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CommissionRuleInclude<ExtArgs> | null
+    where?: CommissionRuleWhereInput
+    orderBy?: CommissionRuleOrderByWithRelationInput | CommissionRuleOrderByWithRelationInput[]
+    cursor?: CommissionRuleWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: CommissionRuleScalarFieldEnum | CommissionRuleScalarFieldEnum[]
   }
 
   /**
@@ -11338,6 +11543,8 @@ export namespace Prisma {
   export type ServiceAvgAggregateOutputType = {
     duration: number | null
     price: number | null
+    maxCapacity: number | null
+    unitCount: number | null
     commissionFixed: number | null
     commissionRate: number | null
   }
@@ -11345,6 +11552,8 @@ export namespace Prisma {
   export type ServiceSumAggregateOutputType = {
     duration: number | null
     price: number | null
+    maxCapacity: number | null
+    unitCount: number | null
     commissionFixed: number | null
     commissionRate: number | null
   }
@@ -11352,46 +11561,58 @@ export namespace Prisma {
   export type ServiceMinAggregateOutputType = {
     id: string | null
     name: string | null
+    description: string | null
     duration: number | null
     price: number | null
+    isActive: boolean | null
+    type: $Enums.ServiceType | null
+    serviceType: $Enums.ServiceType | null
+    maxCapacity: number | null
+    unitCount: number | null
+    commissionFixed: number | null
+    commissionRate: number | null
     categoryId: string | null
     branchId: string | null
     createdAt: Date | null
-    isActive: boolean | null
     updatedAt: Date | null
-    type: $Enums.ServiceType | null
-    commissionFixed: number | null
-    commissionRate: number | null
   }
 
   export type ServiceMaxAggregateOutputType = {
     id: string | null
     name: string | null
+    description: string | null
     duration: number | null
     price: number | null
+    isActive: boolean | null
+    type: $Enums.ServiceType | null
+    serviceType: $Enums.ServiceType | null
+    maxCapacity: number | null
+    unitCount: number | null
+    commissionFixed: number | null
+    commissionRate: number | null
     categoryId: string | null
     branchId: string | null
     createdAt: Date | null
-    isActive: boolean | null
     updatedAt: Date | null
-    type: $Enums.ServiceType | null
-    commissionFixed: number | null
-    commissionRate: number | null
   }
 
   export type ServiceCountAggregateOutputType = {
     id: number
     name: number
+    description: number
     duration: number
     price: number
+    isActive: number
+    type: number
+    serviceType: number
+    maxCapacity: number
+    unitCount: number
+    commissionFixed: number
+    commissionRate: number
     categoryId: number
     branchId: number
     createdAt: number
-    isActive: number
     updatedAt: number
-    type: number
-    commissionFixed: number
-    commissionRate: number
     _all: number
   }
 
@@ -11399,6 +11620,8 @@ export namespace Prisma {
   export type ServiceAvgAggregateInputType = {
     duration?: true
     price?: true
+    maxCapacity?: true
+    unitCount?: true
     commissionFixed?: true
     commissionRate?: true
   }
@@ -11406,6 +11629,8 @@ export namespace Prisma {
   export type ServiceSumAggregateInputType = {
     duration?: true
     price?: true
+    maxCapacity?: true
+    unitCount?: true
     commissionFixed?: true
     commissionRate?: true
   }
@@ -11413,46 +11638,58 @@ export namespace Prisma {
   export type ServiceMinAggregateInputType = {
     id?: true
     name?: true
+    description?: true
     duration?: true
     price?: true
+    isActive?: true
+    type?: true
+    serviceType?: true
+    maxCapacity?: true
+    unitCount?: true
+    commissionFixed?: true
+    commissionRate?: true
     categoryId?: true
     branchId?: true
     createdAt?: true
-    isActive?: true
     updatedAt?: true
-    type?: true
-    commissionFixed?: true
-    commissionRate?: true
   }
 
   export type ServiceMaxAggregateInputType = {
     id?: true
     name?: true
+    description?: true
     duration?: true
     price?: true
+    isActive?: true
+    type?: true
+    serviceType?: true
+    maxCapacity?: true
+    unitCount?: true
+    commissionFixed?: true
+    commissionRate?: true
     categoryId?: true
     branchId?: true
     createdAt?: true
-    isActive?: true
     updatedAt?: true
-    type?: true
-    commissionFixed?: true
-    commissionRate?: true
   }
 
   export type ServiceCountAggregateInputType = {
     id?: true
     name?: true
+    description?: true
     duration?: true
     price?: true
+    isActive?: true
+    type?: true
+    serviceType?: true
+    maxCapacity?: true
+    unitCount?: true
+    commissionFixed?: true
+    commissionRate?: true
     categoryId?: true
     branchId?: true
     createdAt?: true
-    isActive?: true
     updatedAt?: true
-    type?: true
-    commissionFixed?: true
-    commissionRate?: true
     _all?: true
   }
 
@@ -11545,16 +11782,20 @@ export namespace Prisma {
   export type ServiceGroupByOutputType = {
     id: string
     name: string
-    duration: number | null
+    description: string | null
+    duration: number
     price: number
+    isActive: boolean
+    type: $Enums.ServiceType
+    serviceType: $Enums.ServiceType
+    maxCapacity: number
+    unitCount: number | null
+    commissionFixed: number | null
+    commissionRate: number | null
     categoryId: string
     branchId: string
     createdAt: Date
-    isActive: boolean
     updatedAt: Date
-    type: $Enums.ServiceType
-    commissionFixed: number | null
-    commissionRate: number | null
     _count: ServiceCountAggregateOutputType | null
     _avg: ServiceAvgAggregateOutputType | null
     _sum: ServiceSumAggregateOutputType | null
@@ -11579,37 +11820,47 @@ export namespace Prisma {
   export type ServiceSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     name?: boolean
+    description?: boolean
     duration?: boolean
     price?: boolean
+    isActive?: boolean
+    type?: boolean
+    serviceType?: boolean
+    maxCapacity?: boolean
+    unitCount?: boolean
+    commissionFixed?: boolean
+    commissionRate?: boolean
     categoryId?: boolean
     branchId?: boolean
     createdAt?: boolean
-    isActive?: boolean
     updatedAt?: boolean
-    type?: boolean
-    commissionFixed?: boolean
-    commissionRate?: boolean
-    appointments?: boolean | Service$appointmentsArgs<ExtArgs>
-    packages?: boolean | Service$packagesArgs<ExtArgs>
     branch?: boolean | BranchDefaultArgs<ExtArgs>
     category?: boolean | ServiceCategoryDefaultArgs<ExtArgs>
+    appointments?: boolean | Service$appointmentsArgs<ExtArgs>
+    packages?: boolean | Service$packagesArgs<ExtArgs>
     staff?: boolean | Service$staffArgs<ExtArgs>
+    commissionRules?: boolean | Service$commissionRulesArgs<ExtArgs>
+    commissions?: boolean | Service$commissionsArgs<ExtArgs>
     _count?: boolean | ServiceCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["service"]>
 
   export type ServiceSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     name?: boolean
+    description?: boolean
     duration?: boolean
     price?: boolean
+    isActive?: boolean
+    type?: boolean
+    serviceType?: boolean
+    maxCapacity?: boolean
+    unitCount?: boolean
+    commissionFixed?: boolean
+    commissionRate?: boolean
     categoryId?: boolean
     branchId?: boolean
     createdAt?: boolean
-    isActive?: boolean
     updatedAt?: boolean
-    type?: boolean
-    commissionFixed?: boolean
-    commissionRate?: boolean
     branch?: boolean | BranchDefaultArgs<ExtArgs>
     category?: boolean | ServiceCategoryDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["service"]>
@@ -11617,16 +11868,20 @@ export namespace Prisma {
   export type ServiceSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     name?: boolean
+    description?: boolean
     duration?: boolean
     price?: boolean
+    isActive?: boolean
+    type?: boolean
+    serviceType?: boolean
+    maxCapacity?: boolean
+    unitCount?: boolean
+    commissionFixed?: boolean
+    commissionRate?: boolean
     categoryId?: boolean
     branchId?: boolean
     createdAt?: boolean
-    isActive?: boolean
     updatedAt?: boolean
-    type?: boolean
-    commissionFixed?: boolean
-    commissionRate?: boolean
     branch?: boolean | BranchDefaultArgs<ExtArgs>
     category?: boolean | ServiceCategoryDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["service"]>
@@ -11634,25 +11889,31 @@ export namespace Prisma {
   export type ServiceSelectScalar = {
     id?: boolean
     name?: boolean
+    description?: boolean
     duration?: boolean
     price?: boolean
+    isActive?: boolean
+    type?: boolean
+    serviceType?: boolean
+    maxCapacity?: boolean
+    unitCount?: boolean
+    commissionFixed?: boolean
+    commissionRate?: boolean
     categoryId?: boolean
     branchId?: boolean
     createdAt?: boolean
-    isActive?: boolean
     updatedAt?: boolean
-    type?: boolean
-    commissionFixed?: boolean
-    commissionRate?: boolean
   }
 
-  export type ServiceOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "duration" | "price" | "categoryId" | "branchId" | "createdAt" | "isActive" | "updatedAt" | "type" | "commissionFixed" | "commissionRate", ExtArgs["result"]["service"]>
+  export type ServiceOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "description" | "duration" | "price" | "isActive" | "type" | "serviceType" | "maxCapacity" | "unitCount" | "commissionFixed" | "commissionRate" | "categoryId" | "branchId" | "createdAt" | "updatedAt", ExtArgs["result"]["service"]>
   export type ServiceInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    appointments?: boolean | Service$appointmentsArgs<ExtArgs>
-    packages?: boolean | Service$packagesArgs<ExtArgs>
     branch?: boolean | BranchDefaultArgs<ExtArgs>
     category?: boolean | ServiceCategoryDefaultArgs<ExtArgs>
+    appointments?: boolean | Service$appointmentsArgs<ExtArgs>
+    packages?: boolean | Service$packagesArgs<ExtArgs>
     staff?: boolean | Service$staffArgs<ExtArgs>
+    commissionRules?: boolean | Service$commissionRulesArgs<ExtArgs>
+    commissions?: boolean | Service$commissionsArgs<ExtArgs>
     _count?: boolean | ServiceCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type ServiceIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -11667,25 +11928,31 @@ export namespace Prisma {
   export type $ServicePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Service"
     objects: {
-      appointments: Prisma.$AppointmentPayload<ExtArgs>[]
-      packages: Prisma.$PackageServicePayload<ExtArgs>[]
       branch: Prisma.$BranchPayload<ExtArgs>
       category: Prisma.$ServiceCategoryPayload<ExtArgs>
+      appointments: Prisma.$AppointmentPayload<ExtArgs>[]
+      packages: Prisma.$PackageServicePayload<ExtArgs>[]
       staff: Prisma.$StaffServicePayload<ExtArgs>[]
+      commissionRules: Prisma.$CommissionRulePayload<ExtArgs>[]
+      commissions: Prisma.$StaffCommissionPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
       name: string
-      duration: number | null
+      description: string | null
+      duration: number
       price: number
+      isActive: boolean
+      type: $Enums.ServiceType
+      serviceType: $Enums.ServiceType
+      maxCapacity: number
+      unitCount: number | null
+      commissionFixed: number | null
+      commissionRate: number | null
       categoryId: string
       branchId: string
       createdAt: Date
-      isActive: boolean
       updatedAt: Date
-      type: $Enums.ServiceType
-      commissionFixed: number | null
-      commissionRate: number | null
     }, ExtArgs["result"]["service"]>
     composites: {}
   }
@@ -12080,11 +12347,13 @@ export namespace Prisma {
    */
   export interface Prisma__ServiceClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
-    appointments<T extends Service$appointmentsArgs<ExtArgs> = {}>(args?: Subset<T, Service$appointmentsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AppointmentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-    packages<T extends Service$packagesArgs<ExtArgs> = {}>(args?: Subset<T, Service$packagesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PackageServicePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     branch<T extends BranchDefaultArgs<ExtArgs> = {}>(args?: Subset<T, BranchDefaultArgs<ExtArgs>>): Prisma__BranchClient<$Result.GetResult<Prisma.$BranchPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     category<T extends ServiceCategoryDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ServiceCategoryDefaultArgs<ExtArgs>>): Prisma__ServiceCategoryClient<$Result.GetResult<Prisma.$ServiceCategoryPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    appointments<T extends Service$appointmentsArgs<ExtArgs> = {}>(args?: Subset<T, Service$appointmentsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AppointmentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    packages<T extends Service$packagesArgs<ExtArgs> = {}>(args?: Subset<T, Service$packagesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PackageServicePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     staff<T extends Service$staffArgs<ExtArgs> = {}>(args?: Subset<T, Service$staffArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$StaffServicePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    commissionRules<T extends Service$commissionRulesArgs<ExtArgs> = {}>(args?: Subset<T, Service$commissionRulesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CommissionRulePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    commissions<T extends Service$commissionsArgs<ExtArgs> = {}>(args?: Subset<T, Service$commissionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$StaffCommissionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -12116,16 +12385,20 @@ export namespace Prisma {
   interface ServiceFieldRefs {
     readonly id: FieldRef<"Service", 'String'>
     readonly name: FieldRef<"Service", 'String'>
+    readonly description: FieldRef<"Service", 'String'>
     readonly duration: FieldRef<"Service", 'Int'>
     readonly price: FieldRef<"Service", 'Float'>
+    readonly isActive: FieldRef<"Service", 'Boolean'>
+    readonly type: FieldRef<"Service", 'ServiceType'>
+    readonly serviceType: FieldRef<"Service", 'ServiceType'>
+    readonly maxCapacity: FieldRef<"Service", 'Int'>
+    readonly unitCount: FieldRef<"Service", 'Int'>
+    readonly commissionFixed: FieldRef<"Service", 'Float'>
+    readonly commissionRate: FieldRef<"Service", 'Float'>
     readonly categoryId: FieldRef<"Service", 'String'>
     readonly branchId: FieldRef<"Service", 'String'>
     readonly createdAt: FieldRef<"Service", 'DateTime'>
-    readonly isActive: FieldRef<"Service", 'Boolean'>
     readonly updatedAt: FieldRef<"Service", 'DateTime'>
-    readonly type: FieldRef<"Service", 'ServiceType'>
-    readonly commissionFixed: FieldRef<"Service", 'Float'>
-    readonly commissionRate: FieldRef<"Service", 'Float'>
   }
     
 
@@ -12591,6 +12864,54 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: StaffServiceScalarFieldEnum | StaffServiceScalarFieldEnum[]
+  }
+
+  /**
+   * Service.commissionRules
+   */
+  export type Service$commissionRulesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CommissionRule
+     */
+    select?: CommissionRuleSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CommissionRule
+     */
+    omit?: CommissionRuleOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CommissionRuleInclude<ExtArgs> | null
+    where?: CommissionRuleWhereInput
+    orderBy?: CommissionRuleOrderByWithRelationInput | CommissionRuleOrderByWithRelationInput[]
+    cursor?: CommissionRuleWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: CommissionRuleScalarFieldEnum | CommissionRuleScalarFieldEnum[]
+  }
+
+  /**
+   * Service.commissions
+   */
+  export type Service$commissionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StaffCommission
+     */
+    select?: StaffCommissionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StaffCommission
+     */
+    omit?: StaffCommissionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StaffCommissionInclude<ExtArgs> | null
+    where?: StaffCommissionWhereInput
+    orderBy?: StaffCommissionOrderByWithRelationInput | StaffCommissionOrderByWithRelationInput[]
+    cursor?: StaffCommissionWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: StaffCommissionScalarFieldEnum | StaffCommissionScalarFieldEnum[]
   }
 
   /**
@@ -21910,6 +22231,1226 @@ export namespace Prisma {
 
 
   /**
+   * Model CommissionRule
+   */
+
+  export type AggregateCommissionRule = {
+    _count: CommissionRuleCountAggregateOutputType | null
+    _avg: CommissionRuleAvgAggregateOutputType | null
+    _sum: CommissionRuleSumAggregateOutputType | null
+    _min: CommissionRuleMinAggregateOutputType | null
+    _max: CommissionRuleMaxAggregateOutputType | null
+  }
+
+  export type CommissionRuleAvgAggregateOutputType = {
+    value: number | null
+  }
+
+  export type CommissionRuleSumAggregateOutputType = {
+    value: number | null
+  }
+
+  export type CommissionRuleMinAggregateOutputType = {
+    id: string | null
+    type: $Enums.CommissionType | null
+    value: number | null
+    description: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+    isGlobal: boolean | null
+    serviceId: string | null
+    userId: string | null
+  }
+
+  export type CommissionRuleMaxAggregateOutputType = {
+    id: string | null
+    type: $Enums.CommissionType | null
+    value: number | null
+    description: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+    isGlobal: boolean | null
+    serviceId: string | null
+    userId: string | null
+  }
+
+  export type CommissionRuleCountAggregateOutputType = {
+    id: number
+    type: number
+    value: number
+    description: number
+    createdAt: number
+    updatedAt: number
+    isGlobal: number
+    serviceId: number
+    userId: number
+    _all: number
+  }
+
+
+  export type CommissionRuleAvgAggregateInputType = {
+    value?: true
+  }
+
+  export type CommissionRuleSumAggregateInputType = {
+    value?: true
+  }
+
+  export type CommissionRuleMinAggregateInputType = {
+    id?: true
+    type?: true
+    value?: true
+    description?: true
+    createdAt?: true
+    updatedAt?: true
+    isGlobal?: true
+    serviceId?: true
+    userId?: true
+  }
+
+  export type CommissionRuleMaxAggregateInputType = {
+    id?: true
+    type?: true
+    value?: true
+    description?: true
+    createdAt?: true
+    updatedAt?: true
+    isGlobal?: true
+    serviceId?: true
+    userId?: true
+  }
+
+  export type CommissionRuleCountAggregateInputType = {
+    id?: true
+    type?: true
+    value?: true
+    description?: true
+    createdAt?: true
+    updatedAt?: true
+    isGlobal?: true
+    serviceId?: true
+    userId?: true
+    _all?: true
+  }
+
+  export type CommissionRuleAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which CommissionRule to aggregate.
+     */
+    where?: CommissionRuleWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CommissionRules to fetch.
+     */
+    orderBy?: CommissionRuleOrderByWithRelationInput | CommissionRuleOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: CommissionRuleWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CommissionRules from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CommissionRules.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned CommissionRules
+    **/
+    _count?: true | CommissionRuleCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: CommissionRuleAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: CommissionRuleSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: CommissionRuleMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: CommissionRuleMaxAggregateInputType
+  }
+
+  export type GetCommissionRuleAggregateType<T extends CommissionRuleAggregateArgs> = {
+        [P in keyof T & keyof AggregateCommissionRule]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateCommissionRule[P]>
+      : GetScalarType<T[P], AggregateCommissionRule[P]>
+  }
+
+
+
+
+  export type CommissionRuleGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: CommissionRuleWhereInput
+    orderBy?: CommissionRuleOrderByWithAggregationInput | CommissionRuleOrderByWithAggregationInput[]
+    by: CommissionRuleScalarFieldEnum[] | CommissionRuleScalarFieldEnum
+    having?: CommissionRuleScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: CommissionRuleCountAggregateInputType | true
+    _avg?: CommissionRuleAvgAggregateInputType
+    _sum?: CommissionRuleSumAggregateInputType
+    _min?: CommissionRuleMinAggregateInputType
+    _max?: CommissionRuleMaxAggregateInputType
+  }
+
+  export type CommissionRuleGroupByOutputType = {
+    id: string
+    type: $Enums.CommissionType
+    value: number
+    description: string | null
+    createdAt: Date
+    updatedAt: Date
+    isGlobal: boolean
+    serviceId: string | null
+    userId: string | null
+    _count: CommissionRuleCountAggregateOutputType | null
+    _avg: CommissionRuleAvgAggregateOutputType | null
+    _sum: CommissionRuleSumAggregateOutputType | null
+    _min: CommissionRuleMinAggregateOutputType | null
+    _max: CommissionRuleMaxAggregateOutputType | null
+  }
+
+  type GetCommissionRuleGroupByPayload<T extends CommissionRuleGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<CommissionRuleGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof CommissionRuleGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], CommissionRuleGroupByOutputType[P]>
+            : GetScalarType<T[P], CommissionRuleGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type CommissionRuleSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    type?: boolean
+    value?: boolean
+    description?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    isGlobal?: boolean
+    serviceId?: boolean
+    userId?: boolean
+    service?: boolean | CommissionRule$serviceArgs<ExtArgs>
+    user?: boolean | CommissionRule$userArgs<ExtArgs>
+    commissions?: boolean | CommissionRule$commissionsArgs<ExtArgs>
+    _count?: boolean | CommissionRuleCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["commissionRule"]>
+
+  export type CommissionRuleSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    type?: boolean
+    value?: boolean
+    description?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    isGlobal?: boolean
+    serviceId?: boolean
+    userId?: boolean
+    service?: boolean | CommissionRule$serviceArgs<ExtArgs>
+    user?: boolean | CommissionRule$userArgs<ExtArgs>
+  }, ExtArgs["result"]["commissionRule"]>
+
+  export type CommissionRuleSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    type?: boolean
+    value?: boolean
+    description?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    isGlobal?: boolean
+    serviceId?: boolean
+    userId?: boolean
+    service?: boolean | CommissionRule$serviceArgs<ExtArgs>
+    user?: boolean | CommissionRule$userArgs<ExtArgs>
+  }, ExtArgs["result"]["commissionRule"]>
+
+  export type CommissionRuleSelectScalar = {
+    id?: boolean
+    type?: boolean
+    value?: boolean
+    description?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    isGlobal?: boolean
+    serviceId?: boolean
+    userId?: boolean
+  }
+
+  export type CommissionRuleOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "type" | "value" | "description" | "createdAt" | "updatedAt" | "isGlobal" | "serviceId" | "userId", ExtArgs["result"]["commissionRule"]>
+  export type CommissionRuleInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    service?: boolean | CommissionRule$serviceArgs<ExtArgs>
+    user?: boolean | CommissionRule$userArgs<ExtArgs>
+    commissions?: boolean | CommissionRule$commissionsArgs<ExtArgs>
+    _count?: boolean | CommissionRuleCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type CommissionRuleIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    service?: boolean | CommissionRule$serviceArgs<ExtArgs>
+    user?: boolean | CommissionRule$userArgs<ExtArgs>
+  }
+  export type CommissionRuleIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    service?: boolean | CommissionRule$serviceArgs<ExtArgs>
+    user?: boolean | CommissionRule$userArgs<ExtArgs>
+  }
+
+  export type $CommissionRulePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "CommissionRule"
+    objects: {
+      service: Prisma.$ServicePayload<ExtArgs> | null
+      user: Prisma.$UserPayload<ExtArgs> | null
+      commissions: Prisma.$StaffCommissionPayload<ExtArgs>[]
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      type: $Enums.CommissionType
+      value: number
+      description: string | null
+      createdAt: Date
+      updatedAt: Date
+      isGlobal: boolean
+      serviceId: string | null
+      userId: string | null
+    }, ExtArgs["result"]["commissionRule"]>
+    composites: {}
+  }
+
+  type CommissionRuleGetPayload<S extends boolean | null | undefined | CommissionRuleDefaultArgs> = $Result.GetResult<Prisma.$CommissionRulePayload, S>
+
+  type CommissionRuleCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<CommissionRuleFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: CommissionRuleCountAggregateInputType | true
+    }
+
+  export interface CommissionRuleDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['CommissionRule'], meta: { name: 'CommissionRule' } }
+    /**
+     * Find zero or one CommissionRule that matches the filter.
+     * @param {CommissionRuleFindUniqueArgs} args - Arguments to find a CommissionRule
+     * @example
+     * // Get one CommissionRule
+     * const commissionRule = await prisma.commissionRule.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends CommissionRuleFindUniqueArgs>(args: SelectSubset<T, CommissionRuleFindUniqueArgs<ExtArgs>>): Prisma__CommissionRuleClient<$Result.GetResult<Prisma.$CommissionRulePayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one CommissionRule that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {CommissionRuleFindUniqueOrThrowArgs} args - Arguments to find a CommissionRule
+     * @example
+     * // Get one CommissionRule
+     * const commissionRule = await prisma.commissionRule.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends CommissionRuleFindUniqueOrThrowArgs>(args: SelectSubset<T, CommissionRuleFindUniqueOrThrowArgs<ExtArgs>>): Prisma__CommissionRuleClient<$Result.GetResult<Prisma.$CommissionRulePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first CommissionRule that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CommissionRuleFindFirstArgs} args - Arguments to find a CommissionRule
+     * @example
+     * // Get one CommissionRule
+     * const commissionRule = await prisma.commissionRule.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends CommissionRuleFindFirstArgs>(args?: SelectSubset<T, CommissionRuleFindFirstArgs<ExtArgs>>): Prisma__CommissionRuleClient<$Result.GetResult<Prisma.$CommissionRulePayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first CommissionRule that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CommissionRuleFindFirstOrThrowArgs} args - Arguments to find a CommissionRule
+     * @example
+     * // Get one CommissionRule
+     * const commissionRule = await prisma.commissionRule.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends CommissionRuleFindFirstOrThrowArgs>(args?: SelectSubset<T, CommissionRuleFindFirstOrThrowArgs<ExtArgs>>): Prisma__CommissionRuleClient<$Result.GetResult<Prisma.$CommissionRulePayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more CommissionRules that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CommissionRuleFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all CommissionRules
+     * const commissionRules = await prisma.commissionRule.findMany()
+     * 
+     * // Get first 10 CommissionRules
+     * const commissionRules = await prisma.commissionRule.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const commissionRuleWithIdOnly = await prisma.commissionRule.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends CommissionRuleFindManyArgs>(args?: SelectSubset<T, CommissionRuleFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CommissionRulePayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a CommissionRule.
+     * @param {CommissionRuleCreateArgs} args - Arguments to create a CommissionRule.
+     * @example
+     * // Create one CommissionRule
+     * const CommissionRule = await prisma.commissionRule.create({
+     *   data: {
+     *     // ... data to create a CommissionRule
+     *   }
+     * })
+     * 
+     */
+    create<T extends CommissionRuleCreateArgs>(args: SelectSubset<T, CommissionRuleCreateArgs<ExtArgs>>): Prisma__CommissionRuleClient<$Result.GetResult<Prisma.$CommissionRulePayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many CommissionRules.
+     * @param {CommissionRuleCreateManyArgs} args - Arguments to create many CommissionRules.
+     * @example
+     * // Create many CommissionRules
+     * const commissionRule = await prisma.commissionRule.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends CommissionRuleCreateManyArgs>(args?: SelectSubset<T, CommissionRuleCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many CommissionRules and returns the data saved in the database.
+     * @param {CommissionRuleCreateManyAndReturnArgs} args - Arguments to create many CommissionRules.
+     * @example
+     * // Create many CommissionRules
+     * const commissionRule = await prisma.commissionRule.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many CommissionRules and only return the `id`
+     * const commissionRuleWithIdOnly = await prisma.commissionRule.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends CommissionRuleCreateManyAndReturnArgs>(args?: SelectSubset<T, CommissionRuleCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CommissionRulePayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a CommissionRule.
+     * @param {CommissionRuleDeleteArgs} args - Arguments to delete one CommissionRule.
+     * @example
+     * // Delete one CommissionRule
+     * const CommissionRule = await prisma.commissionRule.delete({
+     *   where: {
+     *     // ... filter to delete one CommissionRule
+     *   }
+     * })
+     * 
+     */
+    delete<T extends CommissionRuleDeleteArgs>(args: SelectSubset<T, CommissionRuleDeleteArgs<ExtArgs>>): Prisma__CommissionRuleClient<$Result.GetResult<Prisma.$CommissionRulePayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one CommissionRule.
+     * @param {CommissionRuleUpdateArgs} args - Arguments to update one CommissionRule.
+     * @example
+     * // Update one CommissionRule
+     * const commissionRule = await prisma.commissionRule.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends CommissionRuleUpdateArgs>(args: SelectSubset<T, CommissionRuleUpdateArgs<ExtArgs>>): Prisma__CommissionRuleClient<$Result.GetResult<Prisma.$CommissionRulePayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more CommissionRules.
+     * @param {CommissionRuleDeleteManyArgs} args - Arguments to filter CommissionRules to delete.
+     * @example
+     * // Delete a few CommissionRules
+     * const { count } = await prisma.commissionRule.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends CommissionRuleDeleteManyArgs>(args?: SelectSubset<T, CommissionRuleDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more CommissionRules.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CommissionRuleUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many CommissionRules
+     * const commissionRule = await prisma.commissionRule.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends CommissionRuleUpdateManyArgs>(args: SelectSubset<T, CommissionRuleUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more CommissionRules and returns the data updated in the database.
+     * @param {CommissionRuleUpdateManyAndReturnArgs} args - Arguments to update many CommissionRules.
+     * @example
+     * // Update many CommissionRules
+     * const commissionRule = await prisma.commissionRule.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more CommissionRules and only return the `id`
+     * const commissionRuleWithIdOnly = await prisma.commissionRule.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends CommissionRuleUpdateManyAndReturnArgs>(args: SelectSubset<T, CommissionRuleUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CommissionRulePayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one CommissionRule.
+     * @param {CommissionRuleUpsertArgs} args - Arguments to update or create a CommissionRule.
+     * @example
+     * // Update or create a CommissionRule
+     * const commissionRule = await prisma.commissionRule.upsert({
+     *   create: {
+     *     // ... data to create a CommissionRule
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the CommissionRule we want to update
+     *   }
+     * })
+     */
+    upsert<T extends CommissionRuleUpsertArgs>(args: SelectSubset<T, CommissionRuleUpsertArgs<ExtArgs>>): Prisma__CommissionRuleClient<$Result.GetResult<Prisma.$CommissionRulePayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of CommissionRules.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CommissionRuleCountArgs} args - Arguments to filter CommissionRules to count.
+     * @example
+     * // Count the number of CommissionRules
+     * const count = await prisma.commissionRule.count({
+     *   where: {
+     *     // ... the filter for the CommissionRules we want to count
+     *   }
+     * })
+    **/
+    count<T extends CommissionRuleCountArgs>(
+      args?: Subset<T, CommissionRuleCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], CommissionRuleCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a CommissionRule.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CommissionRuleAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends CommissionRuleAggregateArgs>(args: Subset<T, CommissionRuleAggregateArgs>): Prisma.PrismaPromise<GetCommissionRuleAggregateType<T>>
+
+    /**
+     * Group by CommissionRule.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CommissionRuleGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends CommissionRuleGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: CommissionRuleGroupByArgs['orderBy'] }
+        : { orderBy?: CommissionRuleGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, CommissionRuleGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetCommissionRuleGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the CommissionRule model
+   */
+  readonly fields: CommissionRuleFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for CommissionRule.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__CommissionRuleClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    service<T extends CommissionRule$serviceArgs<ExtArgs> = {}>(args?: Subset<T, CommissionRule$serviceArgs<ExtArgs>>): Prisma__ServiceClient<$Result.GetResult<Prisma.$ServicePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    user<T extends CommissionRule$userArgs<ExtArgs> = {}>(args?: Subset<T, CommissionRule$userArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    commissions<T extends CommissionRule$commissionsArgs<ExtArgs> = {}>(args?: Subset<T, CommissionRule$commissionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$StaffCommissionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the CommissionRule model
+   */
+  interface CommissionRuleFieldRefs {
+    readonly id: FieldRef<"CommissionRule", 'String'>
+    readonly type: FieldRef<"CommissionRule", 'CommissionType'>
+    readonly value: FieldRef<"CommissionRule", 'Float'>
+    readonly description: FieldRef<"CommissionRule", 'String'>
+    readonly createdAt: FieldRef<"CommissionRule", 'DateTime'>
+    readonly updatedAt: FieldRef<"CommissionRule", 'DateTime'>
+    readonly isGlobal: FieldRef<"CommissionRule", 'Boolean'>
+    readonly serviceId: FieldRef<"CommissionRule", 'String'>
+    readonly userId: FieldRef<"CommissionRule", 'String'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * CommissionRule findUnique
+   */
+  export type CommissionRuleFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CommissionRule
+     */
+    select?: CommissionRuleSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CommissionRule
+     */
+    omit?: CommissionRuleOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CommissionRuleInclude<ExtArgs> | null
+    /**
+     * Filter, which CommissionRule to fetch.
+     */
+    where: CommissionRuleWhereUniqueInput
+  }
+
+  /**
+   * CommissionRule findUniqueOrThrow
+   */
+  export type CommissionRuleFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CommissionRule
+     */
+    select?: CommissionRuleSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CommissionRule
+     */
+    omit?: CommissionRuleOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CommissionRuleInclude<ExtArgs> | null
+    /**
+     * Filter, which CommissionRule to fetch.
+     */
+    where: CommissionRuleWhereUniqueInput
+  }
+
+  /**
+   * CommissionRule findFirst
+   */
+  export type CommissionRuleFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CommissionRule
+     */
+    select?: CommissionRuleSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CommissionRule
+     */
+    omit?: CommissionRuleOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CommissionRuleInclude<ExtArgs> | null
+    /**
+     * Filter, which CommissionRule to fetch.
+     */
+    where?: CommissionRuleWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CommissionRules to fetch.
+     */
+    orderBy?: CommissionRuleOrderByWithRelationInput | CommissionRuleOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for CommissionRules.
+     */
+    cursor?: CommissionRuleWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CommissionRules from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CommissionRules.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of CommissionRules.
+     */
+    distinct?: CommissionRuleScalarFieldEnum | CommissionRuleScalarFieldEnum[]
+  }
+
+  /**
+   * CommissionRule findFirstOrThrow
+   */
+  export type CommissionRuleFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CommissionRule
+     */
+    select?: CommissionRuleSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CommissionRule
+     */
+    omit?: CommissionRuleOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CommissionRuleInclude<ExtArgs> | null
+    /**
+     * Filter, which CommissionRule to fetch.
+     */
+    where?: CommissionRuleWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CommissionRules to fetch.
+     */
+    orderBy?: CommissionRuleOrderByWithRelationInput | CommissionRuleOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for CommissionRules.
+     */
+    cursor?: CommissionRuleWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CommissionRules from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CommissionRules.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of CommissionRules.
+     */
+    distinct?: CommissionRuleScalarFieldEnum | CommissionRuleScalarFieldEnum[]
+  }
+
+  /**
+   * CommissionRule findMany
+   */
+  export type CommissionRuleFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CommissionRule
+     */
+    select?: CommissionRuleSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CommissionRule
+     */
+    omit?: CommissionRuleOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CommissionRuleInclude<ExtArgs> | null
+    /**
+     * Filter, which CommissionRules to fetch.
+     */
+    where?: CommissionRuleWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CommissionRules to fetch.
+     */
+    orderBy?: CommissionRuleOrderByWithRelationInput | CommissionRuleOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing CommissionRules.
+     */
+    cursor?: CommissionRuleWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CommissionRules from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CommissionRules.
+     */
+    skip?: number
+    distinct?: CommissionRuleScalarFieldEnum | CommissionRuleScalarFieldEnum[]
+  }
+
+  /**
+   * CommissionRule create
+   */
+  export type CommissionRuleCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CommissionRule
+     */
+    select?: CommissionRuleSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CommissionRule
+     */
+    omit?: CommissionRuleOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CommissionRuleInclude<ExtArgs> | null
+    /**
+     * The data needed to create a CommissionRule.
+     */
+    data: XOR<CommissionRuleCreateInput, CommissionRuleUncheckedCreateInput>
+  }
+
+  /**
+   * CommissionRule createMany
+   */
+  export type CommissionRuleCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many CommissionRules.
+     */
+    data: CommissionRuleCreateManyInput | CommissionRuleCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * CommissionRule createManyAndReturn
+   */
+  export type CommissionRuleCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CommissionRule
+     */
+    select?: CommissionRuleSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the CommissionRule
+     */
+    omit?: CommissionRuleOmit<ExtArgs> | null
+    /**
+     * The data used to create many CommissionRules.
+     */
+    data: CommissionRuleCreateManyInput | CommissionRuleCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CommissionRuleIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * CommissionRule update
+   */
+  export type CommissionRuleUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CommissionRule
+     */
+    select?: CommissionRuleSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CommissionRule
+     */
+    omit?: CommissionRuleOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CommissionRuleInclude<ExtArgs> | null
+    /**
+     * The data needed to update a CommissionRule.
+     */
+    data: XOR<CommissionRuleUpdateInput, CommissionRuleUncheckedUpdateInput>
+    /**
+     * Choose, which CommissionRule to update.
+     */
+    where: CommissionRuleWhereUniqueInput
+  }
+
+  /**
+   * CommissionRule updateMany
+   */
+  export type CommissionRuleUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update CommissionRules.
+     */
+    data: XOR<CommissionRuleUpdateManyMutationInput, CommissionRuleUncheckedUpdateManyInput>
+    /**
+     * Filter which CommissionRules to update
+     */
+    where?: CommissionRuleWhereInput
+    /**
+     * Limit how many CommissionRules to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * CommissionRule updateManyAndReturn
+   */
+  export type CommissionRuleUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CommissionRule
+     */
+    select?: CommissionRuleSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the CommissionRule
+     */
+    omit?: CommissionRuleOmit<ExtArgs> | null
+    /**
+     * The data used to update CommissionRules.
+     */
+    data: XOR<CommissionRuleUpdateManyMutationInput, CommissionRuleUncheckedUpdateManyInput>
+    /**
+     * Filter which CommissionRules to update
+     */
+    where?: CommissionRuleWhereInput
+    /**
+     * Limit how many CommissionRules to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CommissionRuleIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * CommissionRule upsert
+   */
+  export type CommissionRuleUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CommissionRule
+     */
+    select?: CommissionRuleSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CommissionRule
+     */
+    omit?: CommissionRuleOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CommissionRuleInclude<ExtArgs> | null
+    /**
+     * The filter to search for the CommissionRule to update in case it exists.
+     */
+    where: CommissionRuleWhereUniqueInput
+    /**
+     * In case the CommissionRule found by the `where` argument doesn't exist, create a new CommissionRule with this data.
+     */
+    create: XOR<CommissionRuleCreateInput, CommissionRuleUncheckedCreateInput>
+    /**
+     * In case the CommissionRule was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<CommissionRuleUpdateInput, CommissionRuleUncheckedUpdateInput>
+  }
+
+  /**
+   * CommissionRule delete
+   */
+  export type CommissionRuleDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CommissionRule
+     */
+    select?: CommissionRuleSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CommissionRule
+     */
+    omit?: CommissionRuleOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CommissionRuleInclude<ExtArgs> | null
+    /**
+     * Filter which CommissionRule to delete.
+     */
+    where: CommissionRuleWhereUniqueInput
+  }
+
+  /**
+   * CommissionRule deleteMany
+   */
+  export type CommissionRuleDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which CommissionRules to delete
+     */
+    where?: CommissionRuleWhereInput
+    /**
+     * Limit how many CommissionRules to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * CommissionRule.service
+   */
+  export type CommissionRule$serviceArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Service
+     */
+    select?: ServiceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Service
+     */
+    omit?: ServiceOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ServiceInclude<ExtArgs> | null
+    where?: ServiceWhereInput
+  }
+
+  /**
+   * CommissionRule.user
+   */
+  export type CommissionRule$userArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the User
+     */
+    select?: UserSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the User
+     */
+    omit?: UserOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserInclude<ExtArgs> | null
+    where?: UserWhereInput
+  }
+
+  /**
+   * CommissionRule.commissions
+   */
+  export type CommissionRule$commissionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the StaffCommission
+     */
+    select?: StaffCommissionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the StaffCommission
+     */
+    omit?: StaffCommissionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: StaffCommissionInclude<ExtArgs> | null
+    where?: StaffCommissionWhereInput
+    orderBy?: StaffCommissionOrderByWithRelationInput | StaffCommissionOrderByWithRelationInput[]
+    cursor?: StaffCommissionWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: StaffCommissionScalarFieldEnum | StaffCommissionScalarFieldEnum[]
+  }
+
+  /**
+   * CommissionRule without action
+   */
+  export type CommissionRuleDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CommissionRule
+     */
+    select?: CommissionRuleSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CommissionRule
+     */
+    omit?: CommissionRuleOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CommissionRuleInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Model StaffCommission
    */
 
@@ -21932,28 +23473,40 @@ export namespace Prisma {
   export type StaffCommissionMinAggregateOutputType = {
     id: string | null
     amount: number | null
+    status: $Enums.CommissionStatus | null
     isReversed: boolean | null
+    appliedRuleId: string | null
     staffId: string | null
+    serviceId: string | null
     invoiceId: string | null
     createdAt: Date | null
+    updatedAt: Date | null
   }
 
   export type StaffCommissionMaxAggregateOutputType = {
     id: string | null
     amount: number | null
+    status: $Enums.CommissionStatus | null
     isReversed: boolean | null
+    appliedRuleId: string | null
     staffId: string | null
+    serviceId: string | null
     invoiceId: string | null
     createdAt: Date | null
+    updatedAt: Date | null
   }
 
   export type StaffCommissionCountAggregateOutputType = {
     id: number
     amount: number
+    status: number
     isReversed: number
+    appliedRuleId: number
     staffId: number
+    serviceId: number
     invoiceId: number
     createdAt: number
+    updatedAt: number
     _all: number
   }
 
@@ -21969,28 +23522,40 @@ export namespace Prisma {
   export type StaffCommissionMinAggregateInputType = {
     id?: true
     amount?: true
+    status?: true
     isReversed?: true
+    appliedRuleId?: true
     staffId?: true
+    serviceId?: true
     invoiceId?: true
     createdAt?: true
+    updatedAt?: true
   }
 
   export type StaffCommissionMaxAggregateInputType = {
     id?: true
     amount?: true
+    status?: true
     isReversed?: true
+    appliedRuleId?: true
     staffId?: true
+    serviceId?: true
     invoiceId?: true
     createdAt?: true
+    updatedAt?: true
   }
 
   export type StaffCommissionCountAggregateInputType = {
     id?: true
     amount?: true
+    status?: true
     isReversed?: true
+    appliedRuleId?: true
     staffId?: true
+    serviceId?: true
     invoiceId?: true
     createdAt?: true
+    updatedAt?: true
     _all?: true
   }
 
@@ -22083,10 +23648,14 @@ export namespace Prisma {
   export type StaffCommissionGroupByOutputType = {
     id: string
     amount: number
+    status: $Enums.CommissionStatus
     isReversed: boolean
+    appliedRuleId: string | null
     staffId: string
+    serviceId: string | null
     invoiceId: string
     createdAt: Date
+    updatedAt: Date
     _count: StaffCommissionCountAggregateOutputType | null
     _avg: StaffCommissionAvgAggregateOutputType | null
     _sum: StaffCommissionSumAggregateOutputType | null
@@ -22111,72 +23680,106 @@ export namespace Prisma {
   export type StaffCommissionSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     amount?: boolean
+    status?: boolean
     isReversed?: boolean
+    appliedRuleId?: boolean
     staffId?: boolean
+    serviceId?: boolean
     invoiceId?: boolean
     createdAt?: boolean
-    invoice?: boolean | InvoiceDefaultArgs<ExtArgs>
+    updatedAt?: boolean
+    appliedRule?: boolean | StaffCommission$appliedRuleArgs<ExtArgs>
     staff?: boolean | UserDefaultArgs<ExtArgs>
+    service?: boolean | StaffCommission$serviceArgs<ExtArgs>
+    invoice?: boolean | InvoiceDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["staffCommission"]>
 
   export type StaffCommissionSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     amount?: boolean
+    status?: boolean
     isReversed?: boolean
+    appliedRuleId?: boolean
     staffId?: boolean
+    serviceId?: boolean
     invoiceId?: boolean
     createdAt?: boolean
-    invoice?: boolean | InvoiceDefaultArgs<ExtArgs>
+    updatedAt?: boolean
+    appliedRule?: boolean | StaffCommission$appliedRuleArgs<ExtArgs>
     staff?: boolean | UserDefaultArgs<ExtArgs>
+    service?: boolean | StaffCommission$serviceArgs<ExtArgs>
+    invoice?: boolean | InvoiceDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["staffCommission"]>
 
   export type StaffCommissionSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     amount?: boolean
+    status?: boolean
     isReversed?: boolean
+    appliedRuleId?: boolean
     staffId?: boolean
+    serviceId?: boolean
     invoiceId?: boolean
     createdAt?: boolean
-    invoice?: boolean | InvoiceDefaultArgs<ExtArgs>
+    updatedAt?: boolean
+    appliedRule?: boolean | StaffCommission$appliedRuleArgs<ExtArgs>
     staff?: boolean | UserDefaultArgs<ExtArgs>
+    service?: boolean | StaffCommission$serviceArgs<ExtArgs>
+    invoice?: boolean | InvoiceDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["staffCommission"]>
 
   export type StaffCommissionSelectScalar = {
     id?: boolean
     amount?: boolean
+    status?: boolean
     isReversed?: boolean
+    appliedRuleId?: boolean
     staffId?: boolean
+    serviceId?: boolean
     invoiceId?: boolean
     createdAt?: boolean
+    updatedAt?: boolean
   }
 
-  export type StaffCommissionOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "amount" | "isReversed" | "staffId" | "invoiceId" | "createdAt", ExtArgs["result"]["staffCommission"]>
+  export type StaffCommissionOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "amount" | "status" | "isReversed" | "appliedRuleId" | "staffId" | "serviceId" | "invoiceId" | "createdAt" | "updatedAt", ExtArgs["result"]["staffCommission"]>
   export type StaffCommissionInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    invoice?: boolean | InvoiceDefaultArgs<ExtArgs>
+    appliedRule?: boolean | StaffCommission$appliedRuleArgs<ExtArgs>
     staff?: boolean | UserDefaultArgs<ExtArgs>
+    service?: boolean | StaffCommission$serviceArgs<ExtArgs>
+    invoice?: boolean | InvoiceDefaultArgs<ExtArgs>
   }
   export type StaffCommissionIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    invoice?: boolean | InvoiceDefaultArgs<ExtArgs>
+    appliedRule?: boolean | StaffCommission$appliedRuleArgs<ExtArgs>
     staff?: boolean | UserDefaultArgs<ExtArgs>
+    service?: boolean | StaffCommission$serviceArgs<ExtArgs>
+    invoice?: boolean | InvoiceDefaultArgs<ExtArgs>
   }
   export type StaffCommissionIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    invoice?: boolean | InvoiceDefaultArgs<ExtArgs>
+    appliedRule?: boolean | StaffCommission$appliedRuleArgs<ExtArgs>
     staff?: boolean | UserDefaultArgs<ExtArgs>
+    service?: boolean | StaffCommission$serviceArgs<ExtArgs>
+    invoice?: boolean | InvoiceDefaultArgs<ExtArgs>
   }
 
   export type $StaffCommissionPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "StaffCommission"
     objects: {
-      invoice: Prisma.$InvoicePayload<ExtArgs>
+      appliedRule: Prisma.$CommissionRulePayload<ExtArgs> | null
       staff: Prisma.$UserPayload<ExtArgs>
+      service: Prisma.$ServicePayload<ExtArgs> | null
+      invoice: Prisma.$InvoicePayload<ExtArgs>
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
       amount: number
+      status: $Enums.CommissionStatus
       isReversed: boolean
+      appliedRuleId: string | null
       staffId: string
+      serviceId: string | null
       invoiceId: string
       createdAt: Date
+      updatedAt: Date
     }, ExtArgs["result"]["staffCommission"]>
     composites: {}
   }
@@ -22571,8 +24174,10 @@ export namespace Prisma {
    */
   export interface Prisma__StaffCommissionClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
-    invoice<T extends InvoiceDefaultArgs<ExtArgs> = {}>(args?: Subset<T, InvoiceDefaultArgs<ExtArgs>>): Prisma__InvoiceClient<$Result.GetResult<Prisma.$InvoicePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    appliedRule<T extends StaffCommission$appliedRuleArgs<ExtArgs> = {}>(args?: Subset<T, StaffCommission$appliedRuleArgs<ExtArgs>>): Prisma__CommissionRuleClient<$Result.GetResult<Prisma.$CommissionRulePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     staff<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    service<T extends StaffCommission$serviceArgs<ExtArgs> = {}>(args?: Subset<T, StaffCommission$serviceArgs<ExtArgs>>): Prisma__ServiceClient<$Result.GetResult<Prisma.$ServicePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    invoice<T extends InvoiceDefaultArgs<ExtArgs> = {}>(args?: Subset<T, InvoiceDefaultArgs<ExtArgs>>): Prisma__InvoiceClient<$Result.GetResult<Prisma.$InvoicePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -22604,10 +24209,14 @@ export namespace Prisma {
   interface StaffCommissionFieldRefs {
     readonly id: FieldRef<"StaffCommission", 'String'>
     readonly amount: FieldRef<"StaffCommission", 'Float'>
+    readonly status: FieldRef<"StaffCommission", 'CommissionStatus'>
     readonly isReversed: FieldRef<"StaffCommission", 'Boolean'>
+    readonly appliedRuleId: FieldRef<"StaffCommission", 'String'>
     readonly staffId: FieldRef<"StaffCommission", 'String'>
+    readonly serviceId: FieldRef<"StaffCommission", 'String'>
     readonly invoiceId: FieldRef<"StaffCommission", 'String'>
     readonly createdAt: FieldRef<"StaffCommission", 'DateTime'>
+    readonly updatedAt: FieldRef<"StaffCommission", 'DateTime'>
   }
     
 
@@ -23001,6 +24610,44 @@ export namespace Prisma {
      * Limit how many StaffCommissions to delete.
      */
     limit?: number
+  }
+
+  /**
+   * StaffCommission.appliedRule
+   */
+  export type StaffCommission$appliedRuleArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CommissionRule
+     */
+    select?: CommissionRuleSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CommissionRule
+     */
+    omit?: CommissionRuleOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CommissionRuleInclude<ExtArgs> | null
+    where?: CommissionRuleWhereInput
+  }
+
+  /**
+   * StaffCommission.service
+   */
+  export type StaffCommission$serviceArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Service
+     */
+    select?: ServiceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Service
+     */
+    omit?: ServiceOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ServiceInclude<ExtArgs> | null
+    where?: ServiceWhereInput
   }
 
   /**
@@ -24286,16 +25933,20 @@ export namespace Prisma {
   export const ServiceScalarFieldEnum: {
     id: 'id',
     name: 'name',
+    description: 'description',
     duration: 'duration',
     price: 'price',
+    isActive: 'isActive',
+    type: 'type',
+    serviceType: 'serviceType',
+    maxCapacity: 'maxCapacity',
+    unitCount: 'unitCount',
+    commissionFixed: 'commissionFixed',
+    commissionRate: 'commissionRate',
     categoryId: 'categoryId',
     branchId: 'branchId',
     createdAt: 'createdAt',
-    isActive: 'isActive',
-    updatedAt: 'updatedAt',
-    type: 'type',
-    commissionFixed: 'commissionFixed',
-    commissionRate: 'commissionRate'
+    updatedAt: 'updatedAt'
   };
 
   export type ServiceScalarFieldEnum = (typeof ServiceScalarFieldEnum)[keyof typeof ServiceScalarFieldEnum]
@@ -24409,13 +26060,32 @@ export namespace Prisma {
   export type PaymentScalarFieldEnum = (typeof PaymentScalarFieldEnum)[keyof typeof PaymentScalarFieldEnum]
 
 
+  export const CommissionRuleScalarFieldEnum: {
+    id: 'id',
+    type: 'type',
+    value: 'value',
+    description: 'description',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt',
+    isGlobal: 'isGlobal',
+    serviceId: 'serviceId',
+    userId: 'userId'
+  };
+
+  export type CommissionRuleScalarFieldEnum = (typeof CommissionRuleScalarFieldEnum)[keyof typeof CommissionRuleScalarFieldEnum]
+
+
   export const StaffCommissionScalarFieldEnum: {
     id: 'id',
     amount: 'amount',
+    status: 'status',
     isReversed: 'isReversed',
+    appliedRuleId: 'appliedRuleId',
     staffId: 'staffId',
+    serviceId: 'serviceId',
     invoiceId: 'invoiceId',
-    createdAt: 'createdAt'
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
   };
 
   export type StaffCommissionScalarFieldEnum = (typeof StaffCommissionScalarFieldEnum)[keyof typeof StaffCommissionScalarFieldEnum]
@@ -24641,6 +26311,34 @@ export namespace Prisma {
 
 
   /**
+   * Reference to a field of type 'CommissionType'
+   */
+  export type EnumCommissionTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CommissionType'>
+    
+
+
+  /**
+   * Reference to a field of type 'CommissionType[]'
+   */
+  export type ListEnumCommissionTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CommissionType[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'CommissionStatus'
+   */
+  export type EnumCommissionStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CommissionStatus'>
+    
+
+
+  /**
+   * Reference to a field of type 'CommissionStatus[]'
+   */
+  export type ListEnumCommissionStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CommissionStatus[]'>
+    
+
+
+  /**
    * Reference to a field of type 'CashLogType'
    */
   export type EnumCashLogTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CashLogType'>
@@ -24672,6 +26370,7 @@ export namespace Prisma {
     appointments?: AppointmentListRelationFilter
     cashRegisterActions?: CashRegisterLogListRelationFilter
     commissions?: StaffCommissionListRelationFilter
+    commissionRules?: CommissionRuleListRelationFilter
     services?: StaffServiceListRelationFilter
     branch?: XOR<BranchNullableScalarRelationFilter, BranchWhereInput> | null
     workHours?: WorkHourListRelationFilter
@@ -24689,6 +26388,7 @@ export namespace Prisma {
     appointments?: AppointmentOrderByRelationAggregateInput
     cashRegisterActions?: CashRegisterLogOrderByRelationAggregateInput
     commissions?: StaffCommissionOrderByRelationAggregateInput
+    commissionRules?: CommissionRuleOrderByRelationAggregateInput
     services?: StaffServiceOrderByRelationAggregateInput
     branch?: BranchOrderByWithRelationInput
     workHours?: WorkHourOrderByRelationAggregateInput
@@ -24709,6 +26409,7 @@ export namespace Prisma {
     appointments?: AppointmentListRelationFilter
     cashRegisterActions?: CashRegisterLogListRelationFilter
     commissions?: StaffCommissionListRelationFilter
+    commissionRules?: CommissionRuleListRelationFilter
     services?: StaffServiceListRelationFilter
     branch?: XOR<BranchNullableScalarRelationFilter, BranchWhereInput> | null
     workHours?: WorkHourListRelationFilter
@@ -25190,41 +26891,53 @@ export namespace Prisma {
     NOT?: ServiceWhereInput | ServiceWhereInput[]
     id?: StringFilter<"Service"> | string
     name?: StringFilter<"Service"> | string
-    duration?: IntNullableFilter<"Service"> | number | null
+    description?: StringNullableFilter<"Service"> | string | null
+    duration?: IntFilter<"Service"> | number
     price?: FloatFilter<"Service"> | number
+    isActive?: BoolFilter<"Service"> | boolean
+    type?: EnumServiceTypeFilter<"Service"> | $Enums.ServiceType
+    serviceType?: EnumServiceTypeFilter<"Service"> | $Enums.ServiceType
+    maxCapacity?: IntFilter<"Service"> | number
+    unitCount?: IntNullableFilter<"Service"> | number | null
+    commissionFixed?: FloatNullableFilter<"Service"> | number | null
+    commissionRate?: FloatNullableFilter<"Service"> | number | null
     categoryId?: StringFilter<"Service"> | string
     branchId?: StringFilter<"Service"> | string
     createdAt?: DateTimeFilter<"Service"> | Date | string
-    isActive?: BoolFilter<"Service"> | boolean
     updatedAt?: DateTimeFilter<"Service"> | Date | string
-    type?: EnumServiceTypeFilter<"Service"> | $Enums.ServiceType
-    commissionFixed?: FloatNullableFilter<"Service"> | number | null
-    commissionRate?: FloatNullableFilter<"Service"> | number | null
-    appointments?: AppointmentListRelationFilter
-    packages?: PackageServiceListRelationFilter
     branch?: XOR<BranchScalarRelationFilter, BranchWhereInput>
     category?: XOR<ServiceCategoryScalarRelationFilter, ServiceCategoryWhereInput>
+    appointments?: AppointmentListRelationFilter
+    packages?: PackageServiceListRelationFilter
     staff?: StaffServiceListRelationFilter
+    commissionRules?: CommissionRuleListRelationFilter
+    commissions?: StaffCommissionListRelationFilter
   }
 
   export type ServiceOrderByWithRelationInput = {
     id?: SortOrder
     name?: SortOrder
-    duration?: SortOrderInput | SortOrder
+    description?: SortOrderInput | SortOrder
+    duration?: SortOrder
     price?: SortOrder
+    isActive?: SortOrder
+    type?: SortOrder
+    serviceType?: SortOrder
+    maxCapacity?: SortOrder
+    unitCount?: SortOrderInput | SortOrder
+    commissionFixed?: SortOrderInput | SortOrder
+    commissionRate?: SortOrderInput | SortOrder
     categoryId?: SortOrder
     branchId?: SortOrder
     createdAt?: SortOrder
-    isActive?: SortOrder
     updatedAt?: SortOrder
-    type?: SortOrder
-    commissionFixed?: SortOrderInput | SortOrder
-    commissionRate?: SortOrderInput | SortOrder
-    appointments?: AppointmentOrderByRelationAggregateInput
-    packages?: PackageServiceOrderByRelationAggregateInput
     branch?: BranchOrderByWithRelationInput
     category?: ServiceCategoryOrderByWithRelationInput
+    appointments?: AppointmentOrderByRelationAggregateInput
+    packages?: PackageServiceOrderByRelationAggregateInput
     staff?: StaffServiceOrderByRelationAggregateInput
+    commissionRules?: CommissionRuleOrderByRelationAggregateInput
+    commissions?: StaffCommissionOrderByRelationAggregateInput
   }
 
   export type ServiceWhereUniqueInput = Prisma.AtLeast<{
@@ -25233,36 +26946,46 @@ export namespace Prisma {
     OR?: ServiceWhereInput[]
     NOT?: ServiceWhereInput | ServiceWhereInput[]
     name?: StringFilter<"Service"> | string
-    duration?: IntNullableFilter<"Service"> | number | null
+    description?: StringNullableFilter<"Service"> | string | null
+    duration?: IntFilter<"Service"> | number
     price?: FloatFilter<"Service"> | number
+    isActive?: BoolFilter<"Service"> | boolean
+    type?: EnumServiceTypeFilter<"Service"> | $Enums.ServiceType
+    serviceType?: EnumServiceTypeFilter<"Service"> | $Enums.ServiceType
+    maxCapacity?: IntFilter<"Service"> | number
+    unitCount?: IntNullableFilter<"Service"> | number | null
+    commissionFixed?: FloatNullableFilter<"Service"> | number | null
+    commissionRate?: FloatNullableFilter<"Service"> | number | null
     categoryId?: StringFilter<"Service"> | string
     branchId?: StringFilter<"Service"> | string
     createdAt?: DateTimeFilter<"Service"> | Date | string
-    isActive?: BoolFilter<"Service"> | boolean
     updatedAt?: DateTimeFilter<"Service"> | Date | string
-    type?: EnumServiceTypeFilter<"Service"> | $Enums.ServiceType
-    commissionFixed?: FloatNullableFilter<"Service"> | number | null
-    commissionRate?: FloatNullableFilter<"Service"> | number | null
-    appointments?: AppointmentListRelationFilter
-    packages?: PackageServiceListRelationFilter
     branch?: XOR<BranchScalarRelationFilter, BranchWhereInput>
     category?: XOR<ServiceCategoryScalarRelationFilter, ServiceCategoryWhereInput>
+    appointments?: AppointmentListRelationFilter
+    packages?: PackageServiceListRelationFilter
     staff?: StaffServiceListRelationFilter
+    commissionRules?: CommissionRuleListRelationFilter
+    commissions?: StaffCommissionListRelationFilter
   }, "id">
 
   export type ServiceOrderByWithAggregationInput = {
     id?: SortOrder
     name?: SortOrder
-    duration?: SortOrderInput | SortOrder
+    description?: SortOrderInput | SortOrder
+    duration?: SortOrder
     price?: SortOrder
+    isActive?: SortOrder
+    type?: SortOrder
+    serviceType?: SortOrder
+    maxCapacity?: SortOrder
+    unitCount?: SortOrderInput | SortOrder
+    commissionFixed?: SortOrderInput | SortOrder
+    commissionRate?: SortOrderInput | SortOrder
     categoryId?: SortOrder
     branchId?: SortOrder
     createdAt?: SortOrder
-    isActive?: SortOrder
     updatedAt?: SortOrder
-    type?: SortOrder
-    commissionFixed?: SortOrderInput | SortOrder
-    commissionRate?: SortOrderInput | SortOrder
     _count?: ServiceCountOrderByAggregateInput
     _avg?: ServiceAvgOrderByAggregateInput
     _max?: ServiceMaxOrderByAggregateInput
@@ -25276,16 +26999,20 @@ export namespace Prisma {
     NOT?: ServiceScalarWhereWithAggregatesInput | ServiceScalarWhereWithAggregatesInput[]
     id?: StringWithAggregatesFilter<"Service"> | string
     name?: StringWithAggregatesFilter<"Service"> | string
-    duration?: IntNullableWithAggregatesFilter<"Service"> | number | null
+    description?: StringNullableWithAggregatesFilter<"Service"> | string | null
+    duration?: IntWithAggregatesFilter<"Service"> | number
     price?: FloatWithAggregatesFilter<"Service"> | number
+    isActive?: BoolWithAggregatesFilter<"Service"> | boolean
+    type?: EnumServiceTypeWithAggregatesFilter<"Service"> | $Enums.ServiceType
+    serviceType?: EnumServiceTypeWithAggregatesFilter<"Service"> | $Enums.ServiceType
+    maxCapacity?: IntWithAggregatesFilter<"Service"> | number
+    unitCount?: IntNullableWithAggregatesFilter<"Service"> | number | null
+    commissionFixed?: FloatNullableWithAggregatesFilter<"Service"> | number | null
+    commissionRate?: FloatNullableWithAggregatesFilter<"Service"> | number | null
     categoryId?: StringWithAggregatesFilter<"Service"> | string
     branchId?: StringWithAggregatesFilter<"Service"> | string
     createdAt?: DateTimeWithAggregatesFilter<"Service"> | Date | string
-    isActive?: BoolWithAggregatesFilter<"Service"> | boolean
     updatedAt?: DateTimeWithAggregatesFilter<"Service"> | Date | string
-    type?: EnumServiceTypeWithAggregatesFilter<"Service"> | $Enums.ServiceType
-    commissionFixed?: FloatNullableWithAggregatesFilter<"Service"> | number | null
-    commissionRate?: FloatNullableWithAggregatesFilter<"Service"> | number | null
   }
 
   export type StaffServiceWhereInput = {
@@ -25897,29 +27624,124 @@ export namespace Prisma {
     cashRegisterLogId?: StringNullableWithAggregatesFilter<"Payment"> | string | null
   }
 
+  export type CommissionRuleWhereInput = {
+    AND?: CommissionRuleWhereInput | CommissionRuleWhereInput[]
+    OR?: CommissionRuleWhereInput[]
+    NOT?: CommissionRuleWhereInput | CommissionRuleWhereInput[]
+    id?: StringFilter<"CommissionRule"> | string
+    type?: EnumCommissionTypeFilter<"CommissionRule"> | $Enums.CommissionType
+    value?: FloatFilter<"CommissionRule"> | number
+    description?: StringNullableFilter<"CommissionRule"> | string | null
+    createdAt?: DateTimeFilter<"CommissionRule"> | Date | string
+    updatedAt?: DateTimeFilter<"CommissionRule"> | Date | string
+    isGlobal?: BoolFilter<"CommissionRule"> | boolean
+    serviceId?: StringNullableFilter<"CommissionRule"> | string | null
+    userId?: StringNullableFilter<"CommissionRule"> | string | null
+    service?: XOR<ServiceNullableScalarRelationFilter, ServiceWhereInput> | null
+    user?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
+    commissions?: StaffCommissionListRelationFilter
+  }
+
+  export type CommissionRuleOrderByWithRelationInput = {
+    id?: SortOrder
+    type?: SortOrder
+    value?: SortOrder
+    description?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    isGlobal?: SortOrder
+    serviceId?: SortOrderInput | SortOrder
+    userId?: SortOrderInput | SortOrder
+    service?: ServiceOrderByWithRelationInput
+    user?: UserOrderByWithRelationInput
+    commissions?: StaffCommissionOrderByRelationAggregateInput
+  }
+
+  export type CommissionRuleWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: CommissionRuleWhereInput | CommissionRuleWhereInput[]
+    OR?: CommissionRuleWhereInput[]
+    NOT?: CommissionRuleWhereInput | CommissionRuleWhereInput[]
+    type?: EnumCommissionTypeFilter<"CommissionRule"> | $Enums.CommissionType
+    value?: FloatFilter<"CommissionRule"> | number
+    description?: StringNullableFilter<"CommissionRule"> | string | null
+    createdAt?: DateTimeFilter<"CommissionRule"> | Date | string
+    updatedAt?: DateTimeFilter<"CommissionRule"> | Date | string
+    isGlobal?: BoolFilter<"CommissionRule"> | boolean
+    serviceId?: StringNullableFilter<"CommissionRule"> | string | null
+    userId?: StringNullableFilter<"CommissionRule"> | string | null
+    service?: XOR<ServiceNullableScalarRelationFilter, ServiceWhereInput> | null
+    user?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
+    commissions?: StaffCommissionListRelationFilter
+  }, "id">
+
+  export type CommissionRuleOrderByWithAggregationInput = {
+    id?: SortOrder
+    type?: SortOrder
+    value?: SortOrder
+    description?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    isGlobal?: SortOrder
+    serviceId?: SortOrderInput | SortOrder
+    userId?: SortOrderInput | SortOrder
+    _count?: CommissionRuleCountOrderByAggregateInput
+    _avg?: CommissionRuleAvgOrderByAggregateInput
+    _max?: CommissionRuleMaxOrderByAggregateInput
+    _min?: CommissionRuleMinOrderByAggregateInput
+    _sum?: CommissionRuleSumOrderByAggregateInput
+  }
+
+  export type CommissionRuleScalarWhereWithAggregatesInput = {
+    AND?: CommissionRuleScalarWhereWithAggregatesInput | CommissionRuleScalarWhereWithAggregatesInput[]
+    OR?: CommissionRuleScalarWhereWithAggregatesInput[]
+    NOT?: CommissionRuleScalarWhereWithAggregatesInput | CommissionRuleScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"CommissionRule"> | string
+    type?: EnumCommissionTypeWithAggregatesFilter<"CommissionRule"> | $Enums.CommissionType
+    value?: FloatWithAggregatesFilter<"CommissionRule"> | number
+    description?: StringNullableWithAggregatesFilter<"CommissionRule"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"CommissionRule"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"CommissionRule"> | Date | string
+    isGlobal?: BoolWithAggregatesFilter<"CommissionRule"> | boolean
+    serviceId?: StringNullableWithAggregatesFilter<"CommissionRule"> | string | null
+    userId?: StringNullableWithAggregatesFilter<"CommissionRule"> | string | null
+  }
+
   export type StaffCommissionWhereInput = {
     AND?: StaffCommissionWhereInput | StaffCommissionWhereInput[]
     OR?: StaffCommissionWhereInput[]
     NOT?: StaffCommissionWhereInput | StaffCommissionWhereInput[]
     id?: StringFilter<"StaffCommission"> | string
     amount?: FloatFilter<"StaffCommission"> | number
+    status?: EnumCommissionStatusFilter<"StaffCommission"> | $Enums.CommissionStatus
     isReversed?: BoolFilter<"StaffCommission"> | boolean
+    appliedRuleId?: StringNullableFilter<"StaffCommission"> | string | null
     staffId?: StringFilter<"StaffCommission"> | string
+    serviceId?: StringNullableFilter<"StaffCommission"> | string | null
     invoiceId?: StringFilter<"StaffCommission"> | string
     createdAt?: DateTimeFilter<"StaffCommission"> | Date | string
-    invoice?: XOR<InvoiceScalarRelationFilter, InvoiceWhereInput>
+    updatedAt?: DateTimeFilter<"StaffCommission"> | Date | string
+    appliedRule?: XOR<CommissionRuleNullableScalarRelationFilter, CommissionRuleWhereInput> | null
     staff?: XOR<UserScalarRelationFilter, UserWhereInput>
+    service?: XOR<ServiceNullableScalarRelationFilter, ServiceWhereInput> | null
+    invoice?: XOR<InvoiceScalarRelationFilter, InvoiceWhereInput>
   }
 
   export type StaffCommissionOrderByWithRelationInput = {
     id?: SortOrder
     amount?: SortOrder
+    status?: SortOrder
     isReversed?: SortOrder
+    appliedRuleId?: SortOrderInput | SortOrder
     staffId?: SortOrder
+    serviceId?: SortOrderInput | SortOrder
     invoiceId?: SortOrder
     createdAt?: SortOrder
-    invoice?: InvoiceOrderByWithRelationInput
+    updatedAt?: SortOrder
+    appliedRule?: CommissionRuleOrderByWithRelationInput
     staff?: UserOrderByWithRelationInput
+    service?: ServiceOrderByWithRelationInput
+    invoice?: InvoiceOrderByWithRelationInput
   }
 
   export type StaffCommissionWhereUniqueInput = Prisma.AtLeast<{
@@ -25929,20 +27751,30 @@ export namespace Prisma {
     OR?: StaffCommissionWhereInput[]
     NOT?: StaffCommissionWhereInput | StaffCommissionWhereInput[]
     amount?: FloatFilter<"StaffCommission"> | number
+    status?: EnumCommissionStatusFilter<"StaffCommission"> | $Enums.CommissionStatus
     isReversed?: BoolFilter<"StaffCommission"> | boolean
+    appliedRuleId?: StringNullableFilter<"StaffCommission"> | string | null
     staffId?: StringFilter<"StaffCommission"> | string
+    serviceId?: StringNullableFilter<"StaffCommission"> | string | null
     createdAt?: DateTimeFilter<"StaffCommission"> | Date | string
-    invoice?: XOR<InvoiceScalarRelationFilter, InvoiceWhereInput>
+    updatedAt?: DateTimeFilter<"StaffCommission"> | Date | string
+    appliedRule?: XOR<CommissionRuleNullableScalarRelationFilter, CommissionRuleWhereInput> | null
     staff?: XOR<UserScalarRelationFilter, UserWhereInput>
+    service?: XOR<ServiceNullableScalarRelationFilter, ServiceWhereInput> | null
+    invoice?: XOR<InvoiceScalarRelationFilter, InvoiceWhereInput>
   }, "id" | "invoiceId">
 
   export type StaffCommissionOrderByWithAggregationInput = {
     id?: SortOrder
     amount?: SortOrder
+    status?: SortOrder
     isReversed?: SortOrder
+    appliedRuleId?: SortOrderInput | SortOrder
     staffId?: SortOrder
+    serviceId?: SortOrderInput | SortOrder
     invoiceId?: SortOrder
     createdAt?: SortOrder
+    updatedAt?: SortOrder
     _count?: StaffCommissionCountOrderByAggregateInput
     _avg?: StaffCommissionAvgOrderByAggregateInput
     _max?: StaffCommissionMaxOrderByAggregateInput
@@ -25956,10 +27788,14 @@ export namespace Prisma {
     NOT?: StaffCommissionScalarWhereWithAggregatesInput | StaffCommissionScalarWhereWithAggregatesInput[]
     id?: StringWithAggregatesFilter<"StaffCommission"> | string
     amount?: FloatWithAggregatesFilter<"StaffCommission"> | number
+    status?: EnumCommissionStatusWithAggregatesFilter<"StaffCommission"> | $Enums.CommissionStatus
     isReversed?: BoolWithAggregatesFilter<"StaffCommission"> | boolean
+    appliedRuleId?: StringNullableWithAggregatesFilter<"StaffCommission"> | string | null
     staffId?: StringWithAggregatesFilter<"StaffCommission"> | string
+    serviceId?: StringNullableWithAggregatesFilter<"StaffCommission"> | string | null
     invoiceId?: StringWithAggregatesFilter<"StaffCommission"> | string
     createdAt?: DateTimeWithAggregatesFilter<"StaffCommission"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"StaffCommission"> | Date | string
   }
 
   export type CashRegisterLogWhereInput = {
@@ -26046,6 +27882,7 @@ export namespace Prisma {
     appointments?: AppointmentCreateNestedManyWithoutStaffInput
     cashRegisterActions?: CashRegisterLogCreateNestedManyWithoutUserInput
     commissions?: StaffCommissionCreateNestedManyWithoutStaffInput
+    commissionRules?: CommissionRuleCreateNestedManyWithoutUserInput
     services?: StaffServiceCreateNestedManyWithoutUserInput
     branch?: BranchCreateNestedOneWithoutUsersInput
     workHours?: WorkHourCreateNestedManyWithoutStaffInput
@@ -26063,6 +27900,7 @@ export namespace Prisma {
     appointments?: AppointmentUncheckedCreateNestedManyWithoutStaffInput
     cashRegisterActions?: CashRegisterLogUncheckedCreateNestedManyWithoutUserInput
     commissions?: StaffCommissionUncheckedCreateNestedManyWithoutStaffInput
+    commissionRules?: CommissionRuleUncheckedCreateNestedManyWithoutUserInput
     services?: StaffServiceUncheckedCreateNestedManyWithoutUserInput
     workHours?: WorkHourUncheckedCreateNestedManyWithoutStaffInput
   }
@@ -26078,6 +27916,7 @@ export namespace Prisma {
     appointments?: AppointmentUpdateManyWithoutStaffNestedInput
     cashRegisterActions?: CashRegisterLogUpdateManyWithoutUserNestedInput
     commissions?: StaffCommissionUpdateManyWithoutStaffNestedInput
+    commissionRules?: CommissionRuleUpdateManyWithoutUserNestedInput
     services?: StaffServiceUpdateManyWithoutUserNestedInput
     branch?: BranchUpdateOneWithoutUsersNestedInput
     workHours?: WorkHourUpdateManyWithoutStaffNestedInput
@@ -26095,6 +27934,7 @@ export namespace Prisma {
     appointments?: AppointmentUncheckedUpdateManyWithoutStaffNestedInput
     cashRegisterActions?: CashRegisterLogUncheckedUpdateManyWithoutUserNestedInput
     commissions?: StaffCommissionUncheckedUpdateManyWithoutStaffNestedInput
+    commissionRules?: CommissionRuleUncheckedUpdateManyWithoutUserNestedInput
     services?: StaffServiceUncheckedUpdateManyWithoutUserNestedInput
     workHours?: WorkHourUncheckedUpdateManyWithoutStaffNestedInput
   }
@@ -26605,116 +28445,152 @@ export namespace Prisma {
   export type ServiceCreateInput = {
     id?: string
     name: string
-    duration?: number | null
+    description?: string | null
+    duration: number
     price: number
-    createdAt?: Date | string
     isActive?: boolean
-    updatedAt?: Date | string
     type?: $Enums.ServiceType
+    serviceType: $Enums.ServiceType
+    maxCapacity: number
+    unitCount?: number | null
     commissionFixed?: number | null
     commissionRate?: number | null
-    appointments?: AppointmentCreateNestedManyWithoutServiceInput
-    packages?: PackageServiceCreateNestedManyWithoutServiceInput
+    createdAt?: Date | string
+    updatedAt?: Date | string
     branch: BranchCreateNestedOneWithoutServicesInput
     category: ServiceCategoryCreateNestedOneWithoutServicesInput
+    appointments?: AppointmentCreateNestedManyWithoutServiceInput
+    packages?: PackageServiceCreateNestedManyWithoutServiceInput
     staff?: StaffServiceCreateNestedManyWithoutServiceInput
+    commissionRules?: CommissionRuleCreateNestedManyWithoutServiceInput
+    commissions?: StaffCommissionCreateNestedManyWithoutServiceInput
   }
 
   export type ServiceUncheckedCreateInput = {
     id?: string
     name: string
-    duration?: number | null
+    description?: string | null
+    duration: number
     price: number
+    isActive?: boolean
+    type?: $Enums.ServiceType
+    serviceType: $Enums.ServiceType
+    maxCapacity: number
+    unitCount?: number | null
+    commissionFixed?: number | null
+    commissionRate?: number | null
     categoryId: string
     branchId: string
     createdAt?: Date | string
-    isActive?: boolean
     updatedAt?: Date | string
-    type?: $Enums.ServiceType
-    commissionFixed?: number | null
-    commissionRate?: number | null
     appointments?: AppointmentUncheckedCreateNestedManyWithoutServiceInput
     packages?: PackageServiceUncheckedCreateNestedManyWithoutServiceInput
     staff?: StaffServiceUncheckedCreateNestedManyWithoutServiceInput
+    commissionRules?: CommissionRuleUncheckedCreateNestedManyWithoutServiceInput
+    commissions?: StaffCommissionUncheckedCreateNestedManyWithoutServiceInput
   }
 
   export type ServiceUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
-    duration?: NullableIntFieldUpdateOperationsInput | number | null
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    duration?: IntFieldUpdateOperationsInput | number
     price?: FloatFieldUpdateOperationsInput | number
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     type?: EnumServiceTypeFieldUpdateOperationsInput | $Enums.ServiceType
+    serviceType?: EnumServiceTypeFieldUpdateOperationsInput | $Enums.ServiceType
+    maxCapacity?: IntFieldUpdateOperationsInput | number
+    unitCount?: NullableIntFieldUpdateOperationsInput | number | null
     commissionFixed?: NullableFloatFieldUpdateOperationsInput | number | null
     commissionRate?: NullableFloatFieldUpdateOperationsInput | number | null
-    appointments?: AppointmentUpdateManyWithoutServiceNestedInput
-    packages?: PackageServiceUpdateManyWithoutServiceNestedInput
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     branch?: BranchUpdateOneRequiredWithoutServicesNestedInput
     category?: ServiceCategoryUpdateOneRequiredWithoutServicesNestedInput
+    appointments?: AppointmentUpdateManyWithoutServiceNestedInput
+    packages?: PackageServiceUpdateManyWithoutServiceNestedInput
     staff?: StaffServiceUpdateManyWithoutServiceNestedInput
+    commissionRules?: CommissionRuleUpdateManyWithoutServiceNestedInput
+    commissions?: StaffCommissionUpdateManyWithoutServiceNestedInput
   }
 
   export type ServiceUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
-    duration?: NullableIntFieldUpdateOperationsInput | number | null
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    duration?: IntFieldUpdateOperationsInput | number
     price?: FloatFieldUpdateOperationsInput | number
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    type?: EnumServiceTypeFieldUpdateOperationsInput | $Enums.ServiceType
+    serviceType?: EnumServiceTypeFieldUpdateOperationsInput | $Enums.ServiceType
+    maxCapacity?: IntFieldUpdateOperationsInput | number
+    unitCount?: NullableIntFieldUpdateOperationsInput | number | null
+    commissionFixed?: NullableFloatFieldUpdateOperationsInput | number | null
+    commissionRate?: NullableFloatFieldUpdateOperationsInput | number | null
     categoryId?: StringFieldUpdateOperationsInput | string
     branchId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    isActive?: BoolFieldUpdateOperationsInput | boolean
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    type?: EnumServiceTypeFieldUpdateOperationsInput | $Enums.ServiceType
-    commissionFixed?: NullableFloatFieldUpdateOperationsInput | number | null
-    commissionRate?: NullableFloatFieldUpdateOperationsInput | number | null
     appointments?: AppointmentUncheckedUpdateManyWithoutServiceNestedInput
     packages?: PackageServiceUncheckedUpdateManyWithoutServiceNestedInput
     staff?: StaffServiceUncheckedUpdateManyWithoutServiceNestedInput
+    commissionRules?: CommissionRuleUncheckedUpdateManyWithoutServiceNestedInput
+    commissions?: StaffCommissionUncheckedUpdateManyWithoutServiceNestedInput
   }
 
   export type ServiceCreateManyInput = {
     id?: string
     name: string
-    duration?: number | null
+    description?: string | null
+    duration: number
     price: number
+    isActive?: boolean
+    type?: $Enums.ServiceType
+    serviceType: $Enums.ServiceType
+    maxCapacity: number
+    unitCount?: number | null
+    commissionFixed?: number | null
+    commissionRate?: number | null
     categoryId: string
     branchId: string
     createdAt?: Date | string
-    isActive?: boolean
     updatedAt?: Date | string
-    type?: $Enums.ServiceType
-    commissionFixed?: number | null
-    commissionRate?: number | null
   }
 
   export type ServiceUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
-    duration?: NullableIntFieldUpdateOperationsInput | number | null
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    duration?: IntFieldUpdateOperationsInput | number
     price?: FloatFieldUpdateOperationsInput | number
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     type?: EnumServiceTypeFieldUpdateOperationsInput | $Enums.ServiceType
+    serviceType?: EnumServiceTypeFieldUpdateOperationsInput | $Enums.ServiceType
+    maxCapacity?: IntFieldUpdateOperationsInput | number
+    unitCount?: NullableIntFieldUpdateOperationsInput | number | null
     commissionFixed?: NullableFloatFieldUpdateOperationsInput | number | null
     commissionRate?: NullableFloatFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type ServiceUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
-    duration?: NullableIntFieldUpdateOperationsInput | number | null
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    duration?: IntFieldUpdateOperationsInput | number
     price?: FloatFieldUpdateOperationsInput | number
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    type?: EnumServiceTypeFieldUpdateOperationsInput | $Enums.ServiceType
+    serviceType?: EnumServiceTypeFieldUpdateOperationsInput | $Enums.ServiceType
+    maxCapacity?: IntFieldUpdateOperationsInput | number
+    unitCount?: NullableIntFieldUpdateOperationsInput | number | null
+    commissionFixed?: NullableFloatFieldUpdateOperationsInput | number | null
+    commissionRate?: NullableFloatFieldUpdateOperationsInput | number | null
     categoryId?: StringFieldUpdateOperationsInput | string
     branchId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    isActive?: BoolFieldUpdateOperationsInput | boolean
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    type?: EnumServiceTypeFieldUpdateOperationsInput | $Enums.ServiceType
-    commissionFixed?: NullableFloatFieldUpdateOperationsInput | number | null
-    commissionRate?: NullableFloatFieldUpdateOperationsInput | number | null
   }
 
   export type StaffServiceCreateInput = {
@@ -27319,65 +29195,177 @@ export namespace Prisma {
     cashRegisterLogId?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
+  export type CommissionRuleCreateInput = {
+    id?: string
+    type: $Enums.CommissionType
+    value: number
+    description?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    isGlobal?: boolean
+    service?: ServiceCreateNestedOneWithoutCommissionRulesInput
+    user?: UserCreateNestedOneWithoutCommissionRulesInput
+    commissions?: StaffCommissionCreateNestedManyWithoutAppliedRuleInput
+  }
+
+  export type CommissionRuleUncheckedCreateInput = {
+    id?: string
+    type: $Enums.CommissionType
+    value: number
+    description?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    isGlobal?: boolean
+    serviceId?: string | null
+    userId?: string | null
+    commissions?: StaffCommissionUncheckedCreateNestedManyWithoutAppliedRuleInput
+  }
+
+  export type CommissionRuleUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    type?: EnumCommissionTypeFieldUpdateOperationsInput | $Enums.CommissionType
+    value?: FloatFieldUpdateOperationsInput | number
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    isGlobal?: BoolFieldUpdateOperationsInput | boolean
+    service?: ServiceUpdateOneWithoutCommissionRulesNestedInput
+    user?: UserUpdateOneWithoutCommissionRulesNestedInput
+    commissions?: StaffCommissionUpdateManyWithoutAppliedRuleNestedInput
+  }
+
+  export type CommissionRuleUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    type?: EnumCommissionTypeFieldUpdateOperationsInput | $Enums.CommissionType
+    value?: FloatFieldUpdateOperationsInput | number
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    isGlobal?: BoolFieldUpdateOperationsInput | boolean
+    serviceId?: NullableStringFieldUpdateOperationsInput | string | null
+    userId?: NullableStringFieldUpdateOperationsInput | string | null
+    commissions?: StaffCommissionUncheckedUpdateManyWithoutAppliedRuleNestedInput
+  }
+
+  export type CommissionRuleCreateManyInput = {
+    id?: string
+    type: $Enums.CommissionType
+    value: number
+    description?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    isGlobal?: boolean
+    serviceId?: string | null
+    userId?: string | null
+  }
+
+  export type CommissionRuleUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    type?: EnumCommissionTypeFieldUpdateOperationsInput | $Enums.CommissionType
+    value?: FloatFieldUpdateOperationsInput | number
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    isGlobal?: BoolFieldUpdateOperationsInput | boolean
+  }
+
+  export type CommissionRuleUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    type?: EnumCommissionTypeFieldUpdateOperationsInput | $Enums.CommissionType
+    value?: FloatFieldUpdateOperationsInput | number
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    isGlobal?: BoolFieldUpdateOperationsInput | boolean
+    serviceId?: NullableStringFieldUpdateOperationsInput | string | null
+    userId?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
   export type StaffCommissionCreateInput = {
     id?: string
     amount: number
+    status?: $Enums.CommissionStatus
     isReversed?: boolean
     createdAt?: Date | string
-    invoice: InvoiceCreateNestedOneWithoutCommissionInput
+    updatedAt?: Date | string
+    appliedRule?: CommissionRuleCreateNestedOneWithoutCommissionsInput
     staff: UserCreateNestedOneWithoutCommissionsInput
+    service?: ServiceCreateNestedOneWithoutCommissionsInput
+    invoice: InvoiceCreateNestedOneWithoutCommissionInput
   }
 
   export type StaffCommissionUncheckedCreateInput = {
     id?: string
     amount: number
+    status?: $Enums.CommissionStatus
     isReversed?: boolean
+    appliedRuleId?: string | null
     staffId: string
+    serviceId?: string | null
     invoiceId: string
     createdAt?: Date | string
+    updatedAt?: Date | string
   }
 
   export type StaffCommissionUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     amount?: FloatFieldUpdateOperationsInput | number
+    status?: EnumCommissionStatusFieldUpdateOperationsInput | $Enums.CommissionStatus
     isReversed?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    invoice?: InvoiceUpdateOneRequiredWithoutCommissionNestedInput
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    appliedRule?: CommissionRuleUpdateOneWithoutCommissionsNestedInput
     staff?: UserUpdateOneRequiredWithoutCommissionsNestedInput
+    service?: ServiceUpdateOneWithoutCommissionsNestedInput
+    invoice?: InvoiceUpdateOneRequiredWithoutCommissionNestedInput
   }
 
   export type StaffCommissionUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     amount?: FloatFieldUpdateOperationsInput | number
+    status?: EnumCommissionStatusFieldUpdateOperationsInput | $Enums.CommissionStatus
     isReversed?: BoolFieldUpdateOperationsInput | boolean
+    appliedRuleId?: NullableStringFieldUpdateOperationsInput | string | null
     staffId?: StringFieldUpdateOperationsInput | string
+    serviceId?: NullableStringFieldUpdateOperationsInput | string | null
     invoiceId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type StaffCommissionCreateManyInput = {
     id?: string
     amount: number
+    status?: $Enums.CommissionStatus
     isReversed?: boolean
+    appliedRuleId?: string | null
     staffId: string
+    serviceId?: string | null
     invoiceId: string
     createdAt?: Date | string
+    updatedAt?: Date | string
   }
 
   export type StaffCommissionUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
     amount?: FloatFieldUpdateOperationsInput | number
+    status?: EnumCommissionStatusFieldUpdateOperationsInput | $Enums.CommissionStatus
     isReversed?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type StaffCommissionUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
     amount?: FloatFieldUpdateOperationsInput | number
+    status?: EnumCommissionStatusFieldUpdateOperationsInput | $Enums.CommissionStatus
     isReversed?: BoolFieldUpdateOperationsInput | boolean
+    appliedRuleId?: NullableStringFieldUpdateOperationsInput | string | null
     staffId?: StringFieldUpdateOperationsInput | string
+    serviceId?: NullableStringFieldUpdateOperationsInput | string | null
     invoiceId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type CashRegisterLogCreateInput = {
@@ -27518,6 +29506,12 @@ export namespace Prisma {
     none?: StaffCommissionWhereInput
   }
 
+  export type CommissionRuleListRelationFilter = {
+    every?: CommissionRuleWhereInput
+    some?: CommissionRuleWhereInput
+    none?: CommissionRuleWhereInput
+  }
+
   export type StaffServiceListRelationFilter = {
     every?: StaffServiceWhereInput
     some?: StaffServiceWhereInput
@@ -27549,6 +29543,10 @@ export namespace Prisma {
   }
 
   export type StaffCommissionOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type CommissionRuleOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -28036,6 +30034,13 @@ export namespace Prisma {
     branchId?: SortOrder
   }
 
+  export type EnumServiceTypeFilter<$PrismaModel = never> = {
+    equals?: $Enums.ServiceType | EnumServiceTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.ServiceType[] | ListEnumServiceTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.ServiceType[] | ListEnumServiceTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumServiceTypeFilter<$PrismaModel> | $Enums.ServiceType
+  }
+
   export type IntNullableFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel> | null
     in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
@@ -28045,13 +30050,6 @@ export namespace Prisma {
     gt?: number | IntFieldRefInput<$PrismaModel>
     gte?: number | IntFieldRefInput<$PrismaModel>
     not?: NestedIntNullableFilter<$PrismaModel> | number | null
-  }
-
-  export type EnumServiceTypeFilter<$PrismaModel = never> = {
-    equals?: $Enums.ServiceType | EnumServiceTypeFieldRefInput<$PrismaModel>
-    in?: $Enums.ServiceType[] | ListEnumServiceTypeFieldRefInput<$PrismaModel>
-    notIn?: $Enums.ServiceType[] | ListEnumServiceTypeFieldRefInput<$PrismaModel>
-    not?: NestedEnumServiceTypeFilter<$PrismaModel> | $Enums.ServiceType
   }
 
   export type FloatNullableFilter<$PrismaModel = never> = {
@@ -28065,15 +30063,15 @@ export namespace Prisma {
     not?: NestedFloatNullableFilter<$PrismaModel> | number | null
   }
 
+  export type ServiceCategoryScalarRelationFilter = {
+    is?: ServiceCategoryWhereInput
+    isNot?: ServiceCategoryWhereInput
+  }
+
   export type PackageServiceListRelationFilter = {
     every?: PackageServiceWhereInput
     some?: PackageServiceWhereInput
     none?: PackageServiceWhereInput
-  }
-
-  export type ServiceCategoryScalarRelationFilter = {
-    is?: ServiceCategoryWhereInput
-    isNot?: ServiceCategoryWhereInput
   }
 
   export type PackageServiceOrderByRelationAggregateInput = {
@@ -28083,21 +30081,27 @@ export namespace Prisma {
   export type ServiceCountOrderByAggregateInput = {
     id?: SortOrder
     name?: SortOrder
+    description?: SortOrder
     duration?: SortOrder
     price?: SortOrder
+    isActive?: SortOrder
+    type?: SortOrder
+    serviceType?: SortOrder
+    maxCapacity?: SortOrder
+    unitCount?: SortOrder
+    commissionFixed?: SortOrder
+    commissionRate?: SortOrder
     categoryId?: SortOrder
     branchId?: SortOrder
     createdAt?: SortOrder
-    isActive?: SortOrder
     updatedAt?: SortOrder
-    type?: SortOrder
-    commissionFixed?: SortOrder
-    commissionRate?: SortOrder
   }
 
   export type ServiceAvgOrderByAggregateInput = {
     duration?: SortOrder
     price?: SortOrder
+    maxCapacity?: SortOrder
+    unitCount?: SortOrder
     commissionFixed?: SortOrder
     commissionRate?: SortOrder
   }
@@ -28105,38 +30109,58 @@ export namespace Prisma {
   export type ServiceMaxOrderByAggregateInput = {
     id?: SortOrder
     name?: SortOrder
+    description?: SortOrder
     duration?: SortOrder
     price?: SortOrder
+    isActive?: SortOrder
+    type?: SortOrder
+    serviceType?: SortOrder
+    maxCapacity?: SortOrder
+    unitCount?: SortOrder
+    commissionFixed?: SortOrder
+    commissionRate?: SortOrder
     categoryId?: SortOrder
     branchId?: SortOrder
     createdAt?: SortOrder
-    isActive?: SortOrder
     updatedAt?: SortOrder
-    type?: SortOrder
-    commissionFixed?: SortOrder
-    commissionRate?: SortOrder
   }
 
   export type ServiceMinOrderByAggregateInput = {
     id?: SortOrder
     name?: SortOrder
+    description?: SortOrder
     duration?: SortOrder
     price?: SortOrder
+    isActive?: SortOrder
+    type?: SortOrder
+    serviceType?: SortOrder
+    maxCapacity?: SortOrder
+    unitCount?: SortOrder
+    commissionFixed?: SortOrder
+    commissionRate?: SortOrder
     categoryId?: SortOrder
     branchId?: SortOrder
     createdAt?: SortOrder
-    isActive?: SortOrder
     updatedAt?: SortOrder
-    type?: SortOrder
-    commissionFixed?: SortOrder
-    commissionRate?: SortOrder
   }
 
   export type ServiceSumOrderByAggregateInput = {
     duration?: SortOrder
     price?: SortOrder
+    maxCapacity?: SortOrder
+    unitCount?: SortOrder
     commissionFixed?: SortOrder
     commissionRate?: SortOrder
+  }
+
+  export type EnumServiceTypeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.ServiceType | EnumServiceTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.ServiceType[] | ListEnumServiceTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.ServiceType[] | ListEnumServiceTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumServiceTypeWithAggregatesFilter<$PrismaModel> | $Enums.ServiceType
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumServiceTypeFilter<$PrismaModel>
+    _max?: NestedEnumServiceTypeFilter<$PrismaModel>
   }
 
   export type IntNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -28153,16 +30177,6 @@ export namespace Prisma {
     _sum?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedIntNullableFilter<$PrismaModel>
     _max?: NestedIntNullableFilter<$PrismaModel>
-  }
-
-  export type EnumServiceTypeWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: $Enums.ServiceType | EnumServiceTypeFieldRefInput<$PrismaModel>
-    in?: $Enums.ServiceType[] | ListEnumServiceTypeFieldRefInput<$PrismaModel>
-    notIn?: $Enums.ServiceType[] | ListEnumServiceTypeFieldRefInput<$PrismaModel>
-    not?: NestedEnumServiceTypeWithAggregatesFilter<$PrismaModel> | $Enums.ServiceType
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedEnumServiceTypeFilter<$PrismaModel>
-    _max?: NestedEnumServiceTypeFilter<$PrismaModel>
   }
 
   export type FloatNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -28687,13 +30701,100 @@ export namespace Prisma {
     _max?: NestedEnumPaymentMethodFilter<$PrismaModel>
   }
 
+  export type EnumCommissionTypeFilter<$PrismaModel = never> = {
+    equals?: $Enums.CommissionType | EnumCommissionTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.CommissionType[] | ListEnumCommissionTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.CommissionType[] | ListEnumCommissionTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumCommissionTypeFilter<$PrismaModel> | $Enums.CommissionType
+  }
+
+  export type ServiceNullableScalarRelationFilter = {
+    is?: ServiceWhereInput | null
+    isNot?: ServiceWhereInput | null
+  }
+
+  export type UserNullableScalarRelationFilter = {
+    is?: UserWhereInput | null
+    isNot?: UserWhereInput | null
+  }
+
+  export type CommissionRuleCountOrderByAggregateInput = {
+    id?: SortOrder
+    type?: SortOrder
+    value?: SortOrder
+    description?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    isGlobal?: SortOrder
+    serviceId?: SortOrder
+    userId?: SortOrder
+  }
+
+  export type CommissionRuleAvgOrderByAggregateInput = {
+    value?: SortOrder
+  }
+
+  export type CommissionRuleMaxOrderByAggregateInput = {
+    id?: SortOrder
+    type?: SortOrder
+    value?: SortOrder
+    description?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    isGlobal?: SortOrder
+    serviceId?: SortOrder
+    userId?: SortOrder
+  }
+
+  export type CommissionRuleMinOrderByAggregateInput = {
+    id?: SortOrder
+    type?: SortOrder
+    value?: SortOrder
+    description?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    isGlobal?: SortOrder
+    serviceId?: SortOrder
+    userId?: SortOrder
+  }
+
+  export type CommissionRuleSumOrderByAggregateInput = {
+    value?: SortOrder
+  }
+
+  export type EnumCommissionTypeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.CommissionType | EnumCommissionTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.CommissionType[] | ListEnumCommissionTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.CommissionType[] | ListEnumCommissionTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumCommissionTypeWithAggregatesFilter<$PrismaModel> | $Enums.CommissionType
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumCommissionTypeFilter<$PrismaModel>
+    _max?: NestedEnumCommissionTypeFilter<$PrismaModel>
+  }
+
+  export type EnumCommissionStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.CommissionStatus | EnumCommissionStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.CommissionStatus[] | ListEnumCommissionStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.CommissionStatus[] | ListEnumCommissionStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumCommissionStatusFilter<$PrismaModel> | $Enums.CommissionStatus
+  }
+
+  export type CommissionRuleNullableScalarRelationFilter = {
+    is?: CommissionRuleWhereInput | null
+    isNot?: CommissionRuleWhereInput | null
+  }
+
   export type StaffCommissionCountOrderByAggregateInput = {
     id?: SortOrder
     amount?: SortOrder
+    status?: SortOrder
     isReversed?: SortOrder
+    appliedRuleId?: SortOrder
     staffId?: SortOrder
+    serviceId?: SortOrder
     invoiceId?: SortOrder
     createdAt?: SortOrder
+    updatedAt?: SortOrder
   }
 
   export type StaffCommissionAvgOrderByAggregateInput = {
@@ -28703,23 +30804,41 @@ export namespace Prisma {
   export type StaffCommissionMaxOrderByAggregateInput = {
     id?: SortOrder
     amount?: SortOrder
+    status?: SortOrder
     isReversed?: SortOrder
+    appliedRuleId?: SortOrder
     staffId?: SortOrder
+    serviceId?: SortOrder
     invoiceId?: SortOrder
     createdAt?: SortOrder
+    updatedAt?: SortOrder
   }
 
   export type StaffCommissionMinOrderByAggregateInput = {
     id?: SortOrder
     amount?: SortOrder
+    status?: SortOrder
     isReversed?: SortOrder
+    appliedRuleId?: SortOrder
     staffId?: SortOrder
+    serviceId?: SortOrder
     invoiceId?: SortOrder
     createdAt?: SortOrder
+    updatedAt?: SortOrder
   }
 
   export type StaffCommissionSumOrderByAggregateInput = {
     amount?: SortOrder
+  }
+
+  export type EnumCommissionStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.CommissionStatus | EnumCommissionStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.CommissionStatus[] | ListEnumCommissionStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.CommissionStatus[] | ListEnumCommissionStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumCommissionStatusWithAggregatesFilter<$PrismaModel> | $Enums.CommissionStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumCommissionStatusFilter<$PrismaModel>
+    _max?: NestedEnumCommissionStatusFilter<$PrismaModel>
   }
 
   export type EnumCashLogTypeFilter<$PrismaModel = never> = {
@@ -28798,6 +30917,13 @@ export namespace Prisma {
     connect?: StaffCommissionWhereUniqueInput | StaffCommissionWhereUniqueInput[]
   }
 
+  export type CommissionRuleCreateNestedManyWithoutUserInput = {
+    create?: XOR<CommissionRuleCreateWithoutUserInput, CommissionRuleUncheckedCreateWithoutUserInput> | CommissionRuleCreateWithoutUserInput[] | CommissionRuleUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: CommissionRuleCreateOrConnectWithoutUserInput | CommissionRuleCreateOrConnectWithoutUserInput[]
+    createMany?: CommissionRuleCreateManyUserInputEnvelope
+    connect?: CommissionRuleWhereUniqueInput | CommissionRuleWhereUniqueInput[]
+  }
+
   export type StaffServiceCreateNestedManyWithoutUserInput = {
     create?: XOR<StaffServiceCreateWithoutUserInput, StaffServiceUncheckedCreateWithoutUserInput> | StaffServiceCreateWithoutUserInput[] | StaffServiceUncheckedCreateWithoutUserInput[]
     connectOrCreate?: StaffServiceCreateOrConnectWithoutUserInput | StaffServiceCreateOrConnectWithoutUserInput[]
@@ -28837,6 +30963,13 @@ export namespace Prisma {
     connectOrCreate?: StaffCommissionCreateOrConnectWithoutStaffInput | StaffCommissionCreateOrConnectWithoutStaffInput[]
     createMany?: StaffCommissionCreateManyStaffInputEnvelope
     connect?: StaffCommissionWhereUniqueInput | StaffCommissionWhereUniqueInput[]
+  }
+
+  export type CommissionRuleUncheckedCreateNestedManyWithoutUserInput = {
+    create?: XOR<CommissionRuleCreateWithoutUserInput, CommissionRuleUncheckedCreateWithoutUserInput> | CommissionRuleCreateWithoutUserInput[] | CommissionRuleUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: CommissionRuleCreateOrConnectWithoutUserInput | CommissionRuleCreateOrConnectWithoutUserInput[]
+    createMany?: CommissionRuleCreateManyUserInputEnvelope
+    connect?: CommissionRuleWhereUniqueInput | CommissionRuleWhereUniqueInput[]
   }
 
   export type StaffServiceUncheckedCreateNestedManyWithoutUserInput = {
@@ -28905,6 +31038,20 @@ export namespace Prisma {
     update?: StaffCommissionUpdateWithWhereUniqueWithoutStaffInput | StaffCommissionUpdateWithWhereUniqueWithoutStaffInput[]
     updateMany?: StaffCommissionUpdateManyWithWhereWithoutStaffInput | StaffCommissionUpdateManyWithWhereWithoutStaffInput[]
     deleteMany?: StaffCommissionScalarWhereInput | StaffCommissionScalarWhereInput[]
+  }
+
+  export type CommissionRuleUpdateManyWithoutUserNestedInput = {
+    create?: XOR<CommissionRuleCreateWithoutUserInput, CommissionRuleUncheckedCreateWithoutUserInput> | CommissionRuleCreateWithoutUserInput[] | CommissionRuleUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: CommissionRuleCreateOrConnectWithoutUserInput | CommissionRuleCreateOrConnectWithoutUserInput[]
+    upsert?: CommissionRuleUpsertWithWhereUniqueWithoutUserInput | CommissionRuleUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: CommissionRuleCreateManyUserInputEnvelope
+    set?: CommissionRuleWhereUniqueInput | CommissionRuleWhereUniqueInput[]
+    disconnect?: CommissionRuleWhereUniqueInput | CommissionRuleWhereUniqueInput[]
+    delete?: CommissionRuleWhereUniqueInput | CommissionRuleWhereUniqueInput[]
+    connect?: CommissionRuleWhereUniqueInput | CommissionRuleWhereUniqueInput[]
+    update?: CommissionRuleUpdateWithWhereUniqueWithoutUserInput | CommissionRuleUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: CommissionRuleUpdateManyWithWhereWithoutUserInput | CommissionRuleUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: CommissionRuleScalarWhereInput | CommissionRuleScalarWhereInput[]
   }
 
   export type StaffServiceUpdateManyWithoutUserNestedInput = {
@@ -28989,6 +31136,20 @@ export namespace Prisma {
     update?: StaffCommissionUpdateWithWhereUniqueWithoutStaffInput | StaffCommissionUpdateWithWhereUniqueWithoutStaffInput[]
     updateMany?: StaffCommissionUpdateManyWithWhereWithoutStaffInput | StaffCommissionUpdateManyWithWhereWithoutStaffInput[]
     deleteMany?: StaffCommissionScalarWhereInput | StaffCommissionScalarWhereInput[]
+  }
+
+  export type CommissionRuleUncheckedUpdateManyWithoutUserNestedInput = {
+    create?: XOR<CommissionRuleCreateWithoutUserInput, CommissionRuleUncheckedCreateWithoutUserInput> | CommissionRuleCreateWithoutUserInput[] | CommissionRuleUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: CommissionRuleCreateOrConnectWithoutUserInput | CommissionRuleCreateOrConnectWithoutUserInput[]
+    upsert?: CommissionRuleUpsertWithWhereUniqueWithoutUserInput | CommissionRuleUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: CommissionRuleCreateManyUserInputEnvelope
+    set?: CommissionRuleWhereUniqueInput | CommissionRuleWhereUniqueInput[]
+    disconnect?: CommissionRuleWhereUniqueInput | CommissionRuleWhereUniqueInput[]
+    delete?: CommissionRuleWhereUniqueInput | CommissionRuleWhereUniqueInput[]
+    connect?: CommissionRuleWhereUniqueInput | CommissionRuleWhereUniqueInput[]
+    update?: CommissionRuleUpdateWithWhereUniqueWithoutUserInput | CommissionRuleUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: CommissionRuleUpdateManyWithWhereWithoutUserInput | CommissionRuleUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: CommissionRuleScalarWhereInput | CommissionRuleScalarWhereInput[]
   }
 
   export type StaffServiceUncheckedUpdateManyWithoutUserNestedInput = {
@@ -29813,6 +31974,18 @@ export namespace Prisma {
     deleteMany?: ServiceScalarWhereInput | ServiceScalarWhereInput[]
   }
 
+  export type BranchCreateNestedOneWithoutServicesInput = {
+    create?: XOR<BranchCreateWithoutServicesInput, BranchUncheckedCreateWithoutServicesInput>
+    connectOrCreate?: BranchCreateOrConnectWithoutServicesInput
+    connect?: BranchWhereUniqueInput
+  }
+
+  export type ServiceCategoryCreateNestedOneWithoutServicesInput = {
+    create?: XOR<ServiceCategoryCreateWithoutServicesInput, ServiceCategoryUncheckedCreateWithoutServicesInput>
+    connectOrCreate?: ServiceCategoryCreateOrConnectWithoutServicesInput
+    connect?: ServiceCategoryWhereUniqueInput
+  }
+
   export type AppointmentCreateNestedManyWithoutServiceInput = {
     create?: XOR<AppointmentCreateWithoutServiceInput, AppointmentUncheckedCreateWithoutServiceInput> | AppointmentCreateWithoutServiceInput[] | AppointmentUncheckedCreateWithoutServiceInput[]
     connectOrCreate?: AppointmentCreateOrConnectWithoutServiceInput | AppointmentCreateOrConnectWithoutServiceInput[]
@@ -29827,23 +32000,25 @@ export namespace Prisma {
     connect?: PackageServiceWhereUniqueInput | PackageServiceWhereUniqueInput[]
   }
 
-  export type BranchCreateNestedOneWithoutServicesInput = {
-    create?: XOR<BranchCreateWithoutServicesInput, BranchUncheckedCreateWithoutServicesInput>
-    connectOrCreate?: BranchCreateOrConnectWithoutServicesInput
-    connect?: BranchWhereUniqueInput
-  }
-
-  export type ServiceCategoryCreateNestedOneWithoutServicesInput = {
-    create?: XOR<ServiceCategoryCreateWithoutServicesInput, ServiceCategoryUncheckedCreateWithoutServicesInput>
-    connectOrCreate?: ServiceCategoryCreateOrConnectWithoutServicesInput
-    connect?: ServiceCategoryWhereUniqueInput
-  }
-
   export type StaffServiceCreateNestedManyWithoutServiceInput = {
     create?: XOR<StaffServiceCreateWithoutServiceInput, StaffServiceUncheckedCreateWithoutServiceInput> | StaffServiceCreateWithoutServiceInput[] | StaffServiceUncheckedCreateWithoutServiceInput[]
     connectOrCreate?: StaffServiceCreateOrConnectWithoutServiceInput | StaffServiceCreateOrConnectWithoutServiceInput[]
     createMany?: StaffServiceCreateManyServiceInputEnvelope
     connect?: StaffServiceWhereUniqueInput | StaffServiceWhereUniqueInput[]
+  }
+
+  export type CommissionRuleCreateNestedManyWithoutServiceInput = {
+    create?: XOR<CommissionRuleCreateWithoutServiceInput, CommissionRuleUncheckedCreateWithoutServiceInput> | CommissionRuleCreateWithoutServiceInput[] | CommissionRuleUncheckedCreateWithoutServiceInput[]
+    connectOrCreate?: CommissionRuleCreateOrConnectWithoutServiceInput | CommissionRuleCreateOrConnectWithoutServiceInput[]
+    createMany?: CommissionRuleCreateManyServiceInputEnvelope
+    connect?: CommissionRuleWhereUniqueInput | CommissionRuleWhereUniqueInput[]
+  }
+
+  export type StaffCommissionCreateNestedManyWithoutServiceInput = {
+    create?: XOR<StaffCommissionCreateWithoutServiceInput, StaffCommissionUncheckedCreateWithoutServiceInput> | StaffCommissionCreateWithoutServiceInput[] | StaffCommissionUncheckedCreateWithoutServiceInput[]
+    connectOrCreate?: StaffCommissionCreateOrConnectWithoutServiceInput | StaffCommissionCreateOrConnectWithoutServiceInput[]
+    createMany?: StaffCommissionCreateManyServiceInputEnvelope
+    connect?: StaffCommissionWhereUniqueInput | StaffCommissionWhereUniqueInput[]
   }
 
   export type AppointmentUncheckedCreateNestedManyWithoutServiceInput = {
@@ -29867,6 +32042,24 @@ export namespace Prisma {
     connect?: StaffServiceWhereUniqueInput | StaffServiceWhereUniqueInput[]
   }
 
+  export type CommissionRuleUncheckedCreateNestedManyWithoutServiceInput = {
+    create?: XOR<CommissionRuleCreateWithoutServiceInput, CommissionRuleUncheckedCreateWithoutServiceInput> | CommissionRuleCreateWithoutServiceInput[] | CommissionRuleUncheckedCreateWithoutServiceInput[]
+    connectOrCreate?: CommissionRuleCreateOrConnectWithoutServiceInput | CommissionRuleCreateOrConnectWithoutServiceInput[]
+    createMany?: CommissionRuleCreateManyServiceInputEnvelope
+    connect?: CommissionRuleWhereUniqueInput | CommissionRuleWhereUniqueInput[]
+  }
+
+  export type StaffCommissionUncheckedCreateNestedManyWithoutServiceInput = {
+    create?: XOR<StaffCommissionCreateWithoutServiceInput, StaffCommissionUncheckedCreateWithoutServiceInput> | StaffCommissionCreateWithoutServiceInput[] | StaffCommissionUncheckedCreateWithoutServiceInput[]
+    connectOrCreate?: StaffCommissionCreateOrConnectWithoutServiceInput | StaffCommissionCreateOrConnectWithoutServiceInput[]
+    createMany?: StaffCommissionCreateManyServiceInputEnvelope
+    connect?: StaffCommissionWhereUniqueInput | StaffCommissionWhereUniqueInput[]
+  }
+
+  export type EnumServiceTypeFieldUpdateOperationsInput = {
+    set?: $Enums.ServiceType
+  }
+
   export type NullableIntFieldUpdateOperationsInput = {
     set?: number | null
     increment?: number
@@ -29875,16 +32068,28 @@ export namespace Prisma {
     divide?: number
   }
 
-  export type EnumServiceTypeFieldUpdateOperationsInput = {
-    set?: $Enums.ServiceType
-  }
-
   export type NullableFloatFieldUpdateOperationsInput = {
     set?: number | null
     increment?: number
     decrement?: number
     multiply?: number
     divide?: number
+  }
+
+  export type BranchUpdateOneRequiredWithoutServicesNestedInput = {
+    create?: XOR<BranchCreateWithoutServicesInput, BranchUncheckedCreateWithoutServicesInput>
+    connectOrCreate?: BranchCreateOrConnectWithoutServicesInput
+    upsert?: BranchUpsertWithoutServicesInput
+    connect?: BranchWhereUniqueInput
+    update?: XOR<XOR<BranchUpdateToOneWithWhereWithoutServicesInput, BranchUpdateWithoutServicesInput>, BranchUncheckedUpdateWithoutServicesInput>
+  }
+
+  export type ServiceCategoryUpdateOneRequiredWithoutServicesNestedInput = {
+    create?: XOR<ServiceCategoryCreateWithoutServicesInput, ServiceCategoryUncheckedCreateWithoutServicesInput>
+    connectOrCreate?: ServiceCategoryCreateOrConnectWithoutServicesInput
+    upsert?: ServiceCategoryUpsertWithoutServicesInput
+    connect?: ServiceCategoryWhereUniqueInput
+    update?: XOR<XOR<ServiceCategoryUpdateToOneWithWhereWithoutServicesInput, ServiceCategoryUpdateWithoutServicesInput>, ServiceCategoryUncheckedUpdateWithoutServicesInput>
   }
 
   export type AppointmentUpdateManyWithoutServiceNestedInput = {
@@ -29915,22 +32120,6 @@ export namespace Prisma {
     deleteMany?: PackageServiceScalarWhereInput | PackageServiceScalarWhereInput[]
   }
 
-  export type BranchUpdateOneRequiredWithoutServicesNestedInput = {
-    create?: XOR<BranchCreateWithoutServicesInput, BranchUncheckedCreateWithoutServicesInput>
-    connectOrCreate?: BranchCreateOrConnectWithoutServicesInput
-    upsert?: BranchUpsertWithoutServicesInput
-    connect?: BranchWhereUniqueInput
-    update?: XOR<XOR<BranchUpdateToOneWithWhereWithoutServicesInput, BranchUpdateWithoutServicesInput>, BranchUncheckedUpdateWithoutServicesInput>
-  }
-
-  export type ServiceCategoryUpdateOneRequiredWithoutServicesNestedInput = {
-    create?: XOR<ServiceCategoryCreateWithoutServicesInput, ServiceCategoryUncheckedCreateWithoutServicesInput>
-    connectOrCreate?: ServiceCategoryCreateOrConnectWithoutServicesInput
-    upsert?: ServiceCategoryUpsertWithoutServicesInput
-    connect?: ServiceCategoryWhereUniqueInput
-    update?: XOR<XOR<ServiceCategoryUpdateToOneWithWhereWithoutServicesInput, ServiceCategoryUpdateWithoutServicesInput>, ServiceCategoryUncheckedUpdateWithoutServicesInput>
-  }
-
   export type StaffServiceUpdateManyWithoutServiceNestedInput = {
     create?: XOR<StaffServiceCreateWithoutServiceInput, StaffServiceUncheckedCreateWithoutServiceInput> | StaffServiceCreateWithoutServiceInput[] | StaffServiceUncheckedCreateWithoutServiceInput[]
     connectOrCreate?: StaffServiceCreateOrConnectWithoutServiceInput | StaffServiceCreateOrConnectWithoutServiceInput[]
@@ -29943,6 +32132,34 @@ export namespace Prisma {
     update?: StaffServiceUpdateWithWhereUniqueWithoutServiceInput | StaffServiceUpdateWithWhereUniqueWithoutServiceInput[]
     updateMany?: StaffServiceUpdateManyWithWhereWithoutServiceInput | StaffServiceUpdateManyWithWhereWithoutServiceInput[]
     deleteMany?: StaffServiceScalarWhereInput | StaffServiceScalarWhereInput[]
+  }
+
+  export type CommissionRuleUpdateManyWithoutServiceNestedInput = {
+    create?: XOR<CommissionRuleCreateWithoutServiceInput, CommissionRuleUncheckedCreateWithoutServiceInput> | CommissionRuleCreateWithoutServiceInput[] | CommissionRuleUncheckedCreateWithoutServiceInput[]
+    connectOrCreate?: CommissionRuleCreateOrConnectWithoutServiceInput | CommissionRuleCreateOrConnectWithoutServiceInput[]
+    upsert?: CommissionRuleUpsertWithWhereUniqueWithoutServiceInput | CommissionRuleUpsertWithWhereUniqueWithoutServiceInput[]
+    createMany?: CommissionRuleCreateManyServiceInputEnvelope
+    set?: CommissionRuleWhereUniqueInput | CommissionRuleWhereUniqueInput[]
+    disconnect?: CommissionRuleWhereUniqueInput | CommissionRuleWhereUniqueInput[]
+    delete?: CommissionRuleWhereUniqueInput | CommissionRuleWhereUniqueInput[]
+    connect?: CommissionRuleWhereUniqueInput | CommissionRuleWhereUniqueInput[]
+    update?: CommissionRuleUpdateWithWhereUniqueWithoutServiceInput | CommissionRuleUpdateWithWhereUniqueWithoutServiceInput[]
+    updateMany?: CommissionRuleUpdateManyWithWhereWithoutServiceInput | CommissionRuleUpdateManyWithWhereWithoutServiceInput[]
+    deleteMany?: CommissionRuleScalarWhereInput | CommissionRuleScalarWhereInput[]
+  }
+
+  export type StaffCommissionUpdateManyWithoutServiceNestedInput = {
+    create?: XOR<StaffCommissionCreateWithoutServiceInput, StaffCommissionUncheckedCreateWithoutServiceInput> | StaffCommissionCreateWithoutServiceInput[] | StaffCommissionUncheckedCreateWithoutServiceInput[]
+    connectOrCreate?: StaffCommissionCreateOrConnectWithoutServiceInput | StaffCommissionCreateOrConnectWithoutServiceInput[]
+    upsert?: StaffCommissionUpsertWithWhereUniqueWithoutServiceInput | StaffCommissionUpsertWithWhereUniqueWithoutServiceInput[]
+    createMany?: StaffCommissionCreateManyServiceInputEnvelope
+    set?: StaffCommissionWhereUniqueInput | StaffCommissionWhereUniqueInput[]
+    disconnect?: StaffCommissionWhereUniqueInput | StaffCommissionWhereUniqueInput[]
+    delete?: StaffCommissionWhereUniqueInput | StaffCommissionWhereUniqueInput[]
+    connect?: StaffCommissionWhereUniqueInput | StaffCommissionWhereUniqueInput[]
+    update?: StaffCommissionUpdateWithWhereUniqueWithoutServiceInput | StaffCommissionUpdateWithWhereUniqueWithoutServiceInput[]
+    updateMany?: StaffCommissionUpdateManyWithWhereWithoutServiceInput | StaffCommissionUpdateManyWithWhereWithoutServiceInput[]
+    deleteMany?: StaffCommissionScalarWhereInput | StaffCommissionScalarWhereInput[]
   }
 
   export type AppointmentUncheckedUpdateManyWithoutServiceNestedInput = {
@@ -29985,6 +32202,34 @@ export namespace Prisma {
     update?: StaffServiceUpdateWithWhereUniqueWithoutServiceInput | StaffServiceUpdateWithWhereUniqueWithoutServiceInput[]
     updateMany?: StaffServiceUpdateManyWithWhereWithoutServiceInput | StaffServiceUpdateManyWithWhereWithoutServiceInput[]
     deleteMany?: StaffServiceScalarWhereInput | StaffServiceScalarWhereInput[]
+  }
+
+  export type CommissionRuleUncheckedUpdateManyWithoutServiceNestedInput = {
+    create?: XOR<CommissionRuleCreateWithoutServiceInput, CommissionRuleUncheckedCreateWithoutServiceInput> | CommissionRuleCreateWithoutServiceInput[] | CommissionRuleUncheckedCreateWithoutServiceInput[]
+    connectOrCreate?: CommissionRuleCreateOrConnectWithoutServiceInput | CommissionRuleCreateOrConnectWithoutServiceInput[]
+    upsert?: CommissionRuleUpsertWithWhereUniqueWithoutServiceInput | CommissionRuleUpsertWithWhereUniqueWithoutServiceInput[]
+    createMany?: CommissionRuleCreateManyServiceInputEnvelope
+    set?: CommissionRuleWhereUniqueInput | CommissionRuleWhereUniqueInput[]
+    disconnect?: CommissionRuleWhereUniqueInput | CommissionRuleWhereUniqueInput[]
+    delete?: CommissionRuleWhereUniqueInput | CommissionRuleWhereUniqueInput[]
+    connect?: CommissionRuleWhereUniqueInput | CommissionRuleWhereUniqueInput[]
+    update?: CommissionRuleUpdateWithWhereUniqueWithoutServiceInput | CommissionRuleUpdateWithWhereUniqueWithoutServiceInput[]
+    updateMany?: CommissionRuleUpdateManyWithWhereWithoutServiceInput | CommissionRuleUpdateManyWithWhereWithoutServiceInput[]
+    deleteMany?: CommissionRuleScalarWhereInput | CommissionRuleScalarWhereInput[]
+  }
+
+  export type StaffCommissionUncheckedUpdateManyWithoutServiceNestedInput = {
+    create?: XOR<StaffCommissionCreateWithoutServiceInput, StaffCommissionUncheckedCreateWithoutServiceInput> | StaffCommissionCreateWithoutServiceInput[] | StaffCommissionUncheckedCreateWithoutServiceInput[]
+    connectOrCreate?: StaffCommissionCreateOrConnectWithoutServiceInput | StaffCommissionCreateOrConnectWithoutServiceInput[]
+    upsert?: StaffCommissionUpsertWithWhereUniqueWithoutServiceInput | StaffCommissionUpsertWithWhereUniqueWithoutServiceInput[]
+    createMany?: StaffCommissionCreateManyServiceInputEnvelope
+    set?: StaffCommissionWhereUniqueInput | StaffCommissionWhereUniqueInput[]
+    disconnect?: StaffCommissionWhereUniqueInput | StaffCommissionWhereUniqueInput[]
+    delete?: StaffCommissionWhereUniqueInput | StaffCommissionWhereUniqueInput[]
+    connect?: StaffCommissionWhereUniqueInput | StaffCommissionWhereUniqueInput[]
+    update?: StaffCommissionUpdateWithWhereUniqueWithoutServiceInput | StaffCommissionUpdateWithWhereUniqueWithoutServiceInput[]
+    updateMany?: StaffCommissionUpdateManyWithWhereWithoutServiceInput | StaffCommissionUpdateManyWithWhereWithoutServiceInput[]
+    deleteMany?: StaffCommissionScalarWhereInput | StaffCommissionScalarWhereInput[]
   }
 
   export type ServiceCreateNestedOneWithoutStaffInput = {
@@ -30583,10 +32828,88 @@ export namespace Prisma {
     update?: XOR<XOR<InvoiceUpdateToOneWithWhereWithoutPaymentsInput, InvoiceUpdateWithoutPaymentsInput>, InvoiceUncheckedUpdateWithoutPaymentsInput>
   }
 
-  export type InvoiceCreateNestedOneWithoutCommissionInput = {
-    create?: XOR<InvoiceCreateWithoutCommissionInput, InvoiceUncheckedCreateWithoutCommissionInput>
-    connectOrCreate?: InvoiceCreateOrConnectWithoutCommissionInput
-    connect?: InvoiceWhereUniqueInput
+  export type ServiceCreateNestedOneWithoutCommissionRulesInput = {
+    create?: XOR<ServiceCreateWithoutCommissionRulesInput, ServiceUncheckedCreateWithoutCommissionRulesInput>
+    connectOrCreate?: ServiceCreateOrConnectWithoutCommissionRulesInput
+    connect?: ServiceWhereUniqueInput
+  }
+
+  export type UserCreateNestedOneWithoutCommissionRulesInput = {
+    create?: XOR<UserCreateWithoutCommissionRulesInput, UserUncheckedCreateWithoutCommissionRulesInput>
+    connectOrCreate?: UserCreateOrConnectWithoutCommissionRulesInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type StaffCommissionCreateNestedManyWithoutAppliedRuleInput = {
+    create?: XOR<StaffCommissionCreateWithoutAppliedRuleInput, StaffCommissionUncheckedCreateWithoutAppliedRuleInput> | StaffCommissionCreateWithoutAppliedRuleInput[] | StaffCommissionUncheckedCreateWithoutAppliedRuleInput[]
+    connectOrCreate?: StaffCommissionCreateOrConnectWithoutAppliedRuleInput | StaffCommissionCreateOrConnectWithoutAppliedRuleInput[]
+    createMany?: StaffCommissionCreateManyAppliedRuleInputEnvelope
+    connect?: StaffCommissionWhereUniqueInput | StaffCommissionWhereUniqueInput[]
+  }
+
+  export type StaffCommissionUncheckedCreateNestedManyWithoutAppliedRuleInput = {
+    create?: XOR<StaffCommissionCreateWithoutAppliedRuleInput, StaffCommissionUncheckedCreateWithoutAppliedRuleInput> | StaffCommissionCreateWithoutAppliedRuleInput[] | StaffCommissionUncheckedCreateWithoutAppliedRuleInput[]
+    connectOrCreate?: StaffCommissionCreateOrConnectWithoutAppliedRuleInput | StaffCommissionCreateOrConnectWithoutAppliedRuleInput[]
+    createMany?: StaffCommissionCreateManyAppliedRuleInputEnvelope
+    connect?: StaffCommissionWhereUniqueInput | StaffCommissionWhereUniqueInput[]
+  }
+
+  export type EnumCommissionTypeFieldUpdateOperationsInput = {
+    set?: $Enums.CommissionType
+  }
+
+  export type ServiceUpdateOneWithoutCommissionRulesNestedInput = {
+    create?: XOR<ServiceCreateWithoutCommissionRulesInput, ServiceUncheckedCreateWithoutCommissionRulesInput>
+    connectOrCreate?: ServiceCreateOrConnectWithoutCommissionRulesInput
+    upsert?: ServiceUpsertWithoutCommissionRulesInput
+    disconnect?: ServiceWhereInput | boolean
+    delete?: ServiceWhereInput | boolean
+    connect?: ServiceWhereUniqueInput
+    update?: XOR<XOR<ServiceUpdateToOneWithWhereWithoutCommissionRulesInput, ServiceUpdateWithoutCommissionRulesInput>, ServiceUncheckedUpdateWithoutCommissionRulesInput>
+  }
+
+  export type UserUpdateOneWithoutCommissionRulesNestedInput = {
+    create?: XOR<UserCreateWithoutCommissionRulesInput, UserUncheckedCreateWithoutCommissionRulesInput>
+    connectOrCreate?: UserCreateOrConnectWithoutCommissionRulesInput
+    upsert?: UserUpsertWithoutCommissionRulesInput
+    disconnect?: UserWhereInput | boolean
+    delete?: UserWhereInput | boolean
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutCommissionRulesInput, UserUpdateWithoutCommissionRulesInput>, UserUncheckedUpdateWithoutCommissionRulesInput>
+  }
+
+  export type StaffCommissionUpdateManyWithoutAppliedRuleNestedInput = {
+    create?: XOR<StaffCommissionCreateWithoutAppliedRuleInput, StaffCommissionUncheckedCreateWithoutAppliedRuleInput> | StaffCommissionCreateWithoutAppliedRuleInput[] | StaffCommissionUncheckedCreateWithoutAppliedRuleInput[]
+    connectOrCreate?: StaffCommissionCreateOrConnectWithoutAppliedRuleInput | StaffCommissionCreateOrConnectWithoutAppliedRuleInput[]
+    upsert?: StaffCommissionUpsertWithWhereUniqueWithoutAppliedRuleInput | StaffCommissionUpsertWithWhereUniqueWithoutAppliedRuleInput[]
+    createMany?: StaffCommissionCreateManyAppliedRuleInputEnvelope
+    set?: StaffCommissionWhereUniqueInput | StaffCommissionWhereUniqueInput[]
+    disconnect?: StaffCommissionWhereUniqueInput | StaffCommissionWhereUniqueInput[]
+    delete?: StaffCommissionWhereUniqueInput | StaffCommissionWhereUniqueInput[]
+    connect?: StaffCommissionWhereUniqueInput | StaffCommissionWhereUniqueInput[]
+    update?: StaffCommissionUpdateWithWhereUniqueWithoutAppliedRuleInput | StaffCommissionUpdateWithWhereUniqueWithoutAppliedRuleInput[]
+    updateMany?: StaffCommissionUpdateManyWithWhereWithoutAppliedRuleInput | StaffCommissionUpdateManyWithWhereWithoutAppliedRuleInput[]
+    deleteMany?: StaffCommissionScalarWhereInput | StaffCommissionScalarWhereInput[]
+  }
+
+  export type StaffCommissionUncheckedUpdateManyWithoutAppliedRuleNestedInput = {
+    create?: XOR<StaffCommissionCreateWithoutAppliedRuleInput, StaffCommissionUncheckedCreateWithoutAppliedRuleInput> | StaffCommissionCreateWithoutAppliedRuleInput[] | StaffCommissionUncheckedCreateWithoutAppliedRuleInput[]
+    connectOrCreate?: StaffCommissionCreateOrConnectWithoutAppliedRuleInput | StaffCommissionCreateOrConnectWithoutAppliedRuleInput[]
+    upsert?: StaffCommissionUpsertWithWhereUniqueWithoutAppliedRuleInput | StaffCommissionUpsertWithWhereUniqueWithoutAppliedRuleInput[]
+    createMany?: StaffCommissionCreateManyAppliedRuleInputEnvelope
+    set?: StaffCommissionWhereUniqueInput | StaffCommissionWhereUniqueInput[]
+    disconnect?: StaffCommissionWhereUniqueInput | StaffCommissionWhereUniqueInput[]
+    delete?: StaffCommissionWhereUniqueInput | StaffCommissionWhereUniqueInput[]
+    connect?: StaffCommissionWhereUniqueInput | StaffCommissionWhereUniqueInput[]
+    update?: StaffCommissionUpdateWithWhereUniqueWithoutAppliedRuleInput | StaffCommissionUpdateWithWhereUniqueWithoutAppliedRuleInput[]
+    updateMany?: StaffCommissionUpdateManyWithWhereWithoutAppliedRuleInput | StaffCommissionUpdateManyWithWhereWithoutAppliedRuleInput[]
+    deleteMany?: StaffCommissionScalarWhereInput | StaffCommissionScalarWhereInput[]
+  }
+
+  export type CommissionRuleCreateNestedOneWithoutCommissionsInput = {
+    create?: XOR<CommissionRuleCreateWithoutCommissionsInput, CommissionRuleUncheckedCreateWithoutCommissionsInput>
+    connectOrCreate?: CommissionRuleCreateOrConnectWithoutCommissionsInput
+    connect?: CommissionRuleWhereUniqueInput
   }
 
   export type UserCreateNestedOneWithoutCommissionsInput = {
@@ -30595,12 +32918,30 @@ export namespace Prisma {
     connect?: UserWhereUniqueInput
   }
 
-  export type InvoiceUpdateOneRequiredWithoutCommissionNestedInput = {
+  export type ServiceCreateNestedOneWithoutCommissionsInput = {
+    create?: XOR<ServiceCreateWithoutCommissionsInput, ServiceUncheckedCreateWithoutCommissionsInput>
+    connectOrCreate?: ServiceCreateOrConnectWithoutCommissionsInput
+    connect?: ServiceWhereUniqueInput
+  }
+
+  export type InvoiceCreateNestedOneWithoutCommissionInput = {
     create?: XOR<InvoiceCreateWithoutCommissionInput, InvoiceUncheckedCreateWithoutCommissionInput>
     connectOrCreate?: InvoiceCreateOrConnectWithoutCommissionInput
-    upsert?: InvoiceUpsertWithoutCommissionInput
     connect?: InvoiceWhereUniqueInput
-    update?: XOR<XOR<InvoiceUpdateToOneWithWhereWithoutCommissionInput, InvoiceUpdateWithoutCommissionInput>, InvoiceUncheckedUpdateWithoutCommissionInput>
+  }
+
+  export type EnumCommissionStatusFieldUpdateOperationsInput = {
+    set?: $Enums.CommissionStatus
+  }
+
+  export type CommissionRuleUpdateOneWithoutCommissionsNestedInput = {
+    create?: XOR<CommissionRuleCreateWithoutCommissionsInput, CommissionRuleUncheckedCreateWithoutCommissionsInput>
+    connectOrCreate?: CommissionRuleCreateOrConnectWithoutCommissionsInput
+    upsert?: CommissionRuleUpsertWithoutCommissionsInput
+    disconnect?: CommissionRuleWhereInput | boolean
+    delete?: CommissionRuleWhereInput | boolean
+    connect?: CommissionRuleWhereUniqueInput
+    update?: XOR<XOR<CommissionRuleUpdateToOneWithWhereWithoutCommissionsInput, CommissionRuleUpdateWithoutCommissionsInput>, CommissionRuleUncheckedUpdateWithoutCommissionsInput>
   }
 
   export type UserUpdateOneRequiredWithoutCommissionsNestedInput = {
@@ -30609,6 +32950,24 @@ export namespace Prisma {
     upsert?: UserUpsertWithoutCommissionsInput
     connect?: UserWhereUniqueInput
     update?: XOR<XOR<UserUpdateToOneWithWhereWithoutCommissionsInput, UserUpdateWithoutCommissionsInput>, UserUncheckedUpdateWithoutCommissionsInput>
+  }
+
+  export type ServiceUpdateOneWithoutCommissionsNestedInput = {
+    create?: XOR<ServiceCreateWithoutCommissionsInput, ServiceUncheckedCreateWithoutCommissionsInput>
+    connectOrCreate?: ServiceCreateOrConnectWithoutCommissionsInput
+    upsert?: ServiceUpsertWithoutCommissionsInput
+    disconnect?: ServiceWhereInput | boolean
+    delete?: ServiceWhereInput | boolean
+    connect?: ServiceWhereUniqueInput
+    update?: XOR<XOR<ServiceUpdateToOneWithWhereWithoutCommissionsInput, ServiceUpdateWithoutCommissionsInput>, ServiceUncheckedUpdateWithoutCommissionsInput>
+  }
+
+  export type InvoiceUpdateOneRequiredWithoutCommissionNestedInput = {
+    create?: XOR<InvoiceCreateWithoutCommissionInput, InvoiceUncheckedCreateWithoutCommissionInput>
+    connectOrCreate?: InvoiceCreateOrConnectWithoutCommissionInput
+    upsert?: InvoiceUpsertWithoutCommissionInput
+    connect?: InvoiceWhereUniqueInput
+    update?: XOR<XOR<InvoiceUpdateToOneWithWhereWithoutCommissionInput, InvoiceUpdateWithoutCommissionInput>, InvoiceUncheckedUpdateWithoutCommissionInput>
   }
 
   export type BranchCreateNestedOneWithoutCashRegisterLogsInput = {
@@ -30885,6 +33244,16 @@ export namespace Prisma {
     not?: NestedFloatNullableFilter<$PrismaModel> | number | null
   }
 
+  export type NestedEnumServiceTypeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.ServiceType | EnumServiceTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.ServiceType[] | ListEnumServiceTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.ServiceType[] | ListEnumServiceTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumServiceTypeWithAggregatesFilter<$PrismaModel> | $Enums.ServiceType
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumServiceTypeFilter<$PrismaModel>
+    _max?: NestedEnumServiceTypeFilter<$PrismaModel>
+  }
+
   export type NestedIntNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel> | null
     in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
@@ -30899,16 +33268,6 @@ export namespace Prisma {
     _sum?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedIntNullableFilter<$PrismaModel>
     _max?: NestedIntNullableFilter<$PrismaModel>
-  }
-
-  export type NestedEnumServiceTypeWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: $Enums.ServiceType | EnumServiceTypeFieldRefInput<$PrismaModel>
-    in?: $Enums.ServiceType[] | ListEnumServiceTypeFieldRefInput<$PrismaModel>
-    notIn?: $Enums.ServiceType[] | ListEnumServiceTypeFieldRefInput<$PrismaModel>
-    not?: NestedEnumServiceTypeWithAggregatesFilter<$PrismaModel> | $Enums.ServiceType
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedEnumServiceTypeFilter<$PrismaModel>
-    _max?: NestedEnumServiceTypeFilter<$PrismaModel>
   }
 
   export type NestedFloatNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -31018,6 +33377,40 @@ export namespace Prisma {
     _max?: NestedEnumPaymentMethodFilter<$PrismaModel>
   }
 
+  export type NestedEnumCommissionTypeFilter<$PrismaModel = never> = {
+    equals?: $Enums.CommissionType | EnumCommissionTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.CommissionType[] | ListEnumCommissionTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.CommissionType[] | ListEnumCommissionTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumCommissionTypeFilter<$PrismaModel> | $Enums.CommissionType
+  }
+
+  export type NestedEnumCommissionTypeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.CommissionType | EnumCommissionTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.CommissionType[] | ListEnumCommissionTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.CommissionType[] | ListEnumCommissionTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumCommissionTypeWithAggregatesFilter<$PrismaModel> | $Enums.CommissionType
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumCommissionTypeFilter<$PrismaModel>
+    _max?: NestedEnumCommissionTypeFilter<$PrismaModel>
+  }
+
+  export type NestedEnumCommissionStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.CommissionStatus | EnumCommissionStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.CommissionStatus[] | ListEnumCommissionStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.CommissionStatus[] | ListEnumCommissionStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumCommissionStatusFilter<$PrismaModel> | $Enums.CommissionStatus
+  }
+
+  export type NestedEnumCommissionStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.CommissionStatus | EnumCommissionStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.CommissionStatus[] | ListEnumCommissionStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.CommissionStatus[] | ListEnumCommissionStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumCommissionStatusWithAggregatesFilter<$PrismaModel> | $Enums.CommissionStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumCommissionStatusFilter<$PrismaModel>
+    _max?: NestedEnumCommissionStatusFilter<$PrismaModel>
+  }
+
   export type NestedEnumCashLogTypeFilter<$PrismaModel = never> = {
     equals?: $Enums.CashLogType | EnumCashLogTypeFieldRefInput<$PrismaModel>
     in?: $Enums.CashLogType[] | ListEnumCashLogTypeFieldRefInput<$PrismaModel>
@@ -31114,17 +33507,25 @@ export namespace Prisma {
   export type StaffCommissionCreateWithoutStaffInput = {
     id?: string
     amount: number
+    status?: $Enums.CommissionStatus
     isReversed?: boolean
     createdAt?: Date | string
+    updatedAt?: Date | string
+    appliedRule?: CommissionRuleCreateNestedOneWithoutCommissionsInput
+    service?: ServiceCreateNestedOneWithoutCommissionsInput
     invoice: InvoiceCreateNestedOneWithoutCommissionInput
   }
 
   export type StaffCommissionUncheckedCreateWithoutStaffInput = {
     id?: string
     amount: number
+    status?: $Enums.CommissionStatus
     isReversed?: boolean
+    appliedRuleId?: string | null
+    serviceId?: string | null
     invoiceId: string
     createdAt?: Date | string
+    updatedAt?: Date | string
   }
 
   export type StaffCommissionCreateOrConnectWithoutStaffInput = {
@@ -31134,6 +33535,40 @@ export namespace Prisma {
 
   export type StaffCommissionCreateManyStaffInputEnvelope = {
     data: StaffCommissionCreateManyStaffInput | StaffCommissionCreateManyStaffInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type CommissionRuleCreateWithoutUserInput = {
+    id?: string
+    type: $Enums.CommissionType
+    value: number
+    description?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    isGlobal?: boolean
+    service?: ServiceCreateNestedOneWithoutCommissionRulesInput
+    commissions?: StaffCommissionCreateNestedManyWithoutAppliedRuleInput
+  }
+
+  export type CommissionRuleUncheckedCreateWithoutUserInput = {
+    id?: string
+    type: $Enums.CommissionType
+    value: number
+    description?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    isGlobal?: boolean
+    serviceId?: string | null
+    commissions?: StaffCommissionUncheckedCreateNestedManyWithoutAppliedRuleInput
+  }
+
+  export type CommissionRuleCreateOrConnectWithoutUserInput = {
+    where: CommissionRuleWhereUniqueInput
+    create: XOR<CommissionRuleCreateWithoutUserInput, CommissionRuleUncheckedCreateWithoutUserInput>
+  }
+
+  export type CommissionRuleCreateManyUserInputEnvelope = {
+    data: CommissionRuleCreateManyUserInput | CommissionRuleCreateManyUserInput[]
     skipDuplicates?: boolean
   }
 
@@ -31319,10 +33754,45 @@ export namespace Prisma {
     NOT?: StaffCommissionScalarWhereInput | StaffCommissionScalarWhereInput[]
     id?: StringFilter<"StaffCommission"> | string
     amount?: FloatFilter<"StaffCommission"> | number
+    status?: EnumCommissionStatusFilter<"StaffCommission"> | $Enums.CommissionStatus
     isReversed?: BoolFilter<"StaffCommission"> | boolean
+    appliedRuleId?: StringNullableFilter<"StaffCommission"> | string | null
     staffId?: StringFilter<"StaffCommission"> | string
+    serviceId?: StringNullableFilter<"StaffCommission"> | string | null
     invoiceId?: StringFilter<"StaffCommission"> | string
     createdAt?: DateTimeFilter<"StaffCommission"> | Date | string
+    updatedAt?: DateTimeFilter<"StaffCommission"> | Date | string
+  }
+
+  export type CommissionRuleUpsertWithWhereUniqueWithoutUserInput = {
+    where: CommissionRuleWhereUniqueInput
+    update: XOR<CommissionRuleUpdateWithoutUserInput, CommissionRuleUncheckedUpdateWithoutUserInput>
+    create: XOR<CommissionRuleCreateWithoutUserInput, CommissionRuleUncheckedCreateWithoutUserInput>
+  }
+
+  export type CommissionRuleUpdateWithWhereUniqueWithoutUserInput = {
+    where: CommissionRuleWhereUniqueInput
+    data: XOR<CommissionRuleUpdateWithoutUserInput, CommissionRuleUncheckedUpdateWithoutUserInput>
+  }
+
+  export type CommissionRuleUpdateManyWithWhereWithoutUserInput = {
+    where: CommissionRuleScalarWhereInput
+    data: XOR<CommissionRuleUpdateManyMutationInput, CommissionRuleUncheckedUpdateManyWithoutUserInput>
+  }
+
+  export type CommissionRuleScalarWhereInput = {
+    AND?: CommissionRuleScalarWhereInput | CommissionRuleScalarWhereInput[]
+    OR?: CommissionRuleScalarWhereInput[]
+    NOT?: CommissionRuleScalarWhereInput | CommissionRuleScalarWhereInput[]
+    id?: StringFilter<"CommissionRule"> | string
+    type?: EnumCommissionTypeFilter<"CommissionRule"> | $Enums.CommissionType
+    value?: FloatFilter<"CommissionRule"> | number
+    description?: StringNullableFilter<"CommissionRule"> | string | null
+    createdAt?: DateTimeFilter<"CommissionRule"> | Date | string
+    updatedAt?: DateTimeFilter<"CommissionRule"> | Date | string
+    isGlobal?: BoolFilter<"CommissionRule"> | boolean
+    serviceId?: StringNullableFilter<"CommissionRule"> | string | null
+    userId?: StringNullableFilter<"CommissionRule"> | string | null
   }
 
   export type StaffServiceUpsertWithWhereUniqueWithoutUserInput = {
@@ -31442,6 +33912,7 @@ export namespace Prisma {
     appointments?: AppointmentCreateNestedManyWithoutStaffInput
     cashRegisterActions?: CashRegisterLogCreateNestedManyWithoutUserInput
     commissions?: StaffCommissionCreateNestedManyWithoutStaffInput
+    commissionRules?: CommissionRuleCreateNestedManyWithoutUserInput
     services?: StaffServiceCreateNestedManyWithoutUserInput
     branch?: BranchCreateNestedOneWithoutUsersInput
   }
@@ -31458,6 +33929,7 @@ export namespace Prisma {
     appointments?: AppointmentUncheckedCreateNestedManyWithoutStaffInput
     cashRegisterActions?: CashRegisterLogUncheckedCreateNestedManyWithoutUserInput
     commissions?: StaffCommissionUncheckedCreateNestedManyWithoutStaffInput
+    commissionRules?: CommissionRuleUncheckedCreateNestedManyWithoutUserInput
     services?: StaffServiceUncheckedCreateNestedManyWithoutUserInput
   }
 
@@ -31533,6 +34005,7 @@ export namespace Prisma {
     appointments?: AppointmentUpdateManyWithoutStaffNestedInput
     cashRegisterActions?: CashRegisterLogUpdateManyWithoutUserNestedInput
     commissions?: StaffCommissionUpdateManyWithoutStaffNestedInput
+    commissionRules?: CommissionRuleUpdateManyWithoutUserNestedInput
     services?: StaffServiceUpdateManyWithoutUserNestedInput
     branch?: BranchUpdateOneWithoutUsersNestedInput
   }
@@ -31549,6 +34022,7 @@ export namespace Prisma {
     appointments?: AppointmentUncheckedUpdateManyWithoutStaffNestedInput
     cashRegisterActions?: CashRegisterLogUncheckedUpdateManyWithoutUserNestedInput
     commissions?: StaffCommissionUncheckedUpdateManyWithoutStaffNestedInput
+    commissionRules?: CommissionRuleUncheckedUpdateManyWithoutUserNestedInput
     services?: StaffServiceUncheckedUpdateManyWithoutUserNestedInput
   }
 
@@ -31901,35 +34375,47 @@ export namespace Prisma {
   export type ServiceCreateWithoutBranchInput = {
     id?: string
     name: string
-    duration?: number | null
+    description?: string | null
+    duration: number
     price: number
-    createdAt?: Date | string
     isActive?: boolean
-    updatedAt?: Date | string
     type?: $Enums.ServiceType
+    serviceType: $Enums.ServiceType
+    maxCapacity: number
+    unitCount?: number | null
     commissionFixed?: number | null
     commissionRate?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    category: ServiceCategoryCreateNestedOneWithoutServicesInput
     appointments?: AppointmentCreateNestedManyWithoutServiceInput
     packages?: PackageServiceCreateNestedManyWithoutServiceInput
-    category: ServiceCategoryCreateNestedOneWithoutServicesInput
     staff?: StaffServiceCreateNestedManyWithoutServiceInput
+    commissionRules?: CommissionRuleCreateNestedManyWithoutServiceInput
+    commissions?: StaffCommissionCreateNestedManyWithoutServiceInput
   }
 
   export type ServiceUncheckedCreateWithoutBranchInput = {
     id?: string
     name: string
-    duration?: number | null
+    description?: string | null
+    duration: number
     price: number
-    categoryId: string
-    createdAt?: Date | string
     isActive?: boolean
-    updatedAt?: Date | string
     type?: $Enums.ServiceType
+    serviceType: $Enums.ServiceType
+    maxCapacity: number
+    unitCount?: number | null
     commissionFixed?: number | null
     commissionRate?: number | null
+    categoryId: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
     appointments?: AppointmentUncheckedCreateNestedManyWithoutServiceInput
     packages?: PackageServiceUncheckedCreateNestedManyWithoutServiceInput
     staff?: StaffServiceUncheckedCreateNestedManyWithoutServiceInput
+    commissionRules?: CommissionRuleUncheckedCreateNestedManyWithoutServiceInput
+    commissions?: StaffCommissionUncheckedCreateNestedManyWithoutServiceInput
   }
 
   export type ServiceCreateOrConnectWithoutBranchInput = {
@@ -31983,6 +34469,7 @@ export namespace Prisma {
     appointments?: AppointmentCreateNestedManyWithoutStaffInput
     cashRegisterActions?: CashRegisterLogCreateNestedManyWithoutUserInput
     commissions?: StaffCommissionCreateNestedManyWithoutStaffInput
+    commissionRules?: CommissionRuleCreateNestedManyWithoutUserInput
     services?: StaffServiceCreateNestedManyWithoutUserInput
     workHours?: WorkHourCreateNestedManyWithoutStaffInput
   }
@@ -31998,6 +34485,7 @@ export namespace Prisma {
     appointments?: AppointmentUncheckedCreateNestedManyWithoutStaffInput
     cashRegisterActions?: CashRegisterLogUncheckedCreateNestedManyWithoutUserInput
     commissions?: StaffCommissionUncheckedCreateNestedManyWithoutStaffInput
+    commissionRules?: CommissionRuleUncheckedCreateNestedManyWithoutUserInput
     services?: StaffServiceUncheckedCreateNestedManyWithoutUserInput
     workHours?: WorkHourUncheckedCreateNestedManyWithoutStaffInput
   }
@@ -32278,16 +34766,20 @@ export namespace Prisma {
     NOT?: ServiceScalarWhereInput | ServiceScalarWhereInput[]
     id?: StringFilter<"Service"> | string
     name?: StringFilter<"Service"> | string
-    duration?: IntNullableFilter<"Service"> | number | null
+    description?: StringNullableFilter<"Service"> | string | null
+    duration?: IntFilter<"Service"> | number
     price?: FloatFilter<"Service"> | number
+    isActive?: BoolFilter<"Service"> | boolean
+    type?: EnumServiceTypeFilter<"Service"> | $Enums.ServiceType
+    serviceType?: EnumServiceTypeFilter<"Service"> | $Enums.ServiceType
+    maxCapacity?: IntFilter<"Service"> | number
+    unitCount?: IntNullableFilter<"Service"> | number | null
+    commissionFixed?: FloatNullableFilter<"Service"> | number | null
+    commissionRate?: FloatNullableFilter<"Service"> | number | null
     categoryId?: StringFilter<"Service"> | string
     branchId?: StringFilter<"Service"> | string
     createdAt?: DateTimeFilter<"Service"> | Date | string
-    isActive?: BoolFilter<"Service"> | boolean
     updatedAt?: DateTimeFilter<"Service"> | Date | string
-    type?: EnumServiceTypeFilter<"Service"> | $Enums.ServiceType
-    commissionFixed?: FloatNullableFilter<"Service"> | number | null
-    commissionRate?: FloatNullableFilter<"Service"> | number | null
   }
 
   export type ServiceCategoryUpsertWithWhereUniqueWithoutBranchInput = {
@@ -32848,35 +35340,47 @@ export namespace Prisma {
   export type ServiceCreateWithoutCategoryInput = {
     id?: string
     name: string
-    duration?: number | null
+    description?: string | null
+    duration: number
     price: number
-    createdAt?: Date | string
     isActive?: boolean
-    updatedAt?: Date | string
     type?: $Enums.ServiceType
+    serviceType: $Enums.ServiceType
+    maxCapacity: number
+    unitCount?: number | null
     commissionFixed?: number | null
     commissionRate?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    branch: BranchCreateNestedOneWithoutServicesInput
     appointments?: AppointmentCreateNestedManyWithoutServiceInput
     packages?: PackageServiceCreateNestedManyWithoutServiceInput
-    branch: BranchCreateNestedOneWithoutServicesInput
     staff?: StaffServiceCreateNestedManyWithoutServiceInput
+    commissionRules?: CommissionRuleCreateNestedManyWithoutServiceInput
+    commissions?: StaffCommissionCreateNestedManyWithoutServiceInput
   }
 
   export type ServiceUncheckedCreateWithoutCategoryInput = {
     id?: string
     name: string
-    duration?: number | null
+    description?: string | null
+    duration: number
     price: number
-    branchId: string
-    createdAt?: Date | string
     isActive?: boolean
-    updatedAt?: Date | string
     type?: $Enums.ServiceType
+    serviceType: $Enums.ServiceType
+    maxCapacity: number
+    unitCount?: number | null
     commissionFixed?: number | null
     commissionRate?: number | null
+    branchId: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
     appointments?: AppointmentUncheckedCreateNestedManyWithoutServiceInput
     packages?: PackageServiceUncheckedCreateNestedManyWithoutServiceInput
     staff?: StaffServiceUncheckedCreateNestedManyWithoutServiceInput
+    commissionRules?: CommissionRuleUncheckedCreateNestedManyWithoutServiceInput
+    commissions?: StaffCommissionUncheckedCreateNestedManyWithoutServiceInput
   }
 
   export type ServiceCreateOrConnectWithoutCategoryInput = {
@@ -33001,72 +35505,6 @@ export namespace Prisma {
     workHours?: WorkHourUncheckedUpdateManyWithoutBranchNestedInput
   }
 
-  export type AppointmentCreateWithoutServiceInput = {
-    id?: string
-    startTime: Date | string
-    endTime: Date | string
-    duration?: number | null
-    status?: $Enums.AppointmentStatus
-    notes?: string | null
-    packageServiceId?: string | null
-    createdAt?: Date | string
-    updatedAt?: Date | string
-    branch: BranchCreateNestedOneWithoutAppointmentsInput
-    customer: CustomerCreateNestedOneWithoutAppointmentsInput
-    staff: UserCreateNestedOneWithoutAppointmentsInput
-    customerPackage?: CustomerPackageCreateNestedOneWithoutAppointmentsInput
-    invoice?: InvoiceCreateNestedOneWithoutAppointmentInput
-    packageUsage?: PackageUsageHistoryCreateNestedOneWithoutAppointmentInput
-  }
-
-  export type AppointmentUncheckedCreateWithoutServiceInput = {
-    id?: string
-    startTime: Date | string
-    endTime: Date | string
-    duration?: number | null
-    status?: $Enums.AppointmentStatus
-    notes?: string | null
-    customerId: string
-    staffId: string
-    branchId: string
-    customerPackageId?: string | null
-    packageServiceId?: string | null
-    createdAt?: Date | string
-    updatedAt?: Date | string
-    invoice?: InvoiceUncheckedCreateNestedOneWithoutAppointmentInput
-    packageUsage?: PackageUsageHistoryUncheckedCreateNestedOneWithoutAppointmentInput
-  }
-
-  export type AppointmentCreateOrConnectWithoutServiceInput = {
-    where: AppointmentWhereUniqueInput
-    create: XOR<AppointmentCreateWithoutServiceInput, AppointmentUncheckedCreateWithoutServiceInput>
-  }
-
-  export type AppointmentCreateManyServiceInputEnvelope = {
-    data: AppointmentCreateManyServiceInput | AppointmentCreateManyServiceInput[]
-    skipDuplicates?: boolean
-  }
-
-  export type PackageServiceCreateWithoutServiceInput = {
-    quantity: number
-    package: PackageCreateNestedOneWithoutServicesInput
-  }
-
-  export type PackageServiceUncheckedCreateWithoutServiceInput = {
-    packageId: string
-    quantity: number
-  }
-
-  export type PackageServiceCreateOrConnectWithoutServiceInput = {
-    where: PackageServiceWhereUniqueInput
-    create: XOR<PackageServiceCreateWithoutServiceInput, PackageServiceUncheckedCreateWithoutServiceInput>
-  }
-
-  export type PackageServiceCreateManyServiceInputEnvelope = {
-    data: PackageServiceCreateManyServiceInput | PackageServiceCreateManyServiceInput[]
-    skipDuplicates?: boolean
-  }
-
   export type BranchCreateWithoutServicesInput = {
     id?: string
     name: string
@@ -33137,6 +35575,72 @@ export namespace Prisma {
     create: XOR<ServiceCategoryCreateWithoutServicesInput, ServiceCategoryUncheckedCreateWithoutServicesInput>
   }
 
+  export type AppointmentCreateWithoutServiceInput = {
+    id?: string
+    startTime: Date | string
+    endTime: Date | string
+    duration?: number | null
+    status?: $Enums.AppointmentStatus
+    notes?: string | null
+    packageServiceId?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    branch: BranchCreateNestedOneWithoutAppointmentsInput
+    customer: CustomerCreateNestedOneWithoutAppointmentsInput
+    staff: UserCreateNestedOneWithoutAppointmentsInput
+    customerPackage?: CustomerPackageCreateNestedOneWithoutAppointmentsInput
+    invoice?: InvoiceCreateNestedOneWithoutAppointmentInput
+    packageUsage?: PackageUsageHistoryCreateNestedOneWithoutAppointmentInput
+  }
+
+  export type AppointmentUncheckedCreateWithoutServiceInput = {
+    id?: string
+    startTime: Date | string
+    endTime: Date | string
+    duration?: number | null
+    status?: $Enums.AppointmentStatus
+    notes?: string | null
+    customerId: string
+    staffId: string
+    branchId: string
+    customerPackageId?: string | null
+    packageServiceId?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    invoice?: InvoiceUncheckedCreateNestedOneWithoutAppointmentInput
+    packageUsage?: PackageUsageHistoryUncheckedCreateNestedOneWithoutAppointmentInput
+  }
+
+  export type AppointmentCreateOrConnectWithoutServiceInput = {
+    where: AppointmentWhereUniqueInput
+    create: XOR<AppointmentCreateWithoutServiceInput, AppointmentUncheckedCreateWithoutServiceInput>
+  }
+
+  export type AppointmentCreateManyServiceInputEnvelope = {
+    data: AppointmentCreateManyServiceInput | AppointmentCreateManyServiceInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type PackageServiceCreateWithoutServiceInput = {
+    quantity: number
+    package: PackageCreateNestedOneWithoutServicesInput
+  }
+
+  export type PackageServiceUncheckedCreateWithoutServiceInput = {
+    packageId: string
+    quantity: number
+  }
+
+  export type PackageServiceCreateOrConnectWithoutServiceInput = {
+    where: PackageServiceWhereUniqueInput
+    create: XOR<PackageServiceCreateWithoutServiceInput, PackageServiceUncheckedCreateWithoutServiceInput>
+  }
+
+  export type PackageServiceCreateManyServiceInputEnvelope = {
+    data: PackageServiceCreateManyServiceInput | PackageServiceCreateManyServiceInput[]
+    skipDuplicates?: boolean
+  }
+
   export type StaffServiceCreateWithoutServiceInput = {
     user: UserCreateNestedOneWithoutServicesInput
   }
@@ -33155,45 +35659,72 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
-  export type AppointmentUpsertWithWhereUniqueWithoutServiceInput = {
-    where: AppointmentWhereUniqueInput
-    update: XOR<AppointmentUpdateWithoutServiceInput, AppointmentUncheckedUpdateWithoutServiceInput>
-    create: XOR<AppointmentCreateWithoutServiceInput, AppointmentUncheckedCreateWithoutServiceInput>
+  export type CommissionRuleCreateWithoutServiceInput = {
+    id?: string
+    type: $Enums.CommissionType
+    value: number
+    description?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    isGlobal?: boolean
+    user?: UserCreateNestedOneWithoutCommissionRulesInput
+    commissions?: StaffCommissionCreateNestedManyWithoutAppliedRuleInput
   }
 
-  export type AppointmentUpdateWithWhereUniqueWithoutServiceInput = {
-    where: AppointmentWhereUniqueInput
-    data: XOR<AppointmentUpdateWithoutServiceInput, AppointmentUncheckedUpdateWithoutServiceInput>
+  export type CommissionRuleUncheckedCreateWithoutServiceInput = {
+    id?: string
+    type: $Enums.CommissionType
+    value: number
+    description?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    isGlobal?: boolean
+    userId?: string | null
+    commissions?: StaffCommissionUncheckedCreateNestedManyWithoutAppliedRuleInput
   }
 
-  export type AppointmentUpdateManyWithWhereWithoutServiceInput = {
-    where: AppointmentScalarWhereInput
-    data: XOR<AppointmentUpdateManyMutationInput, AppointmentUncheckedUpdateManyWithoutServiceInput>
+  export type CommissionRuleCreateOrConnectWithoutServiceInput = {
+    where: CommissionRuleWhereUniqueInput
+    create: XOR<CommissionRuleCreateWithoutServiceInput, CommissionRuleUncheckedCreateWithoutServiceInput>
   }
 
-  export type PackageServiceUpsertWithWhereUniqueWithoutServiceInput = {
-    where: PackageServiceWhereUniqueInput
-    update: XOR<PackageServiceUpdateWithoutServiceInput, PackageServiceUncheckedUpdateWithoutServiceInput>
-    create: XOR<PackageServiceCreateWithoutServiceInput, PackageServiceUncheckedCreateWithoutServiceInput>
+  export type CommissionRuleCreateManyServiceInputEnvelope = {
+    data: CommissionRuleCreateManyServiceInput | CommissionRuleCreateManyServiceInput[]
+    skipDuplicates?: boolean
   }
 
-  export type PackageServiceUpdateWithWhereUniqueWithoutServiceInput = {
-    where: PackageServiceWhereUniqueInput
-    data: XOR<PackageServiceUpdateWithoutServiceInput, PackageServiceUncheckedUpdateWithoutServiceInput>
+  export type StaffCommissionCreateWithoutServiceInput = {
+    id?: string
+    amount: number
+    status?: $Enums.CommissionStatus
+    isReversed?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    appliedRule?: CommissionRuleCreateNestedOneWithoutCommissionsInput
+    staff: UserCreateNestedOneWithoutCommissionsInput
+    invoice: InvoiceCreateNestedOneWithoutCommissionInput
   }
 
-  export type PackageServiceUpdateManyWithWhereWithoutServiceInput = {
-    where: PackageServiceScalarWhereInput
-    data: XOR<PackageServiceUpdateManyMutationInput, PackageServiceUncheckedUpdateManyWithoutServiceInput>
+  export type StaffCommissionUncheckedCreateWithoutServiceInput = {
+    id?: string
+    amount: number
+    status?: $Enums.CommissionStatus
+    isReversed?: boolean
+    appliedRuleId?: string | null
+    staffId: string
+    invoiceId: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
   }
 
-  export type PackageServiceScalarWhereInput = {
-    AND?: PackageServiceScalarWhereInput | PackageServiceScalarWhereInput[]
-    OR?: PackageServiceScalarWhereInput[]
-    NOT?: PackageServiceScalarWhereInput | PackageServiceScalarWhereInput[]
-    packageId?: StringFilter<"PackageService"> | string
-    serviceId?: StringFilter<"PackageService"> | string
-    quantity?: IntFilter<"PackageService"> | number
+  export type StaffCommissionCreateOrConnectWithoutServiceInput = {
+    where: StaffCommissionWhereUniqueInput
+    create: XOR<StaffCommissionCreateWithoutServiceInput, StaffCommissionUncheckedCreateWithoutServiceInput>
+  }
+
+  export type StaffCommissionCreateManyServiceInputEnvelope = {
+    data: StaffCommissionCreateManyServiceInput | StaffCommissionCreateManyServiceInput[]
+    skipDuplicates?: boolean
   }
 
   export type BranchUpsertWithoutServicesInput = {
@@ -33278,6 +35809,47 @@ export namespace Prisma {
     branchId?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
+  export type AppointmentUpsertWithWhereUniqueWithoutServiceInput = {
+    where: AppointmentWhereUniqueInput
+    update: XOR<AppointmentUpdateWithoutServiceInput, AppointmentUncheckedUpdateWithoutServiceInput>
+    create: XOR<AppointmentCreateWithoutServiceInput, AppointmentUncheckedCreateWithoutServiceInput>
+  }
+
+  export type AppointmentUpdateWithWhereUniqueWithoutServiceInput = {
+    where: AppointmentWhereUniqueInput
+    data: XOR<AppointmentUpdateWithoutServiceInput, AppointmentUncheckedUpdateWithoutServiceInput>
+  }
+
+  export type AppointmentUpdateManyWithWhereWithoutServiceInput = {
+    where: AppointmentScalarWhereInput
+    data: XOR<AppointmentUpdateManyMutationInput, AppointmentUncheckedUpdateManyWithoutServiceInput>
+  }
+
+  export type PackageServiceUpsertWithWhereUniqueWithoutServiceInput = {
+    where: PackageServiceWhereUniqueInput
+    update: XOR<PackageServiceUpdateWithoutServiceInput, PackageServiceUncheckedUpdateWithoutServiceInput>
+    create: XOR<PackageServiceCreateWithoutServiceInput, PackageServiceUncheckedCreateWithoutServiceInput>
+  }
+
+  export type PackageServiceUpdateWithWhereUniqueWithoutServiceInput = {
+    where: PackageServiceWhereUniqueInput
+    data: XOR<PackageServiceUpdateWithoutServiceInput, PackageServiceUncheckedUpdateWithoutServiceInput>
+  }
+
+  export type PackageServiceUpdateManyWithWhereWithoutServiceInput = {
+    where: PackageServiceScalarWhereInput
+    data: XOR<PackageServiceUpdateManyMutationInput, PackageServiceUncheckedUpdateManyWithoutServiceInput>
+  }
+
+  export type PackageServiceScalarWhereInput = {
+    AND?: PackageServiceScalarWhereInput | PackageServiceScalarWhereInput[]
+    OR?: PackageServiceScalarWhereInput[]
+    NOT?: PackageServiceScalarWhereInput | PackageServiceScalarWhereInput[]
+    packageId?: StringFilter<"PackageService"> | string
+    serviceId?: StringFilter<"PackageService"> | string
+    quantity?: IntFilter<"PackageService"> | number
+  }
+
   export type StaffServiceUpsertWithWhereUniqueWithoutServiceInput = {
     where: StaffServiceWhereUniqueInput
     update: XOR<StaffServiceUpdateWithoutServiceInput, StaffServiceUncheckedUpdateWithoutServiceInput>
@@ -33294,38 +35866,82 @@ export namespace Prisma {
     data: XOR<StaffServiceUpdateManyMutationInput, StaffServiceUncheckedUpdateManyWithoutServiceInput>
   }
 
+  export type CommissionRuleUpsertWithWhereUniqueWithoutServiceInput = {
+    where: CommissionRuleWhereUniqueInput
+    update: XOR<CommissionRuleUpdateWithoutServiceInput, CommissionRuleUncheckedUpdateWithoutServiceInput>
+    create: XOR<CommissionRuleCreateWithoutServiceInput, CommissionRuleUncheckedCreateWithoutServiceInput>
+  }
+
+  export type CommissionRuleUpdateWithWhereUniqueWithoutServiceInput = {
+    where: CommissionRuleWhereUniqueInput
+    data: XOR<CommissionRuleUpdateWithoutServiceInput, CommissionRuleUncheckedUpdateWithoutServiceInput>
+  }
+
+  export type CommissionRuleUpdateManyWithWhereWithoutServiceInput = {
+    where: CommissionRuleScalarWhereInput
+    data: XOR<CommissionRuleUpdateManyMutationInput, CommissionRuleUncheckedUpdateManyWithoutServiceInput>
+  }
+
+  export type StaffCommissionUpsertWithWhereUniqueWithoutServiceInput = {
+    where: StaffCommissionWhereUniqueInput
+    update: XOR<StaffCommissionUpdateWithoutServiceInput, StaffCommissionUncheckedUpdateWithoutServiceInput>
+    create: XOR<StaffCommissionCreateWithoutServiceInput, StaffCommissionUncheckedCreateWithoutServiceInput>
+  }
+
+  export type StaffCommissionUpdateWithWhereUniqueWithoutServiceInput = {
+    where: StaffCommissionWhereUniqueInput
+    data: XOR<StaffCommissionUpdateWithoutServiceInput, StaffCommissionUncheckedUpdateWithoutServiceInput>
+  }
+
+  export type StaffCommissionUpdateManyWithWhereWithoutServiceInput = {
+    where: StaffCommissionScalarWhereInput
+    data: XOR<StaffCommissionUpdateManyMutationInput, StaffCommissionUncheckedUpdateManyWithoutServiceInput>
+  }
+
   export type ServiceCreateWithoutStaffInput = {
     id?: string
     name: string
-    duration?: number | null
+    description?: string | null
+    duration: number
     price: number
-    createdAt?: Date | string
     isActive?: boolean
-    updatedAt?: Date | string
     type?: $Enums.ServiceType
+    serviceType: $Enums.ServiceType
+    maxCapacity: number
+    unitCount?: number | null
     commissionFixed?: number | null
     commissionRate?: number | null
-    appointments?: AppointmentCreateNestedManyWithoutServiceInput
-    packages?: PackageServiceCreateNestedManyWithoutServiceInput
+    createdAt?: Date | string
+    updatedAt?: Date | string
     branch: BranchCreateNestedOneWithoutServicesInput
     category: ServiceCategoryCreateNestedOneWithoutServicesInput
+    appointments?: AppointmentCreateNestedManyWithoutServiceInput
+    packages?: PackageServiceCreateNestedManyWithoutServiceInput
+    commissionRules?: CommissionRuleCreateNestedManyWithoutServiceInput
+    commissions?: StaffCommissionCreateNestedManyWithoutServiceInput
   }
 
   export type ServiceUncheckedCreateWithoutStaffInput = {
     id?: string
     name: string
-    duration?: number | null
+    description?: string | null
+    duration: number
     price: number
+    isActive?: boolean
+    type?: $Enums.ServiceType
+    serviceType: $Enums.ServiceType
+    maxCapacity: number
+    unitCount?: number | null
+    commissionFixed?: number | null
+    commissionRate?: number | null
     categoryId: string
     branchId: string
     createdAt?: Date | string
-    isActive?: boolean
     updatedAt?: Date | string
-    type?: $Enums.ServiceType
-    commissionFixed?: number | null
-    commissionRate?: number | null
     appointments?: AppointmentUncheckedCreateNestedManyWithoutServiceInput
     packages?: PackageServiceUncheckedCreateNestedManyWithoutServiceInput
+    commissionRules?: CommissionRuleUncheckedCreateNestedManyWithoutServiceInput
+    commissions?: StaffCommissionUncheckedCreateNestedManyWithoutServiceInput
   }
 
   export type ServiceCreateOrConnectWithoutStaffInput = {
@@ -33344,6 +35960,7 @@ export namespace Prisma {
     appointments?: AppointmentCreateNestedManyWithoutStaffInput
     cashRegisterActions?: CashRegisterLogCreateNestedManyWithoutUserInput
     commissions?: StaffCommissionCreateNestedManyWithoutStaffInput
+    commissionRules?: CommissionRuleCreateNestedManyWithoutUserInput
     branch?: BranchCreateNestedOneWithoutUsersInput
     workHours?: WorkHourCreateNestedManyWithoutStaffInput
   }
@@ -33360,6 +35977,7 @@ export namespace Prisma {
     appointments?: AppointmentUncheckedCreateNestedManyWithoutStaffInput
     cashRegisterActions?: CashRegisterLogUncheckedCreateNestedManyWithoutUserInput
     commissions?: StaffCommissionUncheckedCreateNestedManyWithoutStaffInput
+    commissionRules?: CommissionRuleUncheckedCreateNestedManyWithoutUserInput
     workHours?: WorkHourUncheckedCreateNestedManyWithoutStaffInput
   }
 
@@ -33382,35 +36000,47 @@ export namespace Prisma {
   export type ServiceUpdateWithoutStaffInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
-    duration?: NullableIntFieldUpdateOperationsInput | number | null
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    duration?: IntFieldUpdateOperationsInput | number
     price?: FloatFieldUpdateOperationsInput | number
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     type?: EnumServiceTypeFieldUpdateOperationsInput | $Enums.ServiceType
+    serviceType?: EnumServiceTypeFieldUpdateOperationsInput | $Enums.ServiceType
+    maxCapacity?: IntFieldUpdateOperationsInput | number
+    unitCount?: NullableIntFieldUpdateOperationsInput | number | null
     commissionFixed?: NullableFloatFieldUpdateOperationsInput | number | null
     commissionRate?: NullableFloatFieldUpdateOperationsInput | number | null
-    appointments?: AppointmentUpdateManyWithoutServiceNestedInput
-    packages?: PackageServiceUpdateManyWithoutServiceNestedInput
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     branch?: BranchUpdateOneRequiredWithoutServicesNestedInput
     category?: ServiceCategoryUpdateOneRequiredWithoutServicesNestedInput
+    appointments?: AppointmentUpdateManyWithoutServiceNestedInput
+    packages?: PackageServiceUpdateManyWithoutServiceNestedInput
+    commissionRules?: CommissionRuleUpdateManyWithoutServiceNestedInput
+    commissions?: StaffCommissionUpdateManyWithoutServiceNestedInput
   }
 
   export type ServiceUncheckedUpdateWithoutStaffInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
-    duration?: NullableIntFieldUpdateOperationsInput | number | null
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    duration?: IntFieldUpdateOperationsInput | number
     price?: FloatFieldUpdateOperationsInput | number
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    type?: EnumServiceTypeFieldUpdateOperationsInput | $Enums.ServiceType
+    serviceType?: EnumServiceTypeFieldUpdateOperationsInput | $Enums.ServiceType
+    maxCapacity?: IntFieldUpdateOperationsInput | number
+    unitCount?: NullableIntFieldUpdateOperationsInput | number | null
+    commissionFixed?: NullableFloatFieldUpdateOperationsInput | number | null
+    commissionRate?: NullableFloatFieldUpdateOperationsInput | number | null
     categoryId?: StringFieldUpdateOperationsInput | string
     branchId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    isActive?: BoolFieldUpdateOperationsInput | boolean
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    type?: EnumServiceTypeFieldUpdateOperationsInput | $Enums.ServiceType
-    commissionFixed?: NullableFloatFieldUpdateOperationsInput | number | null
-    commissionRate?: NullableFloatFieldUpdateOperationsInput | number | null
     appointments?: AppointmentUncheckedUpdateManyWithoutServiceNestedInput
     packages?: PackageServiceUncheckedUpdateManyWithoutServiceNestedInput
+    commissionRules?: CommissionRuleUncheckedUpdateManyWithoutServiceNestedInput
+    commissions?: StaffCommissionUncheckedUpdateManyWithoutServiceNestedInput
   }
 
   export type UserUpsertWithoutServicesInput = {
@@ -33435,6 +36065,7 @@ export namespace Prisma {
     appointments?: AppointmentUpdateManyWithoutStaffNestedInput
     cashRegisterActions?: CashRegisterLogUpdateManyWithoutUserNestedInput
     commissions?: StaffCommissionUpdateManyWithoutStaffNestedInput
+    commissionRules?: CommissionRuleUpdateManyWithoutUserNestedInput
     branch?: BranchUpdateOneWithoutUsersNestedInput
     workHours?: WorkHourUpdateManyWithoutStaffNestedInput
   }
@@ -33451,6 +36082,7 @@ export namespace Prisma {
     appointments?: AppointmentUncheckedUpdateManyWithoutStaffNestedInput
     cashRegisterActions?: CashRegisterLogUncheckedUpdateManyWithoutUserNestedInput
     commissions?: StaffCommissionUncheckedUpdateManyWithoutStaffNestedInput
+    commissionRules?: CommissionRuleUncheckedUpdateManyWithoutUserNestedInput
     workHours?: WorkHourUncheckedUpdateManyWithoutStaffNestedInput
   }
 
@@ -33678,35 +36310,47 @@ export namespace Prisma {
   export type ServiceCreateWithoutPackagesInput = {
     id?: string
     name: string
-    duration?: number | null
+    description?: string | null
+    duration: number
     price: number
-    createdAt?: Date | string
     isActive?: boolean
-    updatedAt?: Date | string
     type?: $Enums.ServiceType
+    serviceType: $Enums.ServiceType
+    maxCapacity: number
+    unitCount?: number | null
     commissionFixed?: number | null
     commissionRate?: number | null
-    appointments?: AppointmentCreateNestedManyWithoutServiceInput
+    createdAt?: Date | string
+    updatedAt?: Date | string
     branch: BranchCreateNestedOneWithoutServicesInput
     category: ServiceCategoryCreateNestedOneWithoutServicesInput
+    appointments?: AppointmentCreateNestedManyWithoutServiceInput
     staff?: StaffServiceCreateNestedManyWithoutServiceInput
+    commissionRules?: CommissionRuleCreateNestedManyWithoutServiceInput
+    commissions?: StaffCommissionCreateNestedManyWithoutServiceInput
   }
 
   export type ServiceUncheckedCreateWithoutPackagesInput = {
     id?: string
     name: string
-    duration?: number | null
+    description?: string | null
+    duration: number
     price: number
+    isActive?: boolean
+    type?: $Enums.ServiceType
+    serviceType: $Enums.ServiceType
+    maxCapacity: number
+    unitCount?: number | null
+    commissionFixed?: number | null
+    commissionRate?: number | null
     categoryId: string
     branchId: string
     createdAt?: Date | string
-    isActive?: boolean
     updatedAt?: Date | string
-    type?: $Enums.ServiceType
-    commissionFixed?: number | null
-    commissionRate?: number | null
     appointments?: AppointmentUncheckedCreateNestedManyWithoutServiceInput
     staff?: StaffServiceUncheckedCreateNestedManyWithoutServiceInput
+    commissionRules?: CommissionRuleUncheckedCreateNestedManyWithoutServiceInput
+    commissions?: StaffCommissionUncheckedCreateNestedManyWithoutServiceInput
   }
 
   export type ServiceCreateOrConnectWithoutPackagesInput = {
@@ -33773,35 +36417,47 @@ export namespace Prisma {
   export type ServiceUpdateWithoutPackagesInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
-    duration?: NullableIntFieldUpdateOperationsInput | number | null
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    duration?: IntFieldUpdateOperationsInput | number
     price?: FloatFieldUpdateOperationsInput | number
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     type?: EnumServiceTypeFieldUpdateOperationsInput | $Enums.ServiceType
+    serviceType?: EnumServiceTypeFieldUpdateOperationsInput | $Enums.ServiceType
+    maxCapacity?: IntFieldUpdateOperationsInput | number
+    unitCount?: NullableIntFieldUpdateOperationsInput | number | null
     commissionFixed?: NullableFloatFieldUpdateOperationsInput | number | null
     commissionRate?: NullableFloatFieldUpdateOperationsInput | number | null
-    appointments?: AppointmentUpdateManyWithoutServiceNestedInput
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     branch?: BranchUpdateOneRequiredWithoutServicesNestedInput
     category?: ServiceCategoryUpdateOneRequiredWithoutServicesNestedInput
+    appointments?: AppointmentUpdateManyWithoutServiceNestedInput
     staff?: StaffServiceUpdateManyWithoutServiceNestedInput
+    commissionRules?: CommissionRuleUpdateManyWithoutServiceNestedInput
+    commissions?: StaffCommissionUpdateManyWithoutServiceNestedInput
   }
 
   export type ServiceUncheckedUpdateWithoutPackagesInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
-    duration?: NullableIntFieldUpdateOperationsInput | number | null
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    duration?: IntFieldUpdateOperationsInput | number
     price?: FloatFieldUpdateOperationsInput | number
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    type?: EnumServiceTypeFieldUpdateOperationsInput | $Enums.ServiceType
+    serviceType?: EnumServiceTypeFieldUpdateOperationsInput | $Enums.ServiceType
+    maxCapacity?: IntFieldUpdateOperationsInput | number
+    unitCount?: NullableIntFieldUpdateOperationsInput | number | null
+    commissionFixed?: NullableFloatFieldUpdateOperationsInput | number | null
+    commissionRate?: NullableFloatFieldUpdateOperationsInput | number | null
     categoryId?: StringFieldUpdateOperationsInput | string
     branchId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    isActive?: BoolFieldUpdateOperationsInput | boolean
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    type?: EnumServiceTypeFieldUpdateOperationsInput | $Enums.ServiceType
-    commissionFixed?: NullableFloatFieldUpdateOperationsInput | number | null
-    commissionRate?: NullableFloatFieldUpdateOperationsInput | number | null
     appointments?: AppointmentUncheckedUpdateManyWithoutServiceNestedInput
     staff?: StaffServiceUncheckedUpdateManyWithoutServiceNestedInput
+    commissionRules?: CommissionRuleUncheckedUpdateManyWithoutServiceNestedInput
+    commissions?: StaffCommissionUncheckedUpdateManyWithoutServiceNestedInput
   }
 
   export type CustomerCreateWithoutCustomerPackagesInput = {
@@ -34315,35 +36971,47 @@ export namespace Prisma {
   export type ServiceCreateWithoutAppointmentsInput = {
     id?: string
     name: string
-    duration?: number | null
+    description?: string | null
+    duration: number
     price: number
-    createdAt?: Date | string
     isActive?: boolean
-    updatedAt?: Date | string
     type?: $Enums.ServiceType
+    serviceType: $Enums.ServiceType
+    maxCapacity: number
+    unitCount?: number | null
     commissionFixed?: number | null
     commissionRate?: number | null
-    packages?: PackageServiceCreateNestedManyWithoutServiceInput
+    createdAt?: Date | string
+    updatedAt?: Date | string
     branch: BranchCreateNestedOneWithoutServicesInput
     category: ServiceCategoryCreateNestedOneWithoutServicesInput
+    packages?: PackageServiceCreateNestedManyWithoutServiceInput
     staff?: StaffServiceCreateNestedManyWithoutServiceInput
+    commissionRules?: CommissionRuleCreateNestedManyWithoutServiceInput
+    commissions?: StaffCommissionCreateNestedManyWithoutServiceInput
   }
 
   export type ServiceUncheckedCreateWithoutAppointmentsInput = {
     id?: string
     name: string
-    duration?: number | null
+    description?: string | null
+    duration: number
     price: number
+    isActive?: boolean
+    type?: $Enums.ServiceType
+    serviceType: $Enums.ServiceType
+    maxCapacity: number
+    unitCount?: number | null
+    commissionFixed?: number | null
+    commissionRate?: number | null
     categoryId: string
     branchId: string
     createdAt?: Date | string
-    isActive?: boolean
     updatedAt?: Date | string
-    type?: $Enums.ServiceType
-    commissionFixed?: number | null
-    commissionRate?: number | null
     packages?: PackageServiceUncheckedCreateNestedManyWithoutServiceInput
     staff?: StaffServiceUncheckedCreateNestedManyWithoutServiceInput
+    commissionRules?: CommissionRuleUncheckedCreateNestedManyWithoutServiceInput
+    commissions?: StaffCommissionUncheckedCreateNestedManyWithoutServiceInput
   }
 
   export type ServiceCreateOrConnectWithoutAppointmentsInput = {
@@ -34361,6 +37029,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     cashRegisterActions?: CashRegisterLogCreateNestedManyWithoutUserInput
     commissions?: StaffCommissionCreateNestedManyWithoutStaffInput
+    commissionRules?: CommissionRuleCreateNestedManyWithoutUserInput
     services?: StaffServiceCreateNestedManyWithoutUserInput
     branch?: BranchCreateNestedOneWithoutUsersInput
     workHours?: WorkHourCreateNestedManyWithoutStaffInput
@@ -34377,6 +37046,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     cashRegisterActions?: CashRegisterLogUncheckedCreateNestedManyWithoutUserInput
     commissions?: StaffCommissionUncheckedCreateNestedManyWithoutStaffInput
+    commissionRules?: CommissionRuleUncheckedCreateNestedManyWithoutUserInput
     services?: StaffServiceUncheckedCreateNestedManyWithoutUserInput
     workHours?: WorkHourUncheckedCreateNestedManyWithoutStaffInput
   }
@@ -34573,35 +37243,47 @@ export namespace Prisma {
   export type ServiceUpdateWithoutAppointmentsInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
-    duration?: NullableIntFieldUpdateOperationsInput | number | null
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    duration?: IntFieldUpdateOperationsInput | number
     price?: FloatFieldUpdateOperationsInput | number
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     type?: EnumServiceTypeFieldUpdateOperationsInput | $Enums.ServiceType
+    serviceType?: EnumServiceTypeFieldUpdateOperationsInput | $Enums.ServiceType
+    maxCapacity?: IntFieldUpdateOperationsInput | number
+    unitCount?: NullableIntFieldUpdateOperationsInput | number | null
     commissionFixed?: NullableFloatFieldUpdateOperationsInput | number | null
     commissionRate?: NullableFloatFieldUpdateOperationsInput | number | null
-    packages?: PackageServiceUpdateManyWithoutServiceNestedInput
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     branch?: BranchUpdateOneRequiredWithoutServicesNestedInput
     category?: ServiceCategoryUpdateOneRequiredWithoutServicesNestedInput
+    packages?: PackageServiceUpdateManyWithoutServiceNestedInput
     staff?: StaffServiceUpdateManyWithoutServiceNestedInput
+    commissionRules?: CommissionRuleUpdateManyWithoutServiceNestedInput
+    commissions?: StaffCommissionUpdateManyWithoutServiceNestedInput
   }
 
   export type ServiceUncheckedUpdateWithoutAppointmentsInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
-    duration?: NullableIntFieldUpdateOperationsInput | number | null
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    duration?: IntFieldUpdateOperationsInput | number
     price?: FloatFieldUpdateOperationsInput | number
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    type?: EnumServiceTypeFieldUpdateOperationsInput | $Enums.ServiceType
+    serviceType?: EnumServiceTypeFieldUpdateOperationsInput | $Enums.ServiceType
+    maxCapacity?: IntFieldUpdateOperationsInput | number
+    unitCount?: NullableIntFieldUpdateOperationsInput | number | null
+    commissionFixed?: NullableFloatFieldUpdateOperationsInput | number | null
+    commissionRate?: NullableFloatFieldUpdateOperationsInput | number | null
     categoryId?: StringFieldUpdateOperationsInput | string
     branchId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    isActive?: BoolFieldUpdateOperationsInput | boolean
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    type?: EnumServiceTypeFieldUpdateOperationsInput | $Enums.ServiceType
-    commissionFixed?: NullableFloatFieldUpdateOperationsInput | number | null
-    commissionRate?: NullableFloatFieldUpdateOperationsInput | number | null
     packages?: PackageServiceUncheckedUpdateManyWithoutServiceNestedInput
     staff?: StaffServiceUncheckedUpdateManyWithoutServiceNestedInput
+    commissionRules?: CommissionRuleUncheckedUpdateManyWithoutServiceNestedInput
+    commissions?: StaffCommissionUncheckedUpdateManyWithoutServiceNestedInput
   }
 
   export type UserUpsertWithoutAppointmentsInput = {
@@ -34625,6 +37307,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     cashRegisterActions?: CashRegisterLogUpdateManyWithoutUserNestedInput
     commissions?: StaffCommissionUpdateManyWithoutStaffNestedInput
+    commissionRules?: CommissionRuleUpdateManyWithoutUserNestedInput
     services?: StaffServiceUpdateManyWithoutUserNestedInput
     branch?: BranchUpdateOneWithoutUsersNestedInput
     workHours?: WorkHourUpdateManyWithoutStaffNestedInput
@@ -34641,6 +37324,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     cashRegisterActions?: CashRegisterLogUncheckedUpdateManyWithoutUserNestedInput
     commissions?: StaffCommissionUncheckedUpdateManyWithoutStaffNestedInput
+    commissionRules?: CommissionRuleUncheckedUpdateManyWithoutUserNestedInput
     services?: StaffServiceUncheckedUpdateManyWithoutUserNestedInput
     workHours?: WorkHourUncheckedUpdateManyWithoutStaffNestedInput
   }
@@ -34894,17 +37578,25 @@ export namespace Prisma {
   export type StaffCommissionCreateWithoutInvoiceInput = {
     id?: string
     amount: number
+    status?: $Enums.CommissionStatus
     isReversed?: boolean
     createdAt?: Date | string
+    updatedAt?: Date | string
+    appliedRule?: CommissionRuleCreateNestedOneWithoutCommissionsInput
     staff: UserCreateNestedOneWithoutCommissionsInput
+    service?: ServiceCreateNestedOneWithoutCommissionsInput
   }
 
   export type StaffCommissionUncheckedCreateWithoutInvoiceInput = {
     id?: string
     amount: number
+    status?: $Enums.CommissionStatus
     isReversed?: boolean
+    appliedRuleId?: string | null
     staffId: string
+    serviceId?: string | null
     createdAt?: Date | string
+    updatedAt?: Date | string
   }
 
   export type StaffCommissionCreateOrConnectWithoutInvoiceInput = {
@@ -35095,17 +37787,25 @@ export namespace Prisma {
   export type StaffCommissionUpdateWithoutInvoiceInput = {
     id?: StringFieldUpdateOperationsInput | string
     amount?: FloatFieldUpdateOperationsInput | number
+    status?: EnumCommissionStatusFieldUpdateOperationsInput | $Enums.CommissionStatus
     isReversed?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    appliedRule?: CommissionRuleUpdateOneWithoutCommissionsNestedInput
     staff?: UserUpdateOneRequiredWithoutCommissionsNestedInput
+    service?: ServiceUpdateOneWithoutCommissionsNestedInput
   }
 
   export type StaffCommissionUncheckedUpdateWithoutInvoiceInput = {
     id?: StringFieldUpdateOperationsInput | string
     amount?: FloatFieldUpdateOperationsInput | number
+    status?: EnumCommissionStatusFieldUpdateOperationsInput | $Enums.CommissionStatus
     isReversed?: BoolFieldUpdateOperationsInput | boolean
+    appliedRuleId?: NullableStringFieldUpdateOperationsInput | string | null
     staffId?: StringFieldUpdateOperationsInput | string
+    serviceId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type CashRegisterLogCreateWithoutPaymentsInput = {
@@ -35236,6 +37936,361 @@ export namespace Prisma {
     commission?: StaffCommissionUncheckedUpdateOneWithoutInvoiceNestedInput
   }
 
+  export type ServiceCreateWithoutCommissionRulesInput = {
+    id?: string
+    name: string
+    description?: string | null
+    duration: number
+    price: number
+    isActive?: boolean
+    type?: $Enums.ServiceType
+    serviceType: $Enums.ServiceType
+    maxCapacity: number
+    unitCount?: number | null
+    commissionFixed?: number | null
+    commissionRate?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    branch: BranchCreateNestedOneWithoutServicesInput
+    category: ServiceCategoryCreateNestedOneWithoutServicesInput
+    appointments?: AppointmentCreateNestedManyWithoutServiceInput
+    packages?: PackageServiceCreateNestedManyWithoutServiceInput
+    staff?: StaffServiceCreateNestedManyWithoutServiceInput
+    commissions?: StaffCommissionCreateNestedManyWithoutServiceInput
+  }
+
+  export type ServiceUncheckedCreateWithoutCommissionRulesInput = {
+    id?: string
+    name: string
+    description?: string | null
+    duration: number
+    price: number
+    isActive?: boolean
+    type?: $Enums.ServiceType
+    serviceType: $Enums.ServiceType
+    maxCapacity: number
+    unitCount?: number | null
+    commissionFixed?: number | null
+    commissionRate?: number | null
+    categoryId: string
+    branchId: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    appointments?: AppointmentUncheckedCreateNestedManyWithoutServiceInput
+    packages?: PackageServiceUncheckedCreateNestedManyWithoutServiceInput
+    staff?: StaffServiceUncheckedCreateNestedManyWithoutServiceInput
+    commissions?: StaffCommissionUncheckedCreateNestedManyWithoutServiceInput
+  }
+
+  export type ServiceCreateOrConnectWithoutCommissionRulesInput = {
+    where: ServiceWhereUniqueInput
+    create: XOR<ServiceCreateWithoutCommissionRulesInput, ServiceUncheckedCreateWithoutCommissionRulesInput>
+  }
+
+  export type UserCreateWithoutCommissionRulesInput = {
+    id?: string
+    email: string
+    password: string
+    name: string
+    role: $Enums.UserRole
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    appointments?: AppointmentCreateNestedManyWithoutStaffInput
+    cashRegisterActions?: CashRegisterLogCreateNestedManyWithoutUserInput
+    commissions?: StaffCommissionCreateNestedManyWithoutStaffInput
+    services?: StaffServiceCreateNestedManyWithoutUserInput
+    branch?: BranchCreateNestedOneWithoutUsersInput
+    workHours?: WorkHourCreateNestedManyWithoutStaffInput
+  }
+
+  export type UserUncheckedCreateWithoutCommissionRulesInput = {
+    id?: string
+    email: string
+    password: string
+    name: string
+    role: $Enums.UserRole
+    branchId?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    appointments?: AppointmentUncheckedCreateNestedManyWithoutStaffInput
+    cashRegisterActions?: CashRegisterLogUncheckedCreateNestedManyWithoutUserInput
+    commissions?: StaffCommissionUncheckedCreateNestedManyWithoutStaffInput
+    services?: StaffServiceUncheckedCreateNestedManyWithoutUserInput
+    workHours?: WorkHourUncheckedCreateNestedManyWithoutStaffInput
+  }
+
+  export type UserCreateOrConnectWithoutCommissionRulesInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutCommissionRulesInput, UserUncheckedCreateWithoutCommissionRulesInput>
+  }
+
+  export type StaffCommissionCreateWithoutAppliedRuleInput = {
+    id?: string
+    amount: number
+    status?: $Enums.CommissionStatus
+    isReversed?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    staff: UserCreateNestedOneWithoutCommissionsInput
+    service?: ServiceCreateNestedOneWithoutCommissionsInput
+    invoice: InvoiceCreateNestedOneWithoutCommissionInput
+  }
+
+  export type StaffCommissionUncheckedCreateWithoutAppliedRuleInput = {
+    id?: string
+    amount: number
+    status?: $Enums.CommissionStatus
+    isReversed?: boolean
+    staffId: string
+    serviceId?: string | null
+    invoiceId: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type StaffCommissionCreateOrConnectWithoutAppliedRuleInput = {
+    where: StaffCommissionWhereUniqueInput
+    create: XOR<StaffCommissionCreateWithoutAppliedRuleInput, StaffCommissionUncheckedCreateWithoutAppliedRuleInput>
+  }
+
+  export type StaffCommissionCreateManyAppliedRuleInputEnvelope = {
+    data: StaffCommissionCreateManyAppliedRuleInput | StaffCommissionCreateManyAppliedRuleInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type ServiceUpsertWithoutCommissionRulesInput = {
+    update: XOR<ServiceUpdateWithoutCommissionRulesInput, ServiceUncheckedUpdateWithoutCommissionRulesInput>
+    create: XOR<ServiceCreateWithoutCommissionRulesInput, ServiceUncheckedCreateWithoutCommissionRulesInput>
+    where?: ServiceWhereInput
+  }
+
+  export type ServiceUpdateToOneWithWhereWithoutCommissionRulesInput = {
+    where?: ServiceWhereInput
+    data: XOR<ServiceUpdateWithoutCommissionRulesInput, ServiceUncheckedUpdateWithoutCommissionRulesInput>
+  }
+
+  export type ServiceUpdateWithoutCommissionRulesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    duration?: IntFieldUpdateOperationsInput | number
+    price?: FloatFieldUpdateOperationsInput | number
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    type?: EnumServiceTypeFieldUpdateOperationsInput | $Enums.ServiceType
+    serviceType?: EnumServiceTypeFieldUpdateOperationsInput | $Enums.ServiceType
+    maxCapacity?: IntFieldUpdateOperationsInput | number
+    unitCount?: NullableIntFieldUpdateOperationsInput | number | null
+    commissionFixed?: NullableFloatFieldUpdateOperationsInput | number | null
+    commissionRate?: NullableFloatFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    branch?: BranchUpdateOneRequiredWithoutServicesNestedInput
+    category?: ServiceCategoryUpdateOneRequiredWithoutServicesNestedInput
+    appointments?: AppointmentUpdateManyWithoutServiceNestedInput
+    packages?: PackageServiceUpdateManyWithoutServiceNestedInput
+    staff?: StaffServiceUpdateManyWithoutServiceNestedInput
+    commissions?: StaffCommissionUpdateManyWithoutServiceNestedInput
+  }
+
+  export type ServiceUncheckedUpdateWithoutCommissionRulesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    duration?: IntFieldUpdateOperationsInput | number
+    price?: FloatFieldUpdateOperationsInput | number
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    type?: EnumServiceTypeFieldUpdateOperationsInput | $Enums.ServiceType
+    serviceType?: EnumServiceTypeFieldUpdateOperationsInput | $Enums.ServiceType
+    maxCapacity?: IntFieldUpdateOperationsInput | number
+    unitCount?: NullableIntFieldUpdateOperationsInput | number | null
+    commissionFixed?: NullableFloatFieldUpdateOperationsInput | number | null
+    commissionRate?: NullableFloatFieldUpdateOperationsInput | number | null
+    categoryId?: StringFieldUpdateOperationsInput | string
+    branchId?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    appointments?: AppointmentUncheckedUpdateManyWithoutServiceNestedInput
+    packages?: PackageServiceUncheckedUpdateManyWithoutServiceNestedInput
+    staff?: StaffServiceUncheckedUpdateManyWithoutServiceNestedInput
+    commissions?: StaffCommissionUncheckedUpdateManyWithoutServiceNestedInput
+  }
+
+  export type UserUpsertWithoutCommissionRulesInput = {
+    update: XOR<UserUpdateWithoutCommissionRulesInput, UserUncheckedUpdateWithoutCommissionRulesInput>
+    create: XOR<UserCreateWithoutCommissionRulesInput, UserUncheckedCreateWithoutCommissionRulesInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutCommissionRulesInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutCommissionRulesInput, UserUncheckedUpdateWithoutCommissionRulesInput>
+  }
+
+  export type UserUpdateWithoutCommissionRulesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    password?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    appointments?: AppointmentUpdateManyWithoutStaffNestedInput
+    cashRegisterActions?: CashRegisterLogUpdateManyWithoutUserNestedInput
+    commissions?: StaffCommissionUpdateManyWithoutStaffNestedInput
+    services?: StaffServiceUpdateManyWithoutUserNestedInput
+    branch?: BranchUpdateOneWithoutUsersNestedInput
+    workHours?: WorkHourUpdateManyWithoutStaffNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutCommissionRulesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    password?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    branchId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    appointments?: AppointmentUncheckedUpdateManyWithoutStaffNestedInput
+    cashRegisterActions?: CashRegisterLogUncheckedUpdateManyWithoutUserNestedInput
+    commissions?: StaffCommissionUncheckedUpdateManyWithoutStaffNestedInput
+    services?: StaffServiceUncheckedUpdateManyWithoutUserNestedInput
+    workHours?: WorkHourUncheckedUpdateManyWithoutStaffNestedInput
+  }
+
+  export type StaffCommissionUpsertWithWhereUniqueWithoutAppliedRuleInput = {
+    where: StaffCommissionWhereUniqueInput
+    update: XOR<StaffCommissionUpdateWithoutAppliedRuleInput, StaffCommissionUncheckedUpdateWithoutAppliedRuleInput>
+    create: XOR<StaffCommissionCreateWithoutAppliedRuleInput, StaffCommissionUncheckedCreateWithoutAppliedRuleInput>
+  }
+
+  export type StaffCommissionUpdateWithWhereUniqueWithoutAppliedRuleInput = {
+    where: StaffCommissionWhereUniqueInput
+    data: XOR<StaffCommissionUpdateWithoutAppliedRuleInput, StaffCommissionUncheckedUpdateWithoutAppliedRuleInput>
+  }
+
+  export type StaffCommissionUpdateManyWithWhereWithoutAppliedRuleInput = {
+    where: StaffCommissionScalarWhereInput
+    data: XOR<StaffCommissionUpdateManyMutationInput, StaffCommissionUncheckedUpdateManyWithoutAppliedRuleInput>
+  }
+
+  export type CommissionRuleCreateWithoutCommissionsInput = {
+    id?: string
+    type: $Enums.CommissionType
+    value: number
+    description?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    isGlobal?: boolean
+    service?: ServiceCreateNestedOneWithoutCommissionRulesInput
+    user?: UserCreateNestedOneWithoutCommissionRulesInput
+  }
+
+  export type CommissionRuleUncheckedCreateWithoutCommissionsInput = {
+    id?: string
+    type: $Enums.CommissionType
+    value: number
+    description?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    isGlobal?: boolean
+    serviceId?: string | null
+    userId?: string | null
+  }
+
+  export type CommissionRuleCreateOrConnectWithoutCommissionsInput = {
+    where: CommissionRuleWhereUniqueInput
+    create: XOR<CommissionRuleCreateWithoutCommissionsInput, CommissionRuleUncheckedCreateWithoutCommissionsInput>
+  }
+
+  export type UserCreateWithoutCommissionsInput = {
+    id?: string
+    email: string
+    password: string
+    name: string
+    role: $Enums.UserRole
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    appointments?: AppointmentCreateNestedManyWithoutStaffInput
+    cashRegisterActions?: CashRegisterLogCreateNestedManyWithoutUserInput
+    commissionRules?: CommissionRuleCreateNestedManyWithoutUserInput
+    services?: StaffServiceCreateNestedManyWithoutUserInput
+    branch?: BranchCreateNestedOneWithoutUsersInput
+    workHours?: WorkHourCreateNestedManyWithoutStaffInput
+  }
+
+  export type UserUncheckedCreateWithoutCommissionsInput = {
+    id?: string
+    email: string
+    password: string
+    name: string
+    role: $Enums.UserRole
+    branchId?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    appointments?: AppointmentUncheckedCreateNestedManyWithoutStaffInput
+    cashRegisterActions?: CashRegisterLogUncheckedCreateNestedManyWithoutUserInput
+    commissionRules?: CommissionRuleUncheckedCreateNestedManyWithoutUserInput
+    services?: StaffServiceUncheckedCreateNestedManyWithoutUserInput
+    workHours?: WorkHourUncheckedCreateNestedManyWithoutStaffInput
+  }
+
+  export type UserCreateOrConnectWithoutCommissionsInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutCommissionsInput, UserUncheckedCreateWithoutCommissionsInput>
+  }
+
+  export type ServiceCreateWithoutCommissionsInput = {
+    id?: string
+    name: string
+    description?: string | null
+    duration: number
+    price: number
+    isActive?: boolean
+    type?: $Enums.ServiceType
+    serviceType: $Enums.ServiceType
+    maxCapacity: number
+    unitCount?: number | null
+    commissionFixed?: number | null
+    commissionRate?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    branch: BranchCreateNestedOneWithoutServicesInput
+    category: ServiceCategoryCreateNestedOneWithoutServicesInput
+    appointments?: AppointmentCreateNestedManyWithoutServiceInput
+    packages?: PackageServiceCreateNestedManyWithoutServiceInput
+    staff?: StaffServiceCreateNestedManyWithoutServiceInput
+    commissionRules?: CommissionRuleCreateNestedManyWithoutServiceInput
+  }
+
+  export type ServiceUncheckedCreateWithoutCommissionsInput = {
+    id?: string
+    name: string
+    description?: string | null
+    duration: number
+    price: number
+    isActive?: boolean
+    type?: $Enums.ServiceType
+    serviceType: $Enums.ServiceType
+    maxCapacity: number
+    unitCount?: number | null
+    commissionFixed?: number | null
+    commissionRate?: number | null
+    categoryId: string
+    branchId: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    appointments?: AppointmentUncheckedCreateNestedManyWithoutServiceInput
+    packages?: PackageServiceUncheckedCreateNestedManyWithoutServiceInput
+    staff?: StaffServiceUncheckedCreateNestedManyWithoutServiceInput
+    commissionRules?: CommissionRuleUncheckedCreateNestedManyWithoutServiceInput
+  }
+
+  export type ServiceCreateOrConnectWithoutCommissionsInput = {
+    where: ServiceWhereUniqueInput
+    create: XOR<ServiceCreateWithoutCommissionsInput, ServiceUncheckedCreateWithoutCommissionsInput>
+  }
+
   export type InvoiceCreateWithoutCommissionInput = {
     id?: string
     totalAmount: number
@@ -35269,39 +38324,139 @@ export namespace Prisma {
     create: XOR<InvoiceCreateWithoutCommissionInput, InvoiceUncheckedCreateWithoutCommissionInput>
   }
 
-  export type UserCreateWithoutCommissionsInput = {
-    id?: string
-    email: string
-    password: string
-    name: string
-    role: $Enums.UserRole
-    createdAt?: Date | string
-    updatedAt?: Date | string
-    appointments?: AppointmentCreateNestedManyWithoutStaffInput
-    cashRegisterActions?: CashRegisterLogCreateNestedManyWithoutUserInput
-    services?: StaffServiceCreateNestedManyWithoutUserInput
-    branch?: BranchCreateNestedOneWithoutUsersInput
-    workHours?: WorkHourCreateNestedManyWithoutStaffInput
+  export type CommissionRuleUpsertWithoutCommissionsInput = {
+    update: XOR<CommissionRuleUpdateWithoutCommissionsInput, CommissionRuleUncheckedUpdateWithoutCommissionsInput>
+    create: XOR<CommissionRuleCreateWithoutCommissionsInput, CommissionRuleUncheckedCreateWithoutCommissionsInput>
+    where?: CommissionRuleWhereInput
   }
 
-  export type UserUncheckedCreateWithoutCommissionsInput = {
-    id?: string
-    email: string
-    password: string
-    name: string
-    role: $Enums.UserRole
-    branchId?: string | null
-    createdAt?: Date | string
-    updatedAt?: Date | string
-    appointments?: AppointmentUncheckedCreateNestedManyWithoutStaffInput
-    cashRegisterActions?: CashRegisterLogUncheckedCreateNestedManyWithoutUserInput
-    services?: StaffServiceUncheckedCreateNestedManyWithoutUserInput
-    workHours?: WorkHourUncheckedCreateNestedManyWithoutStaffInput
+  export type CommissionRuleUpdateToOneWithWhereWithoutCommissionsInput = {
+    where?: CommissionRuleWhereInput
+    data: XOR<CommissionRuleUpdateWithoutCommissionsInput, CommissionRuleUncheckedUpdateWithoutCommissionsInput>
   }
 
-  export type UserCreateOrConnectWithoutCommissionsInput = {
-    where: UserWhereUniqueInput
+  export type CommissionRuleUpdateWithoutCommissionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    type?: EnumCommissionTypeFieldUpdateOperationsInput | $Enums.CommissionType
+    value?: FloatFieldUpdateOperationsInput | number
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    isGlobal?: BoolFieldUpdateOperationsInput | boolean
+    service?: ServiceUpdateOneWithoutCommissionRulesNestedInput
+    user?: UserUpdateOneWithoutCommissionRulesNestedInput
+  }
+
+  export type CommissionRuleUncheckedUpdateWithoutCommissionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    type?: EnumCommissionTypeFieldUpdateOperationsInput | $Enums.CommissionType
+    value?: FloatFieldUpdateOperationsInput | number
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    isGlobal?: BoolFieldUpdateOperationsInput | boolean
+    serviceId?: NullableStringFieldUpdateOperationsInput | string | null
+    userId?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type UserUpsertWithoutCommissionsInput = {
+    update: XOR<UserUpdateWithoutCommissionsInput, UserUncheckedUpdateWithoutCommissionsInput>
     create: XOR<UserCreateWithoutCommissionsInput, UserUncheckedCreateWithoutCommissionsInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutCommissionsInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutCommissionsInput, UserUncheckedUpdateWithoutCommissionsInput>
+  }
+
+  export type UserUpdateWithoutCommissionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    password?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    appointments?: AppointmentUpdateManyWithoutStaffNestedInput
+    cashRegisterActions?: CashRegisterLogUpdateManyWithoutUserNestedInput
+    commissionRules?: CommissionRuleUpdateManyWithoutUserNestedInput
+    services?: StaffServiceUpdateManyWithoutUserNestedInput
+    branch?: BranchUpdateOneWithoutUsersNestedInput
+    workHours?: WorkHourUpdateManyWithoutStaffNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutCommissionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    password?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    branchId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    appointments?: AppointmentUncheckedUpdateManyWithoutStaffNestedInput
+    cashRegisterActions?: CashRegisterLogUncheckedUpdateManyWithoutUserNestedInput
+    commissionRules?: CommissionRuleUncheckedUpdateManyWithoutUserNestedInput
+    services?: StaffServiceUncheckedUpdateManyWithoutUserNestedInput
+    workHours?: WorkHourUncheckedUpdateManyWithoutStaffNestedInput
+  }
+
+  export type ServiceUpsertWithoutCommissionsInput = {
+    update: XOR<ServiceUpdateWithoutCommissionsInput, ServiceUncheckedUpdateWithoutCommissionsInput>
+    create: XOR<ServiceCreateWithoutCommissionsInput, ServiceUncheckedCreateWithoutCommissionsInput>
+    where?: ServiceWhereInput
+  }
+
+  export type ServiceUpdateToOneWithWhereWithoutCommissionsInput = {
+    where?: ServiceWhereInput
+    data: XOR<ServiceUpdateWithoutCommissionsInput, ServiceUncheckedUpdateWithoutCommissionsInput>
+  }
+
+  export type ServiceUpdateWithoutCommissionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    duration?: IntFieldUpdateOperationsInput | number
+    price?: FloatFieldUpdateOperationsInput | number
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    type?: EnumServiceTypeFieldUpdateOperationsInput | $Enums.ServiceType
+    serviceType?: EnumServiceTypeFieldUpdateOperationsInput | $Enums.ServiceType
+    maxCapacity?: IntFieldUpdateOperationsInput | number
+    unitCount?: NullableIntFieldUpdateOperationsInput | number | null
+    commissionFixed?: NullableFloatFieldUpdateOperationsInput | number | null
+    commissionRate?: NullableFloatFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    branch?: BranchUpdateOneRequiredWithoutServicesNestedInput
+    category?: ServiceCategoryUpdateOneRequiredWithoutServicesNestedInput
+    appointments?: AppointmentUpdateManyWithoutServiceNestedInput
+    packages?: PackageServiceUpdateManyWithoutServiceNestedInput
+    staff?: StaffServiceUpdateManyWithoutServiceNestedInput
+    commissionRules?: CommissionRuleUpdateManyWithoutServiceNestedInput
+  }
+
+  export type ServiceUncheckedUpdateWithoutCommissionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    duration?: IntFieldUpdateOperationsInput | number
+    price?: FloatFieldUpdateOperationsInput | number
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    type?: EnumServiceTypeFieldUpdateOperationsInput | $Enums.ServiceType
+    serviceType?: EnumServiceTypeFieldUpdateOperationsInput | $Enums.ServiceType
+    maxCapacity?: IntFieldUpdateOperationsInput | number
+    unitCount?: NullableIntFieldUpdateOperationsInput | number | null
+    commissionFixed?: NullableFloatFieldUpdateOperationsInput | number | null
+    commissionRate?: NullableFloatFieldUpdateOperationsInput | number | null
+    categoryId?: StringFieldUpdateOperationsInput | string
+    branchId?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    appointments?: AppointmentUncheckedUpdateManyWithoutServiceNestedInput
+    packages?: PackageServiceUncheckedUpdateManyWithoutServiceNestedInput
+    staff?: StaffServiceUncheckedUpdateManyWithoutServiceNestedInput
+    commissionRules?: CommissionRuleUncheckedUpdateManyWithoutServiceNestedInput
   }
 
   export type InvoiceUpsertWithoutCommissionInput = {
@@ -35341,47 +38496,6 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     payments?: PaymentUncheckedUpdateManyWithoutInvoiceNestedInput
-  }
-
-  export type UserUpsertWithoutCommissionsInput = {
-    update: XOR<UserUpdateWithoutCommissionsInput, UserUncheckedUpdateWithoutCommissionsInput>
-    create: XOR<UserCreateWithoutCommissionsInput, UserUncheckedCreateWithoutCommissionsInput>
-    where?: UserWhereInput
-  }
-
-  export type UserUpdateToOneWithWhereWithoutCommissionsInput = {
-    where?: UserWhereInput
-    data: XOR<UserUpdateWithoutCommissionsInput, UserUncheckedUpdateWithoutCommissionsInput>
-  }
-
-  export type UserUpdateWithoutCommissionsInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    email?: StringFieldUpdateOperationsInput | string
-    password?: StringFieldUpdateOperationsInput | string
-    name?: StringFieldUpdateOperationsInput | string
-    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    appointments?: AppointmentUpdateManyWithoutStaffNestedInput
-    cashRegisterActions?: CashRegisterLogUpdateManyWithoutUserNestedInput
-    services?: StaffServiceUpdateManyWithoutUserNestedInput
-    branch?: BranchUpdateOneWithoutUsersNestedInput
-    workHours?: WorkHourUpdateManyWithoutStaffNestedInput
-  }
-
-  export type UserUncheckedUpdateWithoutCommissionsInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    email?: StringFieldUpdateOperationsInput | string
-    password?: StringFieldUpdateOperationsInput | string
-    name?: StringFieldUpdateOperationsInput | string
-    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
-    branchId?: NullableStringFieldUpdateOperationsInput | string | null
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    appointments?: AppointmentUncheckedUpdateManyWithoutStaffNestedInput
-    cashRegisterActions?: CashRegisterLogUncheckedUpdateManyWithoutUserNestedInput
-    services?: StaffServiceUncheckedUpdateManyWithoutUserNestedInput
-    workHours?: WorkHourUncheckedUpdateManyWithoutStaffNestedInput
   }
 
   export type BranchCreateWithoutCashRegisterLogsInput = {
@@ -35439,6 +38553,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     appointments?: AppointmentCreateNestedManyWithoutStaffInput
     commissions?: StaffCommissionCreateNestedManyWithoutStaffInput
+    commissionRules?: CommissionRuleCreateNestedManyWithoutUserInput
     services?: StaffServiceCreateNestedManyWithoutUserInput
     branch?: BranchCreateNestedOneWithoutUsersInput
     workHours?: WorkHourCreateNestedManyWithoutStaffInput
@@ -35455,6 +38570,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     appointments?: AppointmentUncheckedCreateNestedManyWithoutStaffInput
     commissions?: StaffCommissionUncheckedCreateNestedManyWithoutStaffInput
+    commissionRules?: CommissionRuleUncheckedCreateNestedManyWithoutUserInput
     services?: StaffServiceUncheckedCreateNestedManyWithoutUserInput
     workHours?: WorkHourUncheckedCreateNestedManyWithoutStaffInput
   }
@@ -35562,6 +38678,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     appointments?: AppointmentUpdateManyWithoutStaffNestedInput
     commissions?: StaffCommissionUpdateManyWithoutStaffNestedInput
+    commissionRules?: CommissionRuleUpdateManyWithoutUserNestedInput
     services?: StaffServiceUpdateManyWithoutUserNestedInput
     branch?: BranchUpdateOneWithoutUsersNestedInput
     workHours?: WorkHourUpdateManyWithoutStaffNestedInput
@@ -35578,6 +38695,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     appointments?: AppointmentUncheckedUpdateManyWithoutStaffNestedInput
     commissions?: StaffCommissionUncheckedUpdateManyWithoutStaffNestedInput
+    commissionRules?: CommissionRuleUncheckedUpdateManyWithoutUserNestedInput
     services?: StaffServiceUncheckedUpdateManyWithoutUserNestedInput
     workHours?: WorkHourUncheckedUpdateManyWithoutStaffNestedInput
   }
@@ -35626,9 +38744,24 @@ export namespace Prisma {
   export type StaffCommissionCreateManyStaffInput = {
     id?: string
     amount: number
+    status?: $Enums.CommissionStatus
     isReversed?: boolean
+    appliedRuleId?: string | null
+    serviceId?: string | null
     invoiceId: string
     createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type CommissionRuleCreateManyUserInput = {
+    id?: string
+    type: $Enums.CommissionType
+    value: number
+    description?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    isGlobal?: boolean
+    serviceId?: string | null
   }
 
   export type StaffServiceCreateManyUserInput = {
@@ -35730,25 +38863,72 @@ export namespace Prisma {
   export type StaffCommissionUpdateWithoutStaffInput = {
     id?: StringFieldUpdateOperationsInput | string
     amount?: FloatFieldUpdateOperationsInput | number
+    status?: EnumCommissionStatusFieldUpdateOperationsInput | $Enums.CommissionStatus
     isReversed?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    appliedRule?: CommissionRuleUpdateOneWithoutCommissionsNestedInput
+    service?: ServiceUpdateOneWithoutCommissionsNestedInput
     invoice?: InvoiceUpdateOneRequiredWithoutCommissionNestedInput
   }
 
   export type StaffCommissionUncheckedUpdateWithoutStaffInput = {
     id?: StringFieldUpdateOperationsInput | string
     amount?: FloatFieldUpdateOperationsInput | number
+    status?: EnumCommissionStatusFieldUpdateOperationsInput | $Enums.CommissionStatus
     isReversed?: BoolFieldUpdateOperationsInput | boolean
+    appliedRuleId?: NullableStringFieldUpdateOperationsInput | string | null
+    serviceId?: NullableStringFieldUpdateOperationsInput | string | null
     invoiceId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type StaffCommissionUncheckedUpdateManyWithoutStaffInput = {
     id?: StringFieldUpdateOperationsInput | string
     amount?: FloatFieldUpdateOperationsInput | number
+    status?: EnumCommissionStatusFieldUpdateOperationsInput | $Enums.CommissionStatus
     isReversed?: BoolFieldUpdateOperationsInput | boolean
+    appliedRuleId?: NullableStringFieldUpdateOperationsInput | string | null
+    serviceId?: NullableStringFieldUpdateOperationsInput | string | null
     invoiceId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CommissionRuleUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    type?: EnumCommissionTypeFieldUpdateOperationsInput | $Enums.CommissionType
+    value?: FloatFieldUpdateOperationsInput | number
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    isGlobal?: BoolFieldUpdateOperationsInput | boolean
+    service?: ServiceUpdateOneWithoutCommissionRulesNestedInput
+    commissions?: StaffCommissionUpdateManyWithoutAppliedRuleNestedInput
+  }
+
+  export type CommissionRuleUncheckedUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    type?: EnumCommissionTypeFieldUpdateOperationsInput | $Enums.CommissionType
+    value?: FloatFieldUpdateOperationsInput | number
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    isGlobal?: BoolFieldUpdateOperationsInput | boolean
+    serviceId?: NullableStringFieldUpdateOperationsInput | string | null
+    commissions?: StaffCommissionUncheckedUpdateManyWithoutAppliedRuleNestedInput
+  }
+
+  export type CommissionRuleUncheckedUpdateManyWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    type?: EnumCommissionTypeFieldUpdateOperationsInput | $Enums.CommissionType
+    value?: FloatFieldUpdateOperationsInput | number
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    isGlobal?: BoolFieldUpdateOperationsInput | boolean
+    serviceId?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type StaffServiceUpdateWithoutUserInput = {
@@ -35873,15 +39053,19 @@ export namespace Prisma {
   export type ServiceCreateManyBranchInput = {
     id?: string
     name: string
-    duration?: number | null
+    description?: string | null
+    duration: number
     price: number
-    categoryId: string
-    createdAt?: Date | string
     isActive?: boolean
-    updatedAt?: Date | string
     type?: $Enums.ServiceType
+    serviceType: $Enums.ServiceType
+    maxCapacity: number
+    unitCount?: number | null
     commissionFixed?: number | null
     commissionRate?: number | null
+    categoryId: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
   }
 
   export type ServiceCategoryCreateManyBranchInput = {
@@ -36181,49 +39365,65 @@ export namespace Prisma {
   export type ServiceUpdateWithoutBranchInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
-    duration?: NullableIntFieldUpdateOperationsInput | number | null
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    duration?: IntFieldUpdateOperationsInput | number
     price?: FloatFieldUpdateOperationsInput | number
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     type?: EnumServiceTypeFieldUpdateOperationsInput | $Enums.ServiceType
+    serviceType?: EnumServiceTypeFieldUpdateOperationsInput | $Enums.ServiceType
+    maxCapacity?: IntFieldUpdateOperationsInput | number
+    unitCount?: NullableIntFieldUpdateOperationsInput | number | null
     commissionFixed?: NullableFloatFieldUpdateOperationsInput | number | null
     commissionRate?: NullableFloatFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    category?: ServiceCategoryUpdateOneRequiredWithoutServicesNestedInput
     appointments?: AppointmentUpdateManyWithoutServiceNestedInput
     packages?: PackageServiceUpdateManyWithoutServiceNestedInput
-    category?: ServiceCategoryUpdateOneRequiredWithoutServicesNestedInput
     staff?: StaffServiceUpdateManyWithoutServiceNestedInput
+    commissionRules?: CommissionRuleUpdateManyWithoutServiceNestedInput
+    commissions?: StaffCommissionUpdateManyWithoutServiceNestedInput
   }
 
   export type ServiceUncheckedUpdateWithoutBranchInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
-    duration?: NullableIntFieldUpdateOperationsInput | number | null
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    duration?: IntFieldUpdateOperationsInput | number
     price?: FloatFieldUpdateOperationsInput | number
-    categoryId?: StringFieldUpdateOperationsInput | string
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     type?: EnumServiceTypeFieldUpdateOperationsInput | $Enums.ServiceType
+    serviceType?: EnumServiceTypeFieldUpdateOperationsInput | $Enums.ServiceType
+    maxCapacity?: IntFieldUpdateOperationsInput | number
+    unitCount?: NullableIntFieldUpdateOperationsInput | number | null
     commissionFixed?: NullableFloatFieldUpdateOperationsInput | number | null
     commissionRate?: NullableFloatFieldUpdateOperationsInput | number | null
+    categoryId?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     appointments?: AppointmentUncheckedUpdateManyWithoutServiceNestedInput
     packages?: PackageServiceUncheckedUpdateManyWithoutServiceNestedInput
     staff?: StaffServiceUncheckedUpdateManyWithoutServiceNestedInput
+    commissionRules?: CommissionRuleUncheckedUpdateManyWithoutServiceNestedInput
+    commissions?: StaffCommissionUncheckedUpdateManyWithoutServiceNestedInput
   }
 
   export type ServiceUncheckedUpdateManyWithoutBranchInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
-    duration?: NullableIntFieldUpdateOperationsInput | number | null
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    duration?: IntFieldUpdateOperationsInput | number
     price?: FloatFieldUpdateOperationsInput | number
-    categoryId?: StringFieldUpdateOperationsInput | string
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     type?: EnumServiceTypeFieldUpdateOperationsInput | $Enums.ServiceType
+    serviceType?: EnumServiceTypeFieldUpdateOperationsInput | $Enums.ServiceType
+    maxCapacity?: IntFieldUpdateOperationsInput | number
+    unitCount?: NullableIntFieldUpdateOperationsInput | number | null
     commissionFixed?: NullableFloatFieldUpdateOperationsInput | number | null
     commissionRate?: NullableFloatFieldUpdateOperationsInput | number | null
+    categoryId?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type ServiceCategoryUpdateWithoutBranchInput = {
@@ -36266,6 +39466,7 @@ export namespace Prisma {
     appointments?: AppointmentUpdateManyWithoutStaffNestedInput
     cashRegisterActions?: CashRegisterLogUpdateManyWithoutUserNestedInput
     commissions?: StaffCommissionUpdateManyWithoutStaffNestedInput
+    commissionRules?: CommissionRuleUpdateManyWithoutUserNestedInput
     services?: StaffServiceUpdateManyWithoutUserNestedInput
     workHours?: WorkHourUpdateManyWithoutStaffNestedInput
   }
@@ -36281,6 +39482,7 @@ export namespace Prisma {
     appointments?: AppointmentUncheckedUpdateManyWithoutStaffNestedInput
     cashRegisterActions?: CashRegisterLogUncheckedUpdateManyWithoutUserNestedInput
     commissions?: StaffCommissionUncheckedUpdateManyWithoutStaffNestedInput
+    commissionRules?: CommissionRuleUncheckedUpdateManyWithoutUserNestedInput
     services?: StaffServiceUncheckedUpdateManyWithoutUserNestedInput
     workHours?: WorkHourUncheckedUpdateManyWithoutStaffNestedInput
   }
@@ -36527,63 +39729,83 @@ export namespace Prisma {
   export type ServiceCreateManyCategoryInput = {
     id?: string
     name: string
-    duration?: number | null
+    description?: string | null
+    duration: number
     price: number
-    branchId: string
-    createdAt?: Date | string
     isActive?: boolean
-    updatedAt?: Date | string
     type?: $Enums.ServiceType
+    serviceType: $Enums.ServiceType
+    maxCapacity: number
+    unitCount?: number | null
     commissionFixed?: number | null
     commissionRate?: number | null
+    branchId: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
   }
 
   export type ServiceUpdateWithoutCategoryInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
-    duration?: NullableIntFieldUpdateOperationsInput | number | null
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    duration?: IntFieldUpdateOperationsInput | number
     price?: FloatFieldUpdateOperationsInput | number
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     type?: EnumServiceTypeFieldUpdateOperationsInput | $Enums.ServiceType
+    serviceType?: EnumServiceTypeFieldUpdateOperationsInput | $Enums.ServiceType
+    maxCapacity?: IntFieldUpdateOperationsInput | number
+    unitCount?: NullableIntFieldUpdateOperationsInput | number | null
     commissionFixed?: NullableFloatFieldUpdateOperationsInput | number | null
     commissionRate?: NullableFloatFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    branch?: BranchUpdateOneRequiredWithoutServicesNestedInput
     appointments?: AppointmentUpdateManyWithoutServiceNestedInput
     packages?: PackageServiceUpdateManyWithoutServiceNestedInput
-    branch?: BranchUpdateOneRequiredWithoutServicesNestedInput
     staff?: StaffServiceUpdateManyWithoutServiceNestedInput
+    commissionRules?: CommissionRuleUpdateManyWithoutServiceNestedInput
+    commissions?: StaffCommissionUpdateManyWithoutServiceNestedInput
   }
 
   export type ServiceUncheckedUpdateWithoutCategoryInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
-    duration?: NullableIntFieldUpdateOperationsInput | number | null
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    duration?: IntFieldUpdateOperationsInput | number
     price?: FloatFieldUpdateOperationsInput | number
-    branchId?: StringFieldUpdateOperationsInput | string
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     type?: EnumServiceTypeFieldUpdateOperationsInput | $Enums.ServiceType
+    serviceType?: EnumServiceTypeFieldUpdateOperationsInput | $Enums.ServiceType
+    maxCapacity?: IntFieldUpdateOperationsInput | number
+    unitCount?: NullableIntFieldUpdateOperationsInput | number | null
     commissionFixed?: NullableFloatFieldUpdateOperationsInput | number | null
     commissionRate?: NullableFloatFieldUpdateOperationsInput | number | null
+    branchId?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     appointments?: AppointmentUncheckedUpdateManyWithoutServiceNestedInput
     packages?: PackageServiceUncheckedUpdateManyWithoutServiceNestedInput
     staff?: StaffServiceUncheckedUpdateManyWithoutServiceNestedInput
+    commissionRules?: CommissionRuleUncheckedUpdateManyWithoutServiceNestedInput
+    commissions?: StaffCommissionUncheckedUpdateManyWithoutServiceNestedInput
   }
 
   export type ServiceUncheckedUpdateManyWithoutCategoryInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
-    duration?: NullableIntFieldUpdateOperationsInput | number | null
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    duration?: IntFieldUpdateOperationsInput | number
     price?: FloatFieldUpdateOperationsInput | number
-    branchId?: StringFieldUpdateOperationsInput | string
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     type?: EnumServiceTypeFieldUpdateOperationsInput | $Enums.ServiceType
+    serviceType?: EnumServiceTypeFieldUpdateOperationsInput | $Enums.ServiceType
+    maxCapacity?: IntFieldUpdateOperationsInput | number
+    unitCount?: NullableIntFieldUpdateOperationsInput | number | null
     commissionFixed?: NullableFloatFieldUpdateOperationsInput | number | null
     commissionRate?: NullableFloatFieldUpdateOperationsInput | number | null
+    branchId?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type AppointmentCreateManyServiceInput = {
@@ -36609,6 +39831,29 @@ export namespace Prisma {
 
   export type StaffServiceCreateManyServiceInput = {
     userId: string
+  }
+
+  export type CommissionRuleCreateManyServiceInput = {
+    id?: string
+    type: $Enums.CommissionType
+    value: number
+    description?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    isGlobal?: boolean
+    userId?: string | null
+  }
+
+  export type StaffCommissionCreateManyServiceInput = {
+    id?: string
+    amount: number
+    status?: $Enums.CommissionStatus
+    isReversed?: boolean
+    appliedRuleId?: string | null
+    staffId: string
+    invoiceId: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
   }
 
   export type AppointmentUpdateWithoutServiceInput = {
@@ -36688,6 +39933,77 @@ export namespace Prisma {
 
   export type StaffServiceUncheckedUpdateManyWithoutServiceInput = {
     userId?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type CommissionRuleUpdateWithoutServiceInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    type?: EnumCommissionTypeFieldUpdateOperationsInput | $Enums.CommissionType
+    value?: FloatFieldUpdateOperationsInput | number
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    isGlobal?: BoolFieldUpdateOperationsInput | boolean
+    user?: UserUpdateOneWithoutCommissionRulesNestedInput
+    commissions?: StaffCommissionUpdateManyWithoutAppliedRuleNestedInput
+  }
+
+  export type CommissionRuleUncheckedUpdateWithoutServiceInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    type?: EnumCommissionTypeFieldUpdateOperationsInput | $Enums.CommissionType
+    value?: FloatFieldUpdateOperationsInput | number
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    isGlobal?: BoolFieldUpdateOperationsInput | boolean
+    userId?: NullableStringFieldUpdateOperationsInput | string | null
+    commissions?: StaffCommissionUncheckedUpdateManyWithoutAppliedRuleNestedInput
+  }
+
+  export type CommissionRuleUncheckedUpdateManyWithoutServiceInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    type?: EnumCommissionTypeFieldUpdateOperationsInput | $Enums.CommissionType
+    value?: FloatFieldUpdateOperationsInput | number
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    isGlobal?: BoolFieldUpdateOperationsInput | boolean
+    userId?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type StaffCommissionUpdateWithoutServiceInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    amount?: FloatFieldUpdateOperationsInput | number
+    status?: EnumCommissionStatusFieldUpdateOperationsInput | $Enums.CommissionStatus
+    isReversed?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    appliedRule?: CommissionRuleUpdateOneWithoutCommissionsNestedInput
+    staff?: UserUpdateOneRequiredWithoutCommissionsNestedInput
+    invoice?: InvoiceUpdateOneRequiredWithoutCommissionNestedInput
+  }
+
+  export type StaffCommissionUncheckedUpdateWithoutServiceInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    amount?: FloatFieldUpdateOperationsInput | number
+    status?: EnumCommissionStatusFieldUpdateOperationsInput | $Enums.CommissionStatus
+    isReversed?: BoolFieldUpdateOperationsInput | boolean
+    appliedRuleId?: NullableStringFieldUpdateOperationsInput | string | null
+    staffId?: StringFieldUpdateOperationsInput | string
+    invoiceId?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type StaffCommissionUncheckedUpdateManyWithoutServiceInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    amount?: FloatFieldUpdateOperationsInput | number
+    status?: EnumCommissionStatusFieldUpdateOperationsInput | $Enums.CommissionStatus
+    isReversed?: BoolFieldUpdateOperationsInput | boolean
+    appliedRuleId?: NullableStringFieldUpdateOperationsInput | string | null
+    staffId?: StringFieldUpdateOperationsInput | string
+    invoiceId?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type CustomerPackageCreateManyPackageInput = {
@@ -36876,6 +40192,54 @@ export namespace Prisma {
     method?: EnumPaymentMethodFieldUpdateOperationsInput | $Enums.PaymentMethod
     paymentDate?: DateTimeFieldUpdateOperationsInput | Date | string
     cashRegisterLogId?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type StaffCommissionCreateManyAppliedRuleInput = {
+    id?: string
+    amount: number
+    status?: $Enums.CommissionStatus
+    isReversed?: boolean
+    staffId: string
+    serviceId?: string | null
+    invoiceId: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type StaffCommissionUpdateWithoutAppliedRuleInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    amount?: FloatFieldUpdateOperationsInput | number
+    status?: EnumCommissionStatusFieldUpdateOperationsInput | $Enums.CommissionStatus
+    isReversed?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    staff?: UserUpdateOneRequiredWithoutCommissionsNestedInput
+    service?: ServiceUpdateOneWithoutCommissionsNestedInput
+    invoice?: InvoiceUpdateOneRequiredWithoutCommissionNestedInput
+  }
+
+  export type StaffCommissionUncheckedUpdateWithoutAppliedRuleInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    amount?: FloatFieldUpdateOperationsInput | number
+    status?: EnumCommissionStatusFieldUpdateOperationsInput | $Enums.CommissionStatus
+    isReversed?: BoolFieldUpdateOperationsInput | boolean
+    staffId?: StringFieldUpdateOperationsInput | string
+    serviceId?: NullableStringFieldUpdateOperationsInput | string | null
+    invoiceId?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type StaffCommissionUncheckedUpdateManyWithoutAppliedRuleInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    amount?: FloatFieldUpdateOperationsInput | number
+    status?: EnumCommissionStatusFieldUpdateOperationsInput | $Enums.CommissionStatus
+    isReversed?: BoolFieldUpdateOperationsInput | boolean
+    staffId?: StringFieldUpdateOperationsInput | string
+    serviceId?: NullableStringFieldUpdateOperationsInput | string | null
+    invoiceId?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type PaymentCreateManyCashRegisterLogInput = {

@@ -193,16 +193,20 @@ exports.Prisma.ServiceCategoryScalarFieldEnum = {
 exports.Prisma.ServiceScalarFieldEnum = {
   id: 'id',
   name: 'name',
+  description: 'description',
   duration: 'duration',
   price: 'price',
+  isActive: 'isActive',
+  type: 'type',
+  serviceType: 'serviceType',
+  maxCapacity: 'maxCapacity',
+  unitCount: 'unitCount',
+  commissionFixed: 'commissionFixed',
+  commissionRate: 'commissionRate',
   categoryId: 'categoryId',
   branchId: 'branchId',
   createdAt: 'createdAt',
-  isActive: 'isActive',
-  updatedAt: 'updatedAt',
-  type: 'type',
-  commissionFixed: 'commissionFixed',
-  commissionRate: 'commissionRate'
+  updatedAt: 'updatedAt'
 };
 
 exports.Prisma.StaffServiceScalarFieldEnum = {
@@ -289,13 +293,29 @@ exports.Prisma.PaymentScalarFieldEnum = {
   cashRegisterLogId: 'cashRegisterLogId'
 };
 
+exports.Prisma.CommissionRuleScalarFieldEnum = {
+  id: 'id',
+  type: 'type',
+  value: 'value',
+  description: 'description',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  isGlobal: 'isGlobal',
+  serviceId: 'serviceId',
+  userId: 'userId'
+};
+
 exports.Prisma.StaffCommissionScalarFieldEnum = {
   id: 'id',
   amount: 'amount',
+  status: 'status',
   isReversed: 'isReversed',
+  appliedRuleId: 'appliedRuleId',
   staffId: 'staffId',
+  serviceId: 'serviceId',
   invoiceId: 'invoiceId',
-  createdAt: 'createdAt'
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 };
 
 exports.Prisma.CashRegisterLogScalarFieldEnum = {
@@ -364,7 +384,9 @@ exports.AppointmentStatus = exports.$Enums.AppointmentStatus = {
 exports.PaymentStatus = exports.$Enums.PaymentStatus = {
   PAID: 'PAID',
   UNPAID: 'UNPAID',
-  PARTIALLY_PAID: 'PARTIALLY_PAID'
+  PARTIALLY_PAID: 'PARTIALLY_PAID',
+  CANCELLED: 'CANCELLED',
+  REFUNDED: 'REFUNDED'
 };
 
 exports.PaymentMethod = exports.$Enums.PaymentMethod = {
@@ -372,6 +394,18 @@ exports.PaymentMethod = exports.$Enums.PaymentMethod = {
   CREDIT_CARD: 'CREDIT_CARD',
   BANK_TRANSFER: 'BANK_TRANSFER',
   CUSTOMER_CREDIT: 'CUSTOMER_CREDIT'
+};
+
+exports.CommissionType = exports.$Enums.CommissionType = {
+  PERCENTAGE: 'PERCENTAGE',
+  FIXED_AMOUNT: 'FIXED_AMOUNT'
+};
+
+exports.CommissionStatus = exports.$Enums.CommissionStatus = {
+  PENDING: 'PENDING',
+  APPROVED: 'APPROVED',
+  PAID: 'PAID',
+  CANCELED: 'CANCELED'
 };
 
 exports.CashLogType = exports.$Enums.CashLogType = {
@@ -400,6 +434,7 @@ exports.Prisma.ModelName = {
   Appointment: 'Appointment',
   Invoice: 'Invoice',
   Payment: 'Payment',
+  CommissionRule: 'CommissionRule',
   StaffCommission: 'StaffCommission',
   CashRegisterLog: 'CashRegisterLog'
 };
