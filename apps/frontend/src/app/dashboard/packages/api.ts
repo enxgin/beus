@@ -49,15 +49,33 @@ export const getCustomerPackages = async (params: {
   customerId?: string; 
   active?: boolean 
 } = {}): Promise<{ data: CustomerPackage[]; total: number }> => {
-  let url = '/packages/customer?';
+  const queryParams = new URLSearchParams();
   
-  if (params.skip !== undefined) url += `skip=${params.skip}&`;
-  if (params.take !== undefined) url += `take=${params.take}&`;
-  if (params.customerId) url += `customerId=${params.customerId}&`;
-  if (params.active !== undefined) url += `active=${params.active}`;
+  if (params.skip !== undefined) queryParams.append('skip', params.skip.toString());
+  if (params.take !== undefined) queryParams.append('take', params.take.toString());
+  if (params.customerId) queryParams.append('customerId', params.customerId);
+  if (params.active !== undefined) queryParams.append('active', params.active.toString());
   
-  const response = await api.get<{ data: CustomerPackage[]; total: number }>(url);
-  return response.data;
+  // customerId belirtilmemişse 'all' parametresi ekle
+  if (!params.customerId) {
+    queryParams.append('customerId', 'all');
+  }
+  
+  console.log('getCustomerPackages API çağrısı yapılıyor:', `/packages/customer?${queryParams.toString()}`);
+  
+  try {
+    const response = await api.get<CustomerPackage[]>(`/packages/customer?${queryParams.toString()}`);
+    return { 
+      data: response.data, 
+      total: response.data.length // Backend total dönmüyorsa uzunluğu kullan
+    };
+  } catch (error: any) {
+    console.error('Müşteri paketleri getirilirken hata:', error);
+    if (error.response?.status === 404) {
+      console.warn('Endpoint bulunamadı (404). API yolu kontrol edilmeli.');
+    }
+    throw error;
+  }
 };
 
 // Get a customer package by ID

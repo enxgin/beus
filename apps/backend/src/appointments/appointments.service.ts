@@ -25,8 +25,9 @@ export class AppointmentsService {
   async create(
     createAppointmentDto: CreateAppointmentDto,
   ): Promise<Appointment> {
-    const { startTime, endTime, staffId } = createAppointmentDto;
+    const { startTime, endTime, staffId, customerPackageId, packageServiceId, serviceId } = createAppointmentDto;
 
+    // Personel müsaitlik kontrolü
     const existingAppointment = await this.prisma.appointment.findFirst({
       where: {
         staffId,
@@ -46,6 +47,74 @@ export class AppointmentsService {
       throw new BadRequestException('Personel bu saat aralığında meşgul.');
     }
 
+    // Eğer paket kullanımı varsa
+    if (customerPackageId && packageServiceId) {
+      try {
+        // Müşteri paketini kontrol et
+        const customerPackage = await this.prisma.customerPackage.findUnique({
+          where: { id: customerPackageId },
+          include: {
+            package: {
+              include: {
+                services: true
+              }
+            }
+          }
+        });
+
+        if (!customerPackage) {
+          throw new BadRequestException('Müşteri paketi bulunamadı.');
+        }
+
+        // Paketin süresi dolmuş mu kontrol et
+        if (new Date(customerPackage.expiryDate) < new Date()) {
+          throw new BadRequestException('Paket süresi dolmuş.');
+        }
+
+        // Paket hizmetini bul
+        const packageService = customerPackage.package.services.find(ps => ps.packageId === customerPackage.packageId && ps.serviceId === packageServiceId);
+        if (!packageService) {
+          throw new BadRequestException('Belirtilen hizmet bu pakette bulunamadı.');
+        }
+
+        // Kalan seans sayısını kontrol et
+        const remainingSessions = customerPackage.remainingSessions[packageService.serviceId] || 0;
+        if (remainingSessions <= 0) {
+          throw new BadRequestException('Bu hizmet için kalan seans kalmamış.');
+        }
+
+        // remainingSessions alanını güncelle
+        const currentRemainingSessions = customerPackage.remainingSessions as Record<string, number>;
+        const updatedRemainingSessions = {
+          ...currentRemainingSessions,
+          [packageServiceId]: remainingSessions - 1
+        };
+
+        // Prisma transaction ile hem randevuyu oluştur hem de paketteki kalan seans sayısını güncelle
+        return this.prisma.$transaction(async (tx) => {
+          // Müşteri paketini güncelle
+          await tx.customerPackage.update({
+            where: { id: customerPackageId },
+            data: {
+              remainingSessions: updatedRemainingSessions as any
+            }
+          });
+          
+          // Randevuyu oluştur
+          return tx.appointment.create({
+            data: createAppointmentDto,
+          });
+        });
+      } catch (error) {
+        if (error instanceof BadRequestException) {
+          throw error;
+        }
+        console.error('Paket kullanımı sırasında hata:', error);
+        throw new BadRequestException('Paket kullanımı sırasında bir hata oluştu.');
+      }
+    }
+
+    // Normal randevu oluşturma (paket kullanımı yoksa)
     return this.prisma.appointment.create({
       data: createAppointmentDto,
     });
@@ -214,6 +283,17 @@ export class AppointmentsService {
         customer: true,
         staff: true,
         service: true,
+        customerPackage: {
+          include: {
+            package: {
+              include: {
+                services: {
+                  include: { service: true },
+                },
+              },
+            },
+          },
+        },
       },
     });
     if (!appointment) {
@@ -223,7 +303,16 @@ export class AppointmentsService {
   }
 
   async update(id: string, updateAppointmentDto: UpdateAppointmentDto) {
-    const { startTime, staffId, serviceId } = updateAppointmentDto;
+    const { startTime, staffId, serviceId, status: newStatus } = updateAppointmentDto;
+
+    // Mevcut randevuyu al
+    const currentAppointment = await this.prisma.appointment.findUnique({
+      where: { id },
+    });
+
+    if (!currentAppointment) {
+      throw new NotFoundException('Randevu bulunamadı');
+    }
 
     const service = await this.prisma.service.findUnique({ where: { id: serviceId } });
     if (!service) {
@@ -252,13 +341,88 @@ export class AppointmentsService {
       throw new BadRequestException('Personel bu saat aralığında meşgul.');
     }
 
-    return this.prisma.appointment.update({
-      where: { id },
-      data: {
-        ...updateAppointmentDto,
-        endTime: endTime,
-      },
-    });
+    // Durum değişikliği kontrolü - COMPLETED'a geçiş
+    const isCompleting =
+      newStatus === AppointmentStatus.COMPLETED &&
+      currentAppointment.status !== AppointmentStatus.COMPLETED;
+    const hasPackageInfo =
+      currentAppointment.customerPackageId && currentAppointment.serviceId;
+
+    if (isCompleting && hasPackageInfo) {
+      return this.prisma.$transaction(async (tx) => {
+        const customerPackage = await tx.customerPackage.findUnique({
+          where: { id: currentAppointment.customerPackageId },
+        });
+
+        if (!customerPackage) {
+          throw new NotFoundException('İlişkili müşteri paketi bulunamadı.');
+        }
+
+        const appointmentServiceId = currentAppointment.serviceId;
+        const remainingSessions = customerPackage.remainingSessions as Record<
+          string,
+          number
+        > | null;
+
+        if (
+          !remainingSessions ||
+          typeof remainingSessions[appointmentServiceId] !== 'number'
+        ) {
+          throw new BadRequestException(
+            'Paket, bu hizmet için geçerli bir seans bilgisi içermiyor.',
+          );
+        }
+
+        const currentSessions = remainingSessions[appointmentServiceId];
+
+        if (currentSessions <= 0) {
+          throw new BadRequestException(
+            'Bu hizmet için yeterli seans kalmamıştır.',
+          );
+        }
+
+        const newRemainingSessions = {
+          ...remainingSessions,
+          [appointmentServiceId]: currentSessions - 1,
+        };
+
+        await tx.customerPackage.update({
+          where: { id: customerPackage.id },
+          data: { remainingSessions: newRemainingSessions },
+        });
+
+        const existingHistory = await tx.packageUsageHistory.findUnique({
+          where: { appointmentId: currentAppointment.id },
+        });
+
+        if (!existingHistory) {
+          await tx.packageUsageHistory.create({
+            data: {
+              appointmentId: currentAppointment.id,
+              customerPackageId: customerPackage.id,
+            },
+          });
+        }
+
+        const updatedAppointment = await tx.appointment.update({
+          where: { id },
+          data: {
+            ...updateAppointmentDto,
+            endTime: endTime,
+          },
+        });
+
+        return updatedAppointment;
+      });
+    } else {
+      return this.prisma.appointment.update({
+        where: { id },
+        data: {
+          ...updateAppointmentDto,
+          endTime: endTime,
+        },
+      });
+    }
   }
 
   async remove(id: string) {
@@ -319,19 +483,91 @@ export class AppointmentsService {
   }
 
   async updateStatus(id: string, updateStatusDto: UpdateAppointmentStatusDto) {
+    const { status: newStatus } = updateStatusDto;
+
     const appointment = await this.prisma.appointment.findUnique({
       where: { id },
     });
+
     if (!appointment) {
       throw new NotFoundException('Randevu bulunamadı');
     }
 
-    return this.prisma.appointment.update({
-      where: { id },
-      data: {
-        status: updateStatusDto.status,
-      },
-    });
+    const isCompleting =
+      newStatus === AppointmentStatus.COMPLETED &&
+      appointment.status !== AppointmentStatus.COMPLETED;
+    const hasPackageInfo =
+      appointment.customerPackageId && appointment.serviceId;
+
+    if (isCompleting && hasPackageInfo) {
+      return this.prisma.$transaction(async (tx) => {
+        const customerPackage = await tx.customerPackage.findUnique({
+          where: { id: appointment.customerPackageId },
+        });
+
+        if (!customerPackage) {
+          throw new NotFoundException('İlişkili müşteri paketi bulunamadı.');
+        }
+
+        const serviceId = appointment.serviceId;
+        const remainingSessions = customerPackage.remainingSessions as Record<
+          string,
+          number
+        > | null;
+
+        if (
+          !remainingSessions ||
+          typeof remainingSessions[serviceId] !== 'number'
+        ) {
+          throw new BadRequestException(
+            'Paket, bu hizmet için geçerli bir seans bilgisi içermiyor.',
+          );
+        }
+
+        const currentSessions = remainingSessions[serviceId];
+
+        if (currentSessions <= 0) {
+          throw new BadRequestException(
+            'Bu hizmet için yeterli seans kalmamıştır.',
+          );
+        }
+
+        const newRemainingSessions = {
+          ...remainingSessions,
+          [serviceId]: currentSessions - 1,
+        };
+
+        await tx.customerPackage.update({
+          where: { id: customerPackage.id },
+          data: { remainingSessions: newRemainingSessions },
+        });
+
+        const existingHistory = await tx.packageUsageHistory.findUnique({
+          where: { appointmentId: appointment.id },
+        });
+
+        if (!existingHistory) {
+          await tx.packageUsageHistory.create({
+            data: {
+              appointmentId: appointment.id,
+              customerPackageId: customerPackage.id,
+            },
+          });
+        }
+
+        const updatedAppointment = await tx.appointment.update({
+          where: { id: appointment.id },
+          data: { status: newStatus },
+        });
+
+        return updatedAppointment;
+      });
+    } else {
+      return this.prisma.appointment.update({
+        where: { id },
+        data: { status: newStatus },
+      });
+    }
   }
 
   findByStaffAndDateRange(staffId: string, startDate: Date, endDate: Date) {

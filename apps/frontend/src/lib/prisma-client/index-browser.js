@@ -237,6 +237,8 @@ exports.Prisma.CustomerPackageScalarFieldEnum = {
   purchaseDate: 'purchaseDate',
   expiryDate: 'expiryDate',
   remainingSessions: 'remainingSessions',
+  salesCode: 'salesCode',
+  notes: 'notes',
   customerId: 'customerId',
   packageId: 'packageId'
 };
@@ -259,6 +261,8 @@ exports.Prisma.AppointmentScalarFieldEnum = {
   staffId: 'staffId',
   branchId: 'branchId',
   serviceId: 'serviceId',
+  customerPackageId: 'customerPackageId',
+  packageServiceId: 'packageServiceId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };

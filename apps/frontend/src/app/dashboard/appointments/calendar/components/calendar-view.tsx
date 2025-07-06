@@ -14,10 +14,11 @@ import { DateSelectArg, EventClickArg, EventDropArg, EventInput } from '@fullcal
 import { CalendarSkeleton } from './calendar-skeleton';
 import { AppointmentDetailModal } from './appointment-detail-modal';
 import { Button } from '@/components/ui/button';
-import { Check, ChevronsUpDown, Plus } from 'lucide-react';
+import { Check, ChevronsUpDown, Plus, ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from '@/components/ui/command';
 import { cn } from '@/lib/utils';
+import './calendar-styles.css';
 
 interface Resource {
   id: string;
@@ -41,7 +42,7 @@ export function CalendarView({ branchId }: CalendarViewProps) {
   const calendarRef = useRef<FullCalendar | null>(null);
   const [selectedAppointment, setSelectedAppointment] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [selectedStaffIds, setSelectedStaffIds] = useState<Set<string>>(new Set());
+  const [selectedStaffIds, setSelectedStaffIds] = useState<Set<string>>(new Set(['all']));
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   const [viewDates, setViewDates] = useState(() => {
@@ -49,6 +50,12 @@ export function CalendarView({ branchId }: CalendarViewProps) {
     const end = new Date();
     return { start, end };
   });
+  
+  // Takvim başlığı için state
+  const [calendarTitle, setCalendarTitle] = useState<string>('');
+  
+  // Aktif görünüm türü için state
+  const [activeView, setActiveView] = useState<string>('resourceTimeGridDay');
 
   useEffect(() => {
     if (calendarRef.current) {
@@ -81,20 +88,45 @@ export function CalendarView({ branchId }: CalendarViewProps) {
   const allStaff = useMemo(() => data?.resources || [], [data]);
 
   const filteredResources = useMemo(() => {
-    if (selectedStaffIds.size === 0) {
+    if (selectedStaffIds.has('all')) {
       return allStaff;
     }
     return allStaff.filter((staff: Resource) => selectedStaffIds.has(staff.id));
   }, [allStaff, selectedStaffIds]);
 
+  const [searchQuery, setSearchQuery] = useState<string>('');
+
   const handleStaffSelection = (staffId: string) => {
     setSelectedStaffIds((prev) => {
       const newSet = new Set(prev);
+      
+      // Handle 'all' option
+      if (staffId === 'all') {
+        if (newSet.has('all')) {
+          newSet.delete('all');
+        } else {
+          newSet.clear();
+          newSet.add('all');
+        }
+        return newSet;
+      }
+      
+      // Remove 'all' when selecting specific staff
+      if (newSet.has('all')) {
+        newSet.delete('all');
+      }
+      
+      // Toggle the selected staff
       if (newSet.has(staffId)) {
         newSet.delete(staffId);
+        // If no staff selected, select 'all'
+        if (newSet.size === 0) {
+          newSet.add('all');
+        }
       } else {
         newSet.add(staffId);
       }
+      
       return newSet;
     });
   };
@@ -111,8 +143,21 @@ export function CalendarView({ branchId }: CalendarViewProps) {
     );
   };
 
+  // Randevu detaylarını getiren sorgu
+  const { data: appointmentDetail, refetch: refetchAppointmentDetail } = useQuery({
+    queryKey: ['appointmentDetail', selectedAppointment?.id],
+    queryFn: async () => {
+      if (!selectedAppointment?.id) return null;
+      const response = await api.get(`/appointments/${selectedAppointment.id}`);
+      return response.data;
+    },
+    enabled: !!selectedAppointment?.id,
+  });
+
+  // Randevu tıklandığında detayları getir
   const handleEventClick = (clickInfo: EventClickArg) => {
-    setSelectedAppointment(clickInfo.event);
+    const appointmentId = clickInfo.event.id;
+    setSelectedAppointment({ id: appointmentId });
     setIsModalOpen(true);
   };
 
@@ -165,45 +210,65 @@ export function CalendarView({ branchId }: CalendarViewProps) {
             </PopoverTrigger>
             <PopoverContent className="w-[200px] p-0" align="end">
               <Command>
-                <CommandInput placeholder="Personel ara..." />
+                <CommandInput 
+                  placeholder="Personel ara..." 
+                  value={searchQuery}
+                  onValueChange={setSearchQuery}
+                />
                 <CommandList>
-                  <CommandEmpty>Personel bulunamadı.</CommandEmpty>
                   <CommandGroup>
-                    {data?.resources.map((staff) => (
-                      <CommandItem
-                        key={staff.id}
-                        value={staff.id} // Daha sağlam olması için değer olarak ID kullanıldı
-                        onSelect={(currentValue) => {
-                          // Seçili personel listesini güncelleme mantığı
-                          const newSelected = new Set(selectedStaffIds);
-                          if (newSelected.has(currentValue)) {
-                            newSelected.delete(currentValue);
-                          } else {
-                            newSelected.add(currentValue);
-                          }
-                          setSelectedStaffIds(newSelected);
-                        }}
-                      >
-                        <Check
-                          className={cn(
-                            "mr-2 h-4 w-4",
-                            selectedStaffIds.has(staff.id) ? "opacity-100" : "opacity-0"
-                          )}
-                        />
-                        {staff.title}
-                      </CommandItem>
-                    ))}
+                    {/* Tümü seçeneği */}
+                    <div 
+                      key="all" 
+                      className="flex items-center px-2 py-1.5 text-sm rounded-sm cursor-pointer hover:bg-accent hover:text-accent-foreground font-medium"
+                      onClick={() => handleStaffSelection('all')}
+                    >
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4",
+                          selectedStaffIds.has('all') ? "opacity-100" : "opacity-0"
+                        )}
+                      />
+                      Tümü
+                    </div>
                   </CommandGroup>
-                  {selectedStaffIds.size > 0 && (
+                  
+                  <CommandSeparator />
+                  
+                  <CommandGroup>
+                    {data?.resources
+                      .filter(staff => staff.title.toLowerCase().includes(searchQuery.toLowerCase()))
+                      .map((staff) => (
+                        <div 
+                          key={staff.id} 
+                          className="flex items-center px-2 py-1.5 text-sm rounded-sm cursor-pointer hover:bg-accent hover:text-accent-foreground"
+                          onClick={() => handleStaffSelection(staff.id)}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              selectedStaffIds.has(staff.id) ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          {staff.title}
+                        </div>
+                      ))}
+                    {data?.resources && 
+                     searchQuery && 
+                     !data.resources.some(staff => staff.title.toLowerCase().includes(searchQuery.toLowerCase())) && (
+                      <div className="py-6 text-center text-sm text-muted-foreground">Personel bulunamadı.</div>
+                    )}
+                  </CommandGroup>
+                  {selectedStaffIds.size > 0 && !selectedStaffIds.has('all') && (
                     <>
                       <CommandSeparator />
                       <CommandGroup>
-                        <CommandItem
-                          onSelect={() => setSelectedStaffIds(new Set())}
-                          className="justify-center text-center"
+                        <div
+                          onClick={() => setSelectedStaffIds(new Set(['all']))}
+                          className="flex items-center justify-center px-2 py-1.5 text-sm rounded-sm cursor-pointer hover:bg-accent hover:text-accent-foreground text-center"
                         >
                           Filtreyi Temizle
-                        </CommandItem>
+                        </div>
                       </CommandGroup>
                     </>
                   )}
@@ -221,25 +286,103 @@ export function CalendarView({ branchId }: CalendarViewProps) {
 
       {selectedAppointment && (
         <AppointmentDetailModal
-          appointment={selectedAppointment}
+          appointment={appointmentDetail || {}}
           isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          onAppointmentUpdate={() => refetch()}
+          onClose={() => {
+            setIsModalOpen(false);
+            setSelectedAppointment(null);
+          }}
+          onAppointmentUpdate={() => {
+            refetch();
+            refetchAppointmentDetail();
+          }}
         />
       )}
 
       <div className="p-4 relative min-h-[600px]">
-        <div id="main-calendar" className={cn('transition-opacity', { 'opacity-50': isFetching && !!branchId })}>
+        <div id="main-calendar" className={cn('shadcn-calendar-container transition-opacity', { 'opacity-50': isFetching && !!branchId })}>
+          {/* Özel takvim kontrolleri (tüm ekran boyutlarında görünür) */}
+          <div className="mb-4 flex flex-col space-y-2 sm:space-y-0 sm:flex-row sm:justify-between sm:items-center">
+            <div className="flex justify-between items-center sm:w-auto sm:flex-1">
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => calendarRef.current?.getApi().prev()}
+                  className="h-8 w-8 p-0"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => calendarRef.current?.getApi().next()}
+                  className="h-8 w-8 p-0"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => calendarRef.current?.getApi().today()}
+                  className="text-xs h-8 sm:h-9 sm:text-sm"
+                >
+                  <CalendarIcon className="mr-1 h-3 w-3 sm:h-4 sm:w-4" />
+                  Bugün
+                </Button>
+              </div>
+              
+              <div className="text-sm font-medium sm:text-base sm:font-semibold sm:mx-4 sm:flex-1 sm:text-center">
+                {calendarTitle || 'Takvim'}
+              </div>
+              
+              <div className="flex gap-1 sm:gap-2">
+                <Button 
+                  variant={activeView === 'resourceTimeGridDay' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => {
+                    calendarRef.current?.getApi().changeView('resourceTimeGridDay');
+                    setActiveView('resourceTimeGridDay');
+                  }}
+                  className="text-xs h-8 px-2 sm:text-sm sm:h-9 sm:px-3"
+                >
+                  Gün
+                </Button>
+                <Button 
+                  variant={activeView === 'timeGridWeek' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => {
+                    calendarRef.current?.getApi().changeView('timeGridWeek');
+                    setActiveView('timeGridWeek');
+                  }}
+                  className="text-xs h-8 px-2 sm:text-sm sm:h-9 sm:px-3"
+                >
+                  Hafta
+                </Button>
+                <Button 
+                  variant={activeView === 'dayGridMonth' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => {
+                    calendarRef.current?.getApi().changeView('dayGridMonth');
+                    setActiveView('dayGridMonth');
+                  }}
+                  className="text-xs h-8 px-2 sm:text-sm sm:h-9 sm:px-3"
+                >
+                  Ay
+                </Button>
+              </div>
+            </div>
+          </div>
+          
           <FullCalendar
             ref={calendarRef}
             plugins={[resourceTimeGridPlugin, dayGridPlugin, interactionPlugin]}
             schedulerLicenseKey="GPL-My-Project-Is-Open-Source"
             initialView="resourceTimeGridDay"
-            headerToolbar={{
-              left: 'prev,next today',
-              center: 'title',
-              right: 'resourceTimeGridDay,timeGridWeek,dayGridMonth',
-            }}
+            // Kendi özel kontrollerimizi kullandığımız için orijinal butonları gizliyoruz
+            headerToolbar={false}
             resources={filteredResources}
             events={data?.events || []}
             slotMinTime="08:00:00"
@@ -256,6 +399,8 @@ export function CalendarView({ branchId }: CalendarViewProps) {
             locale="tr"
             datesSet={(arg) => {
               setViewDates({ start: arg.start, end: arg.end });
+              setCalendarTitle(arg.view.title);
+              setActiveView(arg.view.type);
             }}
           />
         </div>

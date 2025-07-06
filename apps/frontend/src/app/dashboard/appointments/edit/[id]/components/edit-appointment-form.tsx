@@ -37,6 +37,24 @@ interface Staff {
   role: any; // Rol tipi backend'den geldiği gibi
 }
 
+interface CustomerPackageService {
+  id: string;
+  serviceId: string;
+  sessions: number;
+  service: Service;
+}
+
+interface CustomerPackage {
+  id: string;
+  expiryDate: string;
+  remainingSessions: Record<string, number>;
+  package: {
+    id: string;
+    name: string;
+    services: CustomerPackageService[];
+  };
+}
+
 interface Appointment {
   id: string;
   startTime: string;
@@ -45,6 +63,8 @@ interface Appointment {
   service: Service;
   staff: Staff;
   branchId: string;
+  customerPackage?: CustomerPackage;
+  packageServiceId?: string;
 }
 
 interface EditAppointmentFormProps {
@@ -132,11 +152,36 @@ export function EditAppointmentForm({ appointment }: EditAppointmentFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <EditStepService
-        branchId={appointment.branchId}
-        selectedService={selectedService}
-        onSelectService={setSelectedService}
-      />
+      {appointment.customerPackage ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Seçilen Paket</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="font-semibold mb-2">{appointment.customerPackage.package.name}</p>
+            {appointment.packageServiceId && (
+              <>
+                {appointment.customerPackage.package.services.map((ps) =>
+                  ps.id === appointment.packageServiceId ? (
+                    <div key={ps.id} className="flex items-center justify-between">
+                      <span>{ps.service.name}</span>
+                      <span className="text-sm text-muted-foreground">
+                        Kalan: {appointment.customerPackage?.remainingSessions[ps.serviceId] ?? 0}/{ps.sessions}
+                      </span>
+                    </div>
+                  ) : null,
+                )}
+              </>
+            )}
+          </CardContent>
+        </Card>
+      ) : (
+        <EditStepService
+          branchId={appointment.branchId}
+          selectedService={selectedService}
+          onSelectService={setSelectedService}
+        />
+      )}
 
       <EditStepStaff
         branchId={appointment.branchId}

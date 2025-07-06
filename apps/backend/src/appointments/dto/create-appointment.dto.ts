@@ -50,4 +50,14 @@ export class CreateAppointmentDto {
   @IsString()
   @IsOptional()
   notes?: string;
+  
+  @ApiProperty({ required: false, description: 'Müşteri paket ID\'si' })
+  @IsString()
+  @IsOptional()
+  customerPackageId?: string;
+  
+  @ApiProperty({ required: false, description: 'Paket hizmet ID\'si' })
+  @IsString()
+  @IsOptional()
+  packageServiceId?: string;
 }

@@ -266,6 +266,8 @@ model CustomerPackage {
   expiryDate        DateTime
   // Kalan seansları JSON formatında tutar: { "serviceId1": 8, "serviceId2": 3 }
   remainingSessions Json
+  salesCode         String?  // Satış kodu (opsiyonel)
+  notes             String?  // Notlar (opsiyonel)
 
   // İlişkiler
   customerId   String

@@ -36,6 +36,7 @@ const menuData = [
       { label: 'Paket Listesi', href: '/dashboard/packages', icon: List },
       { label: 'Yeni Paket', href: '/dashboard/packages/new', icon: PackagePlus },
       { label: 'Paket Sat', href: '/dashboard/packages/sell', icon: ShoppingCart },
+      { label: 'Satılan Paketler', href: '/dashboard/packages/sold', icon: History },
     ]
   },
   {

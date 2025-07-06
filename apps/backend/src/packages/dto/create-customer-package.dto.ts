@@ -2,15 +2,13 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsNotEmpty, IsUUID, IsOptional, IsDateString } from 'class-validator';
 
 export class CreateCustomerPackageDto {
-  @ApiProperty({ description: 'Müşteri ID', example: '1a2b3c4d5e6f7g8h9i0j' })
-  @IsString()
-  @IsUUID('all', { message: 'Geçerli bir müşteri ID değeri giriniz' })
+  @ApiProperty({ description: 'Müşteri ID', example: 'cmcpfmex8000kvj1j7529adyz' })
+  @IsString({ message: 'Müşteri ID bir metin olmalıdır' })
   @IsNotEmpty({ message: 'Müşteri ID boş olamaz' })
   customerId: string;
 
-  @ApiProperty({ description: 'Paket ID', example: '1a2b3c4d5e6f7g8h9i0j' })
-  @IsString()
-  @IsUUID('all', { message: 'Geçerli bir paket ID değeri giriniz' })
+  @ApiProperty({ description: 'Paket ID', example: 'cmcpr9csb0001vjl8vqcv1cmi' })
+  @IsString({ message: 'Paket ID bir metin olmalıdır' })
   @IsNotEmpty({ message: 'Paket ID boş olamaz' })
   packageId: string;
   

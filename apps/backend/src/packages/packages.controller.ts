@@ -84,60 +84,6 @@ export class PackagesController {
     return this.packagesService.findAllPackages(params);
   }
 
-  @ApiOperation({ summary: 'ID\'ye göre paket getir' })
-  @ApiResponse({ status: 200, description: 'Paket başarıyla getirildi' })
-  @ApiResponse({ status: 404, description: 'Paket bulunamadı' })
-  @ApiParam({ name: 'id', description: 'Paket ID' })
-  @Get(':id')
-  findPackageById(@Param('id') id: string) {
-    return this.packagesService.findPackageById(id);
-  }
-
-  @ApiOperation({ summary: 'Paket bilgilerini güncelle' })
-  @ApiResponse({ status: 200, description: 'Paket başarıyla güncellendi' })
-  @ApiResponse({ status: 404, description: 'Paket bulunamadı' })
-  @ApiResponse({ status: 400, description: 'Geçersiz veri' })
-  @ApiResponse({ status: 403, description: 'Erişim reddedildi' })
-  @ApiParam({ name: 'id', description: 'Paket ID' })
-  @Roles(UserRole.ADMIN, UserRole.SUPER_BRANCH_MANAGER, UserRole.BRANCH_MANAGER, UserRole.STAFF)
-  @Patch(':id')
-  updatePackage(@Param('id') id: string, @Body() updatePackageDto: UpdatePackageDto) {
-    return this.packagesService.updatePackage(id, updatePackageDto);
-  }
-
-  @ApiOperation({ summary: 'Paketteki bir hizmetin miktarını güncelle' })
-  @ApiResponse({
-    status: 200,
-    description: 'Paket hizmet miktarı başarıyla güncellendi',
-  })
-  @ApiResponse({ status: 404, description: 'Paket veya hizmet bulunamadı' })
-  @ApiResponse({ status: 400, description: 'Geçersiz veri' })
-  @ApiResponse({ status: 403, description: 'Erişim reddedildi' })
-  @ApiParam({ name: 'id', description: 'Paket ID' })
-  @Roles(UserRole.ADMIN, UserRole.SUPER_BRANCH_MANAGER)
-  @Patch(':id/service')
-  updatePackageService(
-    @Param('id') id: string,
-    @Body() updatePackageServiceDto: UpdatePackageServiceDto,
-  ) {
-    return this.packagesService.updatePackageService(id, updatePackageServiceDto);
-  }
-
-  @ApiOperation({ summary: 'Paket tanımlamasını sil' })
-  @ApiResponse({ status: 200, description: 'Paket başarıyla silindi' })
-  @ApiResponse({ status: 404, description: 'Paket bulunamadı' })
-  @ApiResponse({
-    status: 400,
-    description: 'Paketi silmeden önce bağlı müşteri paketlerini silmelisiniz',
-  })
-  @ApiResponse({ status: 403, description: 'Erişim reddedildi' })
-  @ApiParam({ name: 'id', description: 'Paket ID' })
-  @Roles(UserRole.ADMIN, UserRole.SUPER_BRANCH_MANAGER)
-  @Delete(':id')
-  removePackage(@Param('id') id: string) {
-    return this.packagesService.removePackage(id);
-  }
-
   // Müşteri Paketleri API Endpointleri
   @ApiOperation({ summary: 'Müşteriye paket satışı yap' })
   @ApiResponse({ status: 201, description: 'Müşteri paketi başarıyla oluşturuldu' })
@@ -228,6 +174,60 @@ export class PackagesController {
   @Delete('customer/:id')
   removeCustomerPackage(@Param('id') id: string) {
     return this.packagesService.removeCustomerPackage(id);
+  }
+
+  @ApiOperation({ summary: 'ID\'ye göre paket getir' })
+  @ApiResponse({ status: 200, description: 'Paket başarıyla getirildi' })
+  @ApiResponse({ status: 404, description: 'Paket bulunamadı' })
+  @ApiParam({ name: 'id', description: 'Paket ID' })
+  @Get(':id')
+  findPackageById(@Param('id') id: string) {
+    return this.packagesService.findPackageById(id);
+  }
+
+  @ApiOperation({ summary: 'Paket bilgilerini güncelle' })
+  @ApiResponse({ status: 200, description: 'Paket başarıyla güncellendi' })
+  @ApiResponse({ status: 404, description: 'Paket bulunamadı' })
+  @ApiResponse({ status: 400, description: 'Geçersiz veri' })
+  @ApiResponse({ status: 403, description: 'Erişim reddedildi' })
+  @ApiParam({ name: 'id', description: 'Paket ID' })
+  @Roles(UserRole.ADMIN, UserRole.SUPER_BRANCH_MANAGER, UserRole.BRANCH_MANAGER, UserRole.STAFF)
+  @Patch(':id')
+  updatePackage(@Param('id') id: string, @Body() updatePackageDto: UpdatePackageDto) {
+    return this.packagesService.updatePackage(id, updatePackageDto);
+  }
+
+  @ApiOperation({ summary: 'Paketteki bir hizmetin miktarını güncelle' })
+  @ApiResponse({
+    status: 200,
+    description: 'Paket hizmet miktarı başarıyla güncellendi',
+  })
+  @ApiResponse({ status: 404, description: 'Paket veya hizmet bulunamadı' })
+  @ApiResponse({ status: 400, description: 'Geçersiz veri' })
+  @ApiResponse({ status: 403, description: 'Erişim reddedildi' })
+  @ApiParam({ name: 'id', description: 'Paket ID' })
+  @Roles(UserRole.ADMIN, UserRole.SUPER_BRANCH_MANAGER)
+  @Patch(':id/service')
+  updatePackageService(
+    @Param('id') id: string,
+    @Body() updatePackageServiceDto: UpdatePackageServiceDto,
+  ) {
+    return this.packagesService.updatePackageService(id, updatePackageServiceDto);
+  }
+
+  @ApiOperation({ summary: 'Paket tanımlamasını sil' })
+  @ApiResponse({ status: 200, description: 'Paket başarıyla silindi' })
+  @ApiResponse({ status: 404, description: 'Paket bulunamadı' })
+  @ApiResponse({
+    status: 400,
+    description: 'Paketi silmeden önce bağlı müşteri paketlerini silmelisiniz',
+  })
+  @ApiResponse({ status: 403, description: 'Erişim reddedildi' })
+  @ApiParam({ name: 'id', description: 'Paket ID' })
+  @Roles(UserRole.ADMIN, UserRole.SUPER_BRANCH_MANAGER)
+  @Delete(':id')
+  removePackage(@Param('id') id: string) {
+    return this.packagesService.removePackage(id);
   }
 }
 

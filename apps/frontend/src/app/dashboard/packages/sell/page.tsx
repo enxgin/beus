@@ -311,18 +311,26 @@ export default function SellPackagePage() {
       }
 
       const submissionData = {
-        ...values,
         customerId: selectedCustomer.id,
         packageId: selectedPackage.id,
         startDate: values.startDate.toISOString(), // Tarihi ISO string formatına çevir
+        salesCode: values.salesCode || undefined, // Boş string yerine undefined gönder
+        notes: values.notes || undefined, // Boş string yerine undefined gönder
       };
 
-      await createCustomerPackage(submissionData);
+      console.log("API'ye gönderilecek veri:", submissionData);
+      
+      const response = await createCustomerPackage(submissionData);
+      console.log("API yanıtı:", response);
+      
       toast.success("Paket satışı başarıyla oluşturuldu.");
       router.push("/dashboard/packages");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Form gönderimi hatası:", error);
-      toast.error("Paket satışı oluşturulurken bir hata oluştu.");
+      
+      // Daha detaylı hata mesajı göster
+      const errorMessage = error.response?.data?.message || "Paket satışı oluşturulurken bir hata oluştu.";
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }

@@ -2909,10 +2909,12 @@ export namespace Prisma {
    */
 
   export type CustomerPackageCountOutputType = {
+    appointments: number
     usageHistory: number
   }
 
   export type CustomerPackageCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    appointments?: boolean | CustomerPackageCountOutputTypeCountAppointmentsArgs
     usageHistory?: boolean | CustomerPackageCountOutputTypeCountUsageHistoryArgs
   }
 
@@ -2925,6 +2927,13 @@ export namespace Prisma {
      * Select specific fields to fetch from the CustomerPackageCountOutputType
      */
     select?: CustomerPackageCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * CustomerPackageCountOutputType without action
+   */
+  export type CustomerPackageCountOutputTypeCountAppointmentsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: AppointmentWhereInput
   }
 
   /**
@@ -16011,6 +16020,8 @@ export namespace Prisma {
     id: string | null
     purchaseDate: Date | null
     expiryDate: Date | null
+    salesCode: string | null
+    notes: string | null
     customerId: string | null
     packageId: string | null
   }
@@ -16019,6 +16030,8 @@ export namespace Prisma {
     id: string | null
     purchaseDate: Date | null
     expiryDate: Date | null
+    salesCode: string | null
+    notes: string | null
     customerId: string | null
     packageId: string | null
   }
@@ -16028,6 +16041,8 @@ export namespace Prisma {
     purchaseDate: number
     expiryDate: number
     remainingSessions: number
+    salesCode: number
+    notes: number
     customerId: number
     packageId: number
     _all: number
@@ -16038,6 +16053,8 @@ export namespace Prisma {
     id?: true
     purchaseDate?: true
     expiryDate?: true
+    salesCode?: true
+    notes?: true
     customerId?: true
     packageId?: true
   }
@@ -16046,6 +16063,8 @@ export namespace Prisma {
     id?: true
     purchaseDate?: true
     expiryDate?: true
+    salesCode?: true
+    notes?: true
     customerId?: true
     packageId?: true
   }
@@ -16055,6 +16074,8 @@ export namespace Prisma {
     purchaseDate?: true
     expiryDate?: true
     remainingSessions?: true
+    salesCode?: true
+    notes?: true
     customerId?: true
     packageId?: true
     _all?: true
@@ -16137,6 +16158,8 @@ export namespace Prisma {
     purchaseDate: Date
     expiryDate: Date
     remainingSessions: JsonValue
+    salesCode: string | null
+    notes: string | null
     customerId: string
     packageId: string
     _count: CustomerPackageCountAggregateOutputType | null
@@ -16163,10 +16186,13 @@ export namespace Prisma {
     purchaseDate?: boolean
     expiryDate?: boolean
     remainingSessions?: boolean
+    salesCode?: boolean
+    notes?: boolean
     customerId?: boolean
     packageId?: boolean
     customer?: boolean | CustomerDefaultArgs<ExtArgs>
     package?: boolean | PackageDefaultArgs<ExtArgs>
+    appointments?: boolean | CustomerPackage$appointmentsArgs<ExtArgs>
     usageHistory?: boolean | CustomerPackage$usageHistoryArgs<ExtArgs>
     _count?: boolean | CustomerPackageCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["customerPackage"]>
@@ -16176,6 +16202,8 @@ export namespace Prisma {
     purchaseDate?: boolean
     expiryDate?: boolean
     remainingSessions?: boolean
+    salesCode?: boolean
+    notes?: boolean
     customerId?: boolean
     packageId?: boolean
     customer?: boolean | CustomerDefaultArgs<ExtArgs>
@@ -16187,6 +16215,8 @@ export namespace Prisma {
     purchaseDate?: boolean
     expiryDate?: boolean
     remainingSessions?: boolean
+    salesCode?: boolean
+    notes?: boolean
     customerId?: boolean
     packageId?: boolean
     customer?: boolean | CustomerDefaultArgs<ExtArgs>
@@ -16198,14 +16228,17 @@ export namespace Prisma {
     purchaseDate?: boolean
     expiryDate?: boolean
     remainingSessions?: boolean
+    salesCode?: boolean
+    notes?: boolean
     customerId?: boolean
     packageId?: boolean
   }
 
-  export type CustomerPackageOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "purchaseDate" | "expiryDate" | "remainingSessions" | "customerId" | "packageId", ExtArgs["result"]["customerPackage"]>
+  export type CustomerPackageOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "purchaseDate" | "expiryDate" | "remainingSessions" | "salesCode" | "notes" | "customerId" | "packageId", ExtArgs["result"]["customerPackage"]>
   export type CustomerPackageInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     customer?: boolean | CustomerDefaultArgs<ExtArgs>
     package?: boolean | PackageDefaultArgs<ExtArgs>
+    appointments?: boolean | CustomerPackage$appointmentsArgs<ExtArgs>
     usageHistory?: boolean | CustomerPackage$usageHistoryArgs<ExtArgs>
     _count?: boolean | CustomerPackageCountOutputTypeDefaultArgs<ExtArgs>
   }
@@ -16223,6 +16256,7 @@ export namespace Prisma {
     objects: {
       customer: Prisma.$CustomerPayload<ExtArgs>
       package: Prisma.$PackagePayload<ExtArgs>
+      appointments: Prisma.$AppointmentPayload<ExtArgs>[]
       usageHistory: Prisma.$PackageUsageHistoryPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
@@ -16230,6 +16264,8 @@ export namespace Prisma {
       purchaseDate: Date
       expiryDate: Date
       remainingSessions: Prisma.JsonValue
+      salesCode: string | null
+      notes: string | null
       customerId: string
       packageId: string
     }, ExtArgs["result"]["customerPackage"]>
@@ -16628,6 +16664,7 @@ export namespace Prisma {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     customer<T extends CustomerDefaultArgs<ExtArgs> = {}>(args?: Subset<T, CustomerDefaultArgs<ExtArgs>>): Prisma__CustomerClient<$Result.GetResult<Prisma.$CustomerPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     package<T extends PackageDefaultArgs<ExtArgs> = {}>(args?: Subset<T, PackageDefaultArgs<ExtArgs>>): Prisma__PackageClient<$Result.GetResult<Prisma.$PackagePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    appointments<T extends CustomerPackage$appointmentsArgs<ExtArgs> = {}>(args?: Subset<T, CustomerPackage$appointmentsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AppointmentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     usageHistory<T extends CustomerPackage$usageHistoryArgs<ExtArgs> = {}>(args?: Subset<T, CustomerPackage$usageHistoryArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PackageUsageHistoryPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -16662,6 +16699,8 @@ export namespace Prisma {
     readonly purchaseDate: FieldRef<"CustomerPackage", 'DateTime'>
     readonly expiryDate: FieldRef<"CustomerPackage", 'DateTime'>
     readonly remainingSessions: FieldRef<"CustomerPackage", 'Json'>
+    readonly salesCode: FieldRef<"CustomerPackage", 'String'>
+    readonly notes: FieldRef<"CustomerPackage", 'String'>
     readonly customerId: FieldRef<"CustomerPackage", 'String'>
     readonly packageId: FieldRef<"CustomerPackage", 'String'>
   }
@@ -17057,6 +17096,30 @@ export namespace Prisma {
      * Limit how many CustomerPackages to delete.
      */
     limit?: number
+  }
+
+  /**
+   * CustomerPackage.appointments
+   */
+  export type CustomerPackage$appointmentsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Appointment
+     */
+    select?: AppointmentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Appointment
+     */
+    omit?: AppointmentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AppointmentInclude<ExtArgs> | null
+    where?: AppointmentWhereInput
+    orderBy?: AppointmentOrderByWithRelationInput | AppointmentOrderByWithRelationInput[]
+    cursor?: AppointmentWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: AppointmentScalarFieldEnum | AppointmentScalarFieldEnum[]
   }
 
   /**
@@ -18186,6 +18249,8 @@ export namespace Prisma {
     staffId: string | null
     branchId: string | null
     serviceId: string | null
+    customerPackageId: string | null
+    packageServiceId: string | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -18201,6 +18266,8 @@ export namespace Prisma {
     staffId: string | null
     branchId: string | null
     serviceId: string | null
+    customerPackageId: string | null
+    packageServiceId: string | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -18216,6 +18283,8 @@ export namespace Prisma {
     staffId: number
     branchId: number
     serviceId: number
+    customerPackageId: number
+    packageServiceId: number
     createdAt: number
     updatedAt: number
     _all: number
@@ -18241,6 +18310,8 @@ export namespace Prisma {
     staffId?: true
     branchId?: true
     serviceId?: true
+    customerPackageId?: true
+    packageServiceId?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -18256,6 +18327,8 @@ export namespace Prisma {
     staffId?: true
     branchId?: true
     serviceId?: true
+    customerPackageId?: true
+    packageServiceId?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -18271,6 +18344,8 @@ export namespace Prisma {
     staffId?: true
     branchId?: true
     serviceId?: true
+    customerPackageId?: true
+    packageServiceId?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -18373,6 +18448,8 @@ export namespace Prisma {
     staffId: string
     branchId: string
     serviceId: string
+    customerPackageId: string | null
+    packageServiceId: string | null
     createdAt: Date
     updatedAt: Date
     _count: AppointmentCountAggregateOutputType | null
@@ -18407,12 +18484,15 @@ export namespace Prisma {
     staffId?: boolean
     branchId?: boolean
     serviceId?: boolean
+    customerPackageId?: boolean
+    packageServiceId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     branch?: boolean | BranchDefaultArgs<ExtArgs>
     customer?: boolean | CustomerDefaultArgs<ExtArgs>
     service?: boolean | ServiceDefaultArgs<ExtArgs>
     staff?: boolean | UserDefaultArgs<ExtArgs>
+    customerPackage?: boolean | Appointment$customerPackageArgs<ExtArgs>
     invoice?: boolean | Appointment$invoiceArgs<ExtArgs>
     packageUsage?: boolean | Appointment$packageUsageArgs<ExtArgs>
   }, ExtArgs["result"]["appointment"]>
@@ -18428,12 +18508,15 @@ export namespace Prisma {
     staffId?: boolean
     branchId?: boolean
     serviceId?: boolean
+    customerPackageId?: boolean
+    packageServiceId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     branch?: boolean | BranchDefaultArgs<ExtArgs>
     customer?: boolean | CustomerDefaultArgs<ExtArgs>
     service?: boolean | ServiceDefaultArgs<ExtArgs>
     staff?: boolean | UserDefaultArgs<ExtArgs>
+    customerPackage?: boolean | Appointment$customerPackageArgs<ExtArgs>
   }, ExtArgs["result"]["appointment"]>
 
   export type AppointmentSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -18447,12 +18530,15 @@ export namespace Prisma {
     staffId?: boolean
     branchId?: boolean
     serviceId?: boolean
+    customerPackageId?: boolean
+    packageServiceId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     branch?: boolean | BranchDefaultArgs<ExtArgs>
     customer?: boolean | CustomerDefaultArgs<ExtArgs>
     service?: boolean | ServiceDefaultArgs<ExtArgs>
     staff?: boolean | UserDefaultArgs<ExtArgs>
+    customerPackage?: boolean | Appointment$customerPackageArgs<ExtArgs>
   }, ExtArgs["result"]["appointment"]>
 
   export type AppointmentSelectScalar = {
@@ -18466,16 +18552,19 @@ export namespace Prisma {
     staffId?: boolean
     branchId?: boolean
     serviceId?: boolean
+    customerPackageId?: boolean
+    packageServiceId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type AppointmentOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "startTime" | "endTime" | "duration" | "status" | "notes" | "customerId" | "staffId" | "branchId" | "serviceId" | "createdAt" | "updatedAt", ExtArgs["result"]["appointment"]>
+  export type AppointmentOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "startTime" | "endTime" | "duration" | "status" | "notes" | "customerId" | "staffId" | "branchId" | "serviceId" | "customerPackageId" | "packageServiceId" | "createdAt" | "updatedAt", ExtArgs["result"]["appointment"]>
   export type AppointmentInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     branch?: boolean | BranchDefaultArgs<ExtArgs>
     customer?: boolean | CustomerDefaultArgs<ExtArgs>
     service?: boolean | ServiceDefaultArgs<ExtArgs>
     staff?: boolean | UserDefaultArgs<ExtArgs>
+    customerPackage?: boolean | Appointment$customerPackageArgs<ExtArgs>
     invoice?: boolean | Appointment$invoiceArgs<ExtArgs>
     packageUsage?: boolean | Appointment$packageUsageArgs<ExtArgs>
   }
@@ -18484,12 +18573,14 @@ export namespace Prisma {
     customer?: boolean | CustomerDefaultArgs<ExtArgs>
     service?: boolean | ServiceDefaultArgs<ExtArgs>
     staff?: boolean | UserDefaultArgs<ExtArgs>
+    customerPackage?: boolean | Appointment$customerPackageArgs<ExtArgs>
   }
   export type AppointmentIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     branch?: boolean | BranchDefaultArgs<ExtArgs>
     customer?: boolean | CustomerDefaultArgs<ExtArgs>
     service?: boolean | ServiceDefaultArgs<ExtArgs>
     staff?: boolean | UserDefaultArgs<ExtArgs>
+    customerPackage?: boolean | Appointment$customerPackageArgs<ExtArgs>
   }
 
   export type $AppointmentPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -18499,6 +18590,7 @@ export namespace Prisma {
       customer: Prisma.$CustomerPayload<ExtArgs>
       service: Prisma.$ServicePayload<ExtArgs>
       staff: Prisma.$UserPayload<ExtArgs>
+      customerPackage: Prisma.$CustomerPackagePayload<ExtArgs> | null
       invoice: Prisma.$InvoicePayload<ExtArgs> | null
       packageUsage: Prisma.$PackageUsageHistoryPayload<ExtArgs> | null
     }
@@ -18513,6 +18605,8 @@ export namespace Prisma {
       staffId: string
       branchId: string
       serviceId: string
+      customerPackageId: string | null
+      packageServiceId: string | null
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["appointment"]>
@@ -18913,6 +19007,7 @@ export namespace Prisma {
     customer<T extends CustomerDefaultArgs<ExtArgs> = {}>(args?: Subset<T, CustomerDefaultArgs<ExtArgs>>): Prisma__CustomerClient<$Result.GetResult<Prisma.$CustomerPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     service<T extends ServiceDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ServiceDefaultArgs<ExtArgs>>): Prisma__ServiceClient<$Result.GetResult<Prisma.$ServicePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     staff<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    customerPackage<T extends Appointment$customerPackageArgs<ExtArgs> = {}>(args?: Subset<T, Appointment$customerPackageArgs<ExtArgs>>): Prisma__CustomerPackageClient<$Result.GetResult<Prisma.$CustomerPackagePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     invoice<T extends Appointment$invoiceArgs<ExtArgs> = {}>(args?: Subset<T, Appointment$invoiceArgs<ExtArgs>>): Prisma__InvoiceClient<$Result.GetResult<Prisma.$InvoicePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     packageUsage<T extends Appointment$packageUsageArgs<ExtArgs> = {}>(args?: Subset<T, Appointment$packageUsageArgs<ExtArgs>>): Prisma__PackageUsageHistoryClient<$Result.GetResult<Prisma.$PackageUsageHistoryPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     /**
@@ -18954,6 +19049,8 @@ export namespace Prisma {
     readonly staffId: FieldRef<"Appointment", 'String'>
     readonly branchId: FieldRef<"Appointment", 'String'>
     readonly serviceId: FieldRef<"Appointment", 'String'>
+    readonly customerPackageId: FieldRef<"Appointment", 'String'>
+    readonly packageServiceId: FieldRef<"Appointment", 'String'>
     readonly createdAt: FieldRef<"Appointment", 'DateTime'>
     readonly updatedAt: FieldRef<"Appointment", 'DateTime'>
   }
@@ -19349,6 +19446,25 @@ export namespace Prisma {
      * Limit how many Appointments to delete.
      */
     limit?: number
+  }
+
+  /**
+   * Appointment.customerPackage
+   */
+  export type Appointment$customerPackageArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CustomerPackage
+     */
+    select?: CustomerPackageSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CustomerPackage
+     */
+    omit?: CustomerPackageOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CustomerPackageInclude<ExtArgs> | null
+    where?: CustomerPackageWhereInput
   }
 
   /**
@@ -24226,6 +24342,8 @@ export namespace Prisma {
     purchaseDate: 'purchaseDate',
     expiryDate: 'expiryDate',
     remainingSessions: 'remainingSessions',
+    salesCode: 'salesCode',
+    notes: 'notes',
     customerId: 'customerId',
     packageId: 'packageId'
   };
@@ -24254,6 +24372,8 @@ export namespace Prisma {
     staffId: 'staffId',
     branchId: 'branchId',
     serviceId: 'serviceId',
+    customerPackageId: 'customerPackageId',
+    packageServiceId: 'packageServiceId',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -25374,10 +25494,13 @@ export namespace Prisma {
     purchaseDate?: DateTimeFilter<"CustomerPackage"> | Date | string
     expiryDate?: DateTimeFilter<"CustomerPackage"> | Date | string
     remainingSessions?: JsonFilter<"CustomerPackage">
+    salesCode?: StringNullableFilter<"CustomerPackage"> | string | null
+    notes?: StringNullableFilter<"CustomerPackage"> | string | null
     customerId?: StringFilter<"CustomerPackage"> | string
     packageId?: StringFilter<"CustomerPackage"> | string
     customer?: XOR<CustomerScalarRelationFilter, CustomerWhereInput>
     package?: XOR<PackageScalarRelationFilter, PackageWhereInput>
+    appointments?: AppointmentListRelationFilter
     usageHistory?: PackageUsageHistoryListRelationFilter
   }
 
@@ -25386,10 +25509,13 @@ export namespace Prisma {
     purchaseDate?: SortOrder
     expiryDate?: SortOrder
     remainingSessions?: SortOrder
+    salesCode?: SortOrderInput | SortOrder
+    notes?: SortOrderInput | SortOrder
     customerId?: SortOrder
     packageId?: SortOrder
     customer?: CustomerOrderByWithRelationInput
     package?: PackageOrderByWithRelationInput
+    appointments?: AppointmentOrderByRelationAggregateInput
     usageHistory?: PackageUsageHistoryOrderByRelationAggregateInput
   }
 
@@ -25401,10 +25527,13 @@ export namespace Prisma {
     purchaseDate?: DateTimeFilter<"CustomerPackage"> | Date | string
     expiryDate?: DateTimeFilter<"CustomerPackage"> | Date | string
     remainingSessions?: JsonFilter<"CustomerPackage">
+    salesCode?: StringNullableFilter<"CustomerPackage"> | string | null
+    notes?: StringNullableFilter<"CustomerPackage"> | string | null
     customerId?: StringFilter<"CustomerPackage"> | string
     packageId?: StringFilter<"CustomerPackage"> | string
     customer?: XOR<CustomerScalarRelationFilter, CustomerWhereInput>
     package?: XOR<PackageScalarRelationFilter, PackageWhereInput>
+    appointments?: AppointmentListRelationFilter
     usageHistory?: PackageUsageHistoryListRelationFilter
   }, "id">
 
@@ -25413,6 +25542,8 @@ export namespace Prisma {
     purchaseDate?: SortOrder
     expiryDate?: SortOrder
     remainingSessions?: SortOrder
+    salesCode?: SortOrderInput | SortOrder
+    notes?: SortOrderInput | SortOrder
     customerId?: SortOrder
     packageId?: SortOrder
     _count?: CustomerPackageCountOrderByAggregateInput
@@ -25428,6 +25559,8 @@ export namespace Prisma {
     purchaseDate?: DateTimeWithAggregatesFilter<"CustomerPackage"> | Date | string
     expiryDate?: DateTimeWithAggregatesFilter<"CustomerPackage"> | Date | string
     remainingSessions?: JsonWithAggregatesFilter<"CustomerPackage">
+    salesCode?: StringNullableWithAggregatesFilter<"CustomerPackage"> | string | null
+    notes?: StringNullableWithAggregatesFilter<"CustomerPackage"> | string | null
     customerId?: StringWithAggregatesFilter<"CustomerPackage"> | string
     packageId?: StringWithAggregatesFilter<"CustomerPackage"> | string
   }
@@ -25499,12 +25632,15 @@ export namespace Prisma {
     staffId?: StringFilter<"Appointment"> | string
     branchId?: StringFilter<"Appointment"> | string
     serviceId?: StringFilter<"Appointment"> | string
+    customerPackageId?: StringNullableFilter<"Appointment"> | string | null
+    packageServiceId?: StringNullableFilter<"Appointment"> | string | null
     createdAt?: DateTimeFilter<"Appointment"> | Date | string
     updatedAt?: DateTimeFilter<"Appointment"> | Date | string
     branch?: XOR<BranchScalarRelationFilter, BranchWhereInput>
     customer?: XOR<CustomerScalarRelationFilter, CustomerWhereInput>
     service?: XOR<ServiceScalarRelationFilter, ServiceWhereInput>
     staff?: XOR<UserScalarRelationFilter, UserWhereInput>
+    customerPackage?: XOR<CustomerPackageNullableScalarRelationFilter, CustomerPackageWhereInput> | null
     invoice?: XOR<InvoiceNullableScalarRelationFilter, InvoiceWhereInput> | null
     packageUsage?: XOR<PackageUsageHistoryNullableScalarRelationFilter, PackageUsageHistoryWhereInput> | null
   }
@@ -25520,12 +25656,15 @@ export namespace Prisma {
     staffId?: SortOrder
     branchId?: SortOrder
     serviceId?: SortOrder
+    customerPackageId?: SortOrderInput | SortOrder
+    packageServiceId?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     branch?: BranchOrderByWithRelationInput
     customer?: CustomerOrderByWithRelationInput
     service?: ServiceOrderByWithRelationInput
     staff?: UserOrderByWithRelationInput
+    customerPackage?: CustomerPackageOrderByWithRelationInput
     invoice?: InvoiceOrderByWithRelationInput
     packageUsage?: PackageUsageHistoryOrderByWithRelationInput
   }
@@ -25544,12 +25683,15 @@ export namespace Prisma {
     staffId?: StringFilter<"Appointment"> | string
     branchId?: StringFilter<"Appointment"> | string
     serviceId?: StringFilter<"Appointment"> | string
+    customerPackageId?: StringNullableFilter<"Appointment"> | string | null
+    packageServiceId?: StringNullableFilter<"Appointment"> | string | null
     createdAt?: DateTimeFilter<"Appointment"> | Date | string
     updatedAt?: DateTimeFilter<"Appointment"> | Date | string
     branch?: XOR<BranchScalarRelationFilter, BranchWhereInput>
     customer?: XOR<CustomerScalarRelationFilter, CustomerWhereInput>
     service?: XOR<ServiceScalarRelationFilter, ServiceWhereInput>
     staff?: XOR<UserScalarRelationFilter, UserWhereInput>
+    customerPackage?: XOR<CustomerPackageNullableScalarRelationFilter, CustomerPackageWhereInput> | null
     invoice?: XOR<InvoiceNullableScalarRelationFilter, InvoiceWhereInput> | null
     packageUsage?: XOR<PackageUsageHistoryNullableScalarRelationFilter, PackageUsageHistoryWhereInput> | null
   }, "id">
@@ -25565,6 +25707,8 @@ export namespace Prisma {
     staffId?: SortOrder
     branchId?: SortOrder
     serviceId?: SortOrder
+    customerPackageId?: SortOrderInput | SortOrder
+    packageServiceId?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: AppointmentCountOrderByAggregateInput
@@ -25588,6 +25732,8 @@ export namespace Prisma {
     staffId?: StringWithAggregatesFilter<"Appointment"> | string
     branchId?: StringWithAggregatesFilter<"Appointment"> | string
     serviceId?: StringWithAggregatesFilter<"Appointment"> | string
+    customerPackageId?: StringNullableWithAggregatesFilter<"Appointment"> | string | null
+    packageServiceId?: StringNullableWithAggregatesFilter<"Appointment"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"Appointment"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Appointment"> | Date | string
   }
@@ -26769,8 +26915,11 @@ export namespace Prisma {
     purchaseDate?: Date | string
     expiryDate: Date | string
     remainingSessions: JsonNullValueInput | InputJsonValue
+    salesCode?: string | null
+    notes?: string | null
     customer: CustomerCreateNestedOneWithoutCustomerPackagesInput
     package: PackageCreateNestedOneWithoutCustomerPackagesInput
+    appointments?: AppointmentCreateNestedManyWithoutCustomerPackageInput
     usageHistory?: PackageUsageHistoryCreateNestedManyWithoutCustomerPackageInput
   }
 
@@ -26779,8 +26928,11 @@ export namespace Prisma {
     purchaseDate?: Date | string
     expiryDate: Date | string
     remainingSessions: JsonNullValueInput | InputJsonValue
+    salesCode?: string | null
+    notes?: string | null
     customerId: string
     packageId: string
+    appointments?: AppointmentUncheckedCreateNestedManyWithoutCustomerPackageInput
     usageHistory?: PackageUsageHistoryUncheckedCreateNestedManyWithoutCustomerPackageInput
   }
 
@@ -26789,8 +26941,11 @@ export namespace Prisma {
     purchaseDate?: DateTimeFieldUpdateOperationsInput | Date | string
     expiryDate?: DateTimeFieldUpdateOperationsInput | Date | string
     remainingSessions?: JsonNullValueInput | InputJsonValue
+    salesCode?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
     customer?: CustomerUpdateOneRequiredWithoutCustomerPackagesNestedInput
     package?: PackageUpdateOneRequiredWithoutCustomerPackagesNestedInput
+    appointments?: AppointmentUpdateManyWithoutCustomerPackageNestedInput
     usageHistory?: PackageUsageHistoryUpdateManyWithoutCustomerPackageNestedInput
   }
 
@@ -26799,8 +26954,11 @@ export namespace Prisma {
     purchaseDate?: DateTimeFieldUpdateOperationsInput | Date | string
     expiryDate?: DateTimeFieldUpdateOperationsInput | Date | string
     remainingSessions?: JsonNullValueInput | InputJsonValue
+    salesCode?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
     customerId?: StringFieldUpdateOperationsInput | string
     packageId?: StringFieldUpdateOperationsInput | string
+    appointments?: AppointmentUncheckedUpdateManyWithoutCustomerPackageNestedInput
     usageHistory?: PackageUsageHistoryUncheckedUpdateManyWithoutCustomerPackageNestedInput
   }
 
@@ -26809,6 +26967,8 @@ export namespace Prisma {
     purchaseDate?: Date | string
     expiryDate: Date | string
     remainingSessions: JsonNullValueInput | InputJsonValue
+    salesCode?: string | null
+    notes?: string | null
     customerId: string
     packageId: string
   }
@@ -26818,6 +26978,8 @@ export namespace Prisma {
     purchaseDate?: DateTimeFieldUpdateOperationsInput | Date | string
     expiryDate?: DateTimeFieldUpdateOperationsInput | Date | string
     remainingSessions?: JsonNullValueInput | InputJsonValue
+    salesCode?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type CustomerPackageUncheckedUpdateManyInput = {
@@ -26825,6 +26987,8 @@ export namespace Prisma {
     purchaseDate?: DateTimeFieldUpdateOperationsInput | Date | string
     expiryDate?: DateTimeFieldUpdateOperationsInput | Date | string
     remainingSessions?: JsonNullValueInput | InputJsonValue
+    salesCode?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
     customerId?: StringFieldUpdateOperationsInput | string
     packageId?: StringFieldUpdateOperationsInput | string
   }
@@ -26883,12 +27047,14 @@ export namespace Prisma {
     duration?: number | null
     status?: $Enums.AppointmentStatus
     notes?: string | null
+    packageServiceId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     branch: BranchCreateNestedOneWithoutAppointmentsInput
     customer: CustomerCreateNestedOneWithoutAppointmentsInput
     service: ServiceCreateNestedOneWithoutAppointmentsInput
     staff: UserCreateNestedOneWithoutAppointmentsInput
+    customerPackage?: CustomerPackageCreateNestedOneWithoutAppointmentsInput
     invoice?: InvoiceCreateNestedOneWithoutAppointmentInput
     packageUsage?: PackageUsageHistoryCreateNestedOneWithoutAppointmentInput
   }
@@ -26904,6 +27070,8 @@ export namespace Prisma {
     staffId: string
     branchId: string
     serviceId: string
+    customerPackageId?: string | null
+    packageServiceId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     invoice?: InvoiceUncheckedCreateNestedOneWithoutAppointmentInput
@@ -26917,12 +27085,14 @@ export namespace Prisma {
     duration?: NullableIntFieldUpdateOperationsInput | number | null
     status?: EnumAppointmentStatusFieldUpdateOperationsInput | $Enums.AppointmentStatus
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    packageServiceId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     branch?: BranchUpdateOneRequiredWithoutAppointmentsNestedInput
     customer?: CustomerUpdateOneRequiredWithoutAppointmentsNestedInput
     service?: ServiceUpdateOneRequiredWithoutAppointmentsNestedInput
     staff?: UserUpdateOneRequiredWithoutAppointmentsNestedInput
+    customerPackage?: CustomerPackageUpdateOneWithoutAppointmentsNestedInput
     invoice?: InvoiceUpdateOneWithoutAppointmentNestedInput
     packageUsage?: PackageUsageHistoryUpdateOneWithoutAppointmentNestedInput
   }
@@ -26938,6 +27108,8 @@ export namespace Prisma {
     staffId?: StringFieldUpdateOperationsInput | string
     branchId?: StringFieldUpdateOperationsInput | string
     serviceId?: StringFieldUpdateOperationsInput | string
+    customerPackageId?: NullableStringFieldUpdateOperationsInput | string | null
+    packageServiceId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     invoice?: InvoiceUncheckedUpdateOneWithoutAppointmentNestedInput
@@ -26955,6 +27127,8 @@ export namespace Prisma {
     staffId: string
     branchId: string
     serviceId: string
+    customerPackageId?: string | null
+    packageServiceId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -26966,6 +27140,7 @@ export namespace Prisma {
     duration?: NullableIntFieldUpdateOperationsInput | number | null
     status?: EnumAppointmentStatusFieldUpdateOperationsInput | $Enums.AppointmentStatus
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    packageServiceId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -26981,6 +27156,8 @@ export namespace Prisma {
     staffId?: StringFieldUpdateOperationsInput | string
     branchId?: StringFieldUpdateOperationsInput | string
     serviceId?: StringFieldUpdateOperationsInput | string
+    customerPackageId?: NullableStringFieldUpdateOperationsInput | string | null
+    packageServiceId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -28186,6 +28363,8 @@ export namespace Prisma {
     purchaseDate?: SortOrder
     expiryDate?: SortOrder
     remainingSessions?: SortOrder
+    salesCode?: SortOrder
+    notes?: SortOrder
     customerId?: SortOrder
     packageId?: SortOrder
   }
@@ -28194,6 +28373,8 @@ export namespace Prisma {
     id?: SortOrder
     purchaseDate?: SortOrder
     expiryDate?: SortOrder
+    salesCode?: SortOrder
+    notes?: SortOrder
     customerId?: SortOrder
     packageId?: SortOrder
   }
@@ -28202,6 +28383,8 @@ export namespace Prisma {
     id?: SortOrder
     purchaseDate?: SortOrder
     expiryDate?: SortOrder
+    salesCode?: SortOrder
+    notes?: SortOrder
     customerId?: SortOrder
     packageId?: SortOrder
   }
@@ -28270,6 +28453,11 @@ export namespace Prisma {
     not?: NestedEnumAppointmentStatusFilter<$PrismaModel> | $Enums.AppointmentStatus
   }
 
+  export type CustomerPackageNullableScalarRelationFilter = {
+    is?: CustomerPackageWhereInput | null
+    isNot?: CustomerPackageWhereInput | null
+  }
+
   export type InvoiceNullableScalarRelationFilter = {
     is?: InvoiceWhereInput | null
     isNot?: InvoiceWhereInput | null
@@ -28291,6 +28479,8 @@ export namespace Prisma {
     staffId?: SortOrder
     branchId?: SortOrder
     serviceId?: SortOrder
+    customerPackageId?: SortOrder
+    packageServiceId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -28310,6 +28500,8 @@ export namespace Prisma {
     staffId?: SortOrder
     branchId?: SortOrder
     serviceId?: SortOrder
+    customerPackageId?: SortOrder
+    packageServiceId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -28325,6 +28517,8 @@ export namespace Prisma {
     staffId?: SortOrder
     branchId?: SortOrder
     serviceId?: SortOrder
+    customerPackageId?: SortOrder
+    packageServiceId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -29965,11 +30159,25 @@ export namespace Prisma {
     connect?: PackageWhereUniqueInput
   }
 
+  export type AppointmentCreateNestedManyWithoutCustomerPackageInput = {
+    create?: XOR<AppointmentCreateWithoutCustomerPackageInput, AppointmentUncheckedCreateWithoutCustomerPackageInput> | AppointmentCreateWithoutCustomerPackageInput[] | AppointmentUncheckedCreateWithoutCustomerPackageInput[]
+    connectOrCreate?: AppointmentCreateOrConnectWithoutCustomerPackageInput | AppointmentCreateOrConnectWithoutCustomerPackageInput[]
+    createMany?: AppointmentCreateManyCustomerPackageInputEnvelope
+    connect?: AppointmentWhereUniqueInput | AppointmentWhereUniqueInput[]
+  }
+
   export type PackageUsageHistoryCreateNestedManyWithoutCustomerPackageInput = {
     create?: XOR<PackageUsageHistoryCreateWithoutCustomerPackageInput, PackageUsageHistoryUncheckedCreateWithoutCustomerPackageInput> | PackageUsageHistoryCreateWithoutCustomerPackageInput[] | PackageUsageHistoryUncheckedCreateWithoutCustomerPackageInput[]
     connectOrCreate?: PackageUsageHistoryCreateOrConnectWithoutCustomerPackageInput | PackageUsageHistoryCreateOrConnectWithoutCustomerPackageInput[]
     createMany?: PackageUsageHistoryCreateManyCustomerPackageInputEnvelope
     connect?: PackageUsageHistoryWhereUniqueInput | PackageUsageHistoryWhereUniqueInput[]
+  }
+
+  export type AppointmentUncheckedCreateNestedManyWithoutCustomerPackageInput = {
+    create?: XOR<AppointmentCreateWithoutCustomerPackageInput, AppointmentUncheckedCreateWithoutCustomerPackageInput> | AppointmentCreateWithoutCustomerPackageInput[] | AppointmentUncheckedCreateWithoutCustomerPackageInput[]
+    connectOrCreate?: AppointmentCreateOrConnectWithoutCustomerPackageInput | AppointmentCreateOrConnectWithoutCustomerPackageInput[]
+    createMany?: AppointmentCreateManyCustomerPackageInputEnvelope
+    connect?: AppointmentWhereUniqueInput | AppointmentWhereUniqueInput[]
   }
 
   export type PackageUsageHistoryUncheckedCreateNestedManyWithoutCustomerPackageInput = {
@@ -29995,6 +30203,20 @@ export namespace Prisma {
     update?: XOR<XOR<PackageUpdateToOneWithWhereWithoutCustomerPackagesInput, PackageUpdateWithoutCustomerPackagesInput>, PackageUncheckedUpdateWithoutCustomerPackagesInput>
   }
 
+  export type AppointmentUpdateManyWithoutCustomerPackageNestedInput = {
+    create?: XOR<AppointmentCreateWithoutCustomerPackageInput, AppointmentUncheckedCreateWithoutCustomerPackageInput> | AppointmentCreateWithoutCustomerPackageInput[] | AppointmentUncheckedCreateWithoutCustomerPackageInput[]
+    connectOrCreate?: AppointmentCreateOrConnectWithoutCustomerPackageInput | AppointmentCreateOrConnectWithoutCustomerPackageInput[]
+    upsert?: AppointmentUpsertWithWhereUniqueWithoutCustomerPackageInput | AppointmentUpsertWithWhereUniqueWithoutCustomerPackageInput[]
+    createMany?: AppointmentCreateManyCustomerPackageInputEnvelope
+    set?: AppointmentWhereUniqueInput | AppointmentWhereUniqueInput[]
+    disconnect?: AppointmentWhereUniqueInput | AppointmentWhereUniqueInput[]
+    delete?: AppointmentWhereUniqueInput | AppointmentWhereUniqueInput[]
+    connect?: AppointmentWhereUniqueInput | AppointmentWhereUniqueInput[]
+    update?: AppointmentUpdateWithWhereUniqueWithoutCustomerPackageInput | AppointmentUpdateWithWhereUniqueWithoutCustomerPackageInput[]
+    updateMany?: AppointmentUpdateManyWithWhereWithoutCustomerPackageInput | AppointmentUpdateManyWithWhereWithoutCustomerPackageInput[]
+    deleteMany?: AppointmentScalarWhereInput | AppointmentScalarWhereInput[]
+  }
+
   export type PackageUsageHistoryUpdateManyWithoutCustomerPackageNestedInput = {
     create?: XOR<PackageUsageHistoryCreateWithoutCustomerPackageInput, PackageUsageHistoryUncheckedCreateWithoutCustomerPackageInput> | PackageUsageHistoryCreateWithoutCustomerPackageInput[] | PackageUsageHistoryUncheckedCreateWithoutCustomerPackageInput[]
     connectOrCreate?: PackageUsageHistoryCreateOrConnectWithoutCustomerPackageInput | PackageUsageHistoryCreateOrConnectWithoutCustomerPackageInput[]
@@ -30007,6 +30229,20 @@ export namespace Prisma {
     update?: PackageUsageHistoryUpdateWithWhereUniqueWithoutCustomerPackageInput | PackageUsageHistoryUpdateWithWhereUniqueWithoutCustomerPackageInput[]
     updateMany?: PackageUsageHistoryUpdateManyWithWhereWithoutCustomerPackageInput | PackageUsageHistoryUpdateManyWithWhereWithoutCustomerPackageInput[]
     deleteMany?: PackageUsageHistoryScalarWhereInput | PackageUsageHistoryScalarWhereInput[]
+  }
+
+  export type AppointmentUncheckedUpdateManyWithoutCustomerPackageNestedInput = {
+    create?: XOR<AppointmentCreateWithoutCustomerPackageInput, AppointmentUncheckedCreateWithoutCustomerPackageInput> | AppointmentCreateWithoutCustomerPackageInput[] | AppointmentUncheckedCreateWithoutCustomerPackageInput[]
+    connectOrCreate?: AppointmentCreateOrConnectWithoutCustomerPackageInput | AppointmentCreateOrConnectWithoutCustomerPackageInput[]
+    upsert?: AppointmentUpsertWithWhereUniqueWithoutCustomerPackageInput | AppointmentUpsertWithWhereUniqueWithoutCustomerPackageInput[]
+    createMany?: AppointmentCreateManyCustomerPackageInputEnvelope
+    set?: AppointmentWhereUniqueInput | AppointmentWhereUniqueInput[]
+    disconnect?: AppointmentWhereUniqueInput | AppointmentWhereUniqueInput[]
+    delete?: AppointmentWhereUniqueInput | AppointmentWhereUniqueInput[]
+    connect?: AppointmentWhereUniqueInput | AppointmentWhereUniqueInput[]
+    update?: AppointmentUpdateWithWhereUniqueWithoutCustomerPackageInput | AppointmentUpdateWithWhereUniqueWithoutCustomerPackageInput[]
+    updateMany?: AppointmentUpdateManyWithWhereWithoutCustomerPackageInput | AppointmentUpdateManyWithWhereWithoutCustomerPackageInput[]
+    deleteMany?: AppointmentScalarWhereInput | AppointmentScalarWhereInput[]
   }
 
   export type PackageUsageHistoryUncheckedUpdateManyWithoutCustomerPackageNestedInput = {
@@ -30075,6 +30311,12 @@ export namespace Prisma {
     connect?: UserWhereUniqueInput
   }
 
+  export type CustomerPackageCreateNestedOneWithoutAppointmentsInput = {
+    create?: XOR<CustomerPackageCreateWithoutAppointmentsInput, CustomerPackageUncheckedCreateWithoutAppointmentsInput>
+    connectOrCreate?: CustomerPackageCreateOrConnectWithoutAppointmentsInput
+    connect?: CustomerPackageWhereUniqueInput
+  }
+
   export type InvoiceCreateNestedOneWithoutAppointmentInput = {
     create?: XOR<InvoiceCreateWithoutAppointmentInput, InvoiceUncheckedCreateWithoutAppointmentInput>
     connectOrCreate?: InvoiceCreateOrConnectWithoutAppointmentInput
@@ -30133,6 +30375,16 @@ export namespace Prisma {
     upsert?: UserUpsertWithoutAppointmentsInput
     connect?: UserWhereUniqueInput
     update?: XOR<XOR<UserUpdateToOneWithWhereWithoutAppointmentsInput, UserUpdateWithoutAppointmentsInput>, UserUncheckedUpdateWithoutAppointmentsInput>
+  }
+
+  export type CustomerPackageUpdateOneWithoutAppointmentsNestedInput = {
+    create?: XOR<CustomerPackageCreateWithoutAppointmentsInput, CustomerPackageUncheckedCreateWithoutAppointmentsInput>
+    connectOrCreate?: CustomerPackageCreateOrConnectWithoutAppointmentsInput
+    upsert?: CustomerPackageUpsertWithoutAppointmentsInput
+    disconnect?: CustomerPackageWhereInput | boolean
+    delete?: CustomerPackageWhereInput | boolean
+    connect?: CustomerPackageWhereUniqueInput
+    update?: XOR<XOR<CustomerPackageUpdateToOneWithWhereWithoutAppointmentsInput, CustomerPackageUpdateWithoutAppointmentsInput>, CustomerPackageUncheckedUpdateWithoutAppointmentsInput>
   }
 
   export type InvoiceUpdateOneWithoutAppointmentNestedInput = {
@@ -30790,11 +31042,13 @@ export namespace Prisma {
     duration?: number | null
     status?: $Enums.AppointmentStatus
     notes?: string | null
+    packageServiceId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     branch: BranchCreateNestedOneWithoutAppointmentsInput
     customer: CustomerCreateNestedOneWithoutAppointmentsInput
     service: ServiceCreateNestedOneWithoutAppointmentsInput
+    customerPackage?: CustomerPackageCreateNestedOneWithoutAppointmentsInput
     invoice?: InvoiceCreateNestedOneWithoutAppointmentInput
     packageUsage?: PackageUsageHistoryCreateNestedOneWithoutAppointmentInput
   }
@@ -30809,6 +31063,8 @@ export namespace Prisma {
     customerId: string
     branchId: string
     serviceId: string
+    customerPackageId?: string | null
+    packageServiceId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     invoice?: InvoiceUncheckedCreateNestedOneWithoutAppointmentInput
@@ -31006,6 +31262,8 @@ export namespace Prisma {
     staffId?: StringFilter<"Appointment"> | string
     branchId?: StringFilter<"Appointment"> | string
     serviceId?: StringFilter<"Appointment"> | string
+    customerPackageId?: StringNullableFilter<"Appointment"> | string | null
+    packageServiceId?: StringNullableFilter<"Appointment"> | string | null
     createdAt?: DateTimeFilter<"Appointment"> | Date | string
     updatedAt?: DateTimeFilter<"Appointment"> | Date | string
   }
@@ -31352,11 +31610,13 @@ export namespace Prisma {
     duration?: number | null
     status?: $Enums.AppointmentStatus
     notes?: string | null
+    packageServiceId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     customer: CustomerCreateNestedOneWithoutAppointmentsInput
     service: ServiceCreateNestedOneWithoutAppointmentsInput
     staff: UserCreateNestedOneWithoutAppointmentsInput
+    customerPackage?: CustomerPackageCreateNestedOneWithoutAppointmentsInput
     invoice?: InvoiceCreateNestedOneWithoutAppointmentInput
     packageUsage?: PackageUsageHistoryCreateNestedOneWithoutAppointmentInput
   }
@@ -31371,6 +31631,8 @@ export namespace Prisma {
     customerId: string
     staffId: string
     serviceId: string
+    customerPackageId?: string | null
+    packageServiceId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     invoice?: InvoiceUncheckedCreateNestedOneWithoutAppointmentInput
@@ -32280,11 +32542,13 @@ export namespace Prisma {
     duration?: number | null
     status?: $Enums.AppointmentStatus
     notes?: string | null
+    packageServiceId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     branch: BranchCreateNestedOneWithoutAppointmentsInput
     service: ServiceCreateNestedOneWithoutAppointmentsInput
     staff: UserCreateNestedOneWithoutAppointmentsInput
+    customerPackage?: CustomerPackageCreateNestedOneWithoutAppointmentsInput
     invoice?: InvoiceCreateNestedOneWithoutAppointmentInput
     packageUsage?: PackageUsageHistoryCreateNestedOneWithoutAppointmentInput
   }
@@ -32299,6 +32563,8 @@ export namespace Prisma {
     staffId: string
     branchId: string
     serviceId: string
+    customerPackageId?: string | null
+    packageServiceId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     invoice?: InvoiceUncheckedCreateNestedOneWithoutAppointmentInput
@@ -32365,7 +32631,10 @@ export namespace Prisma {
     purchaseDate?: Date | string
     expiryDate: Date | string
     remainingSessions: JsonNullValueInput | InputJsonValue
+    salesCode?: string | null
+    notes?: string | null
     package: PackageCreateNestedOneWithoutCustomerPackagesInput
+    appointments?: AppointmentCreateNestedManyWithoutCustomerPackageInput
     usageHistory?: PackageUsageHistoryCreateNestedManyWithoutCustomerPackageInput
   }
 
@@ -32374,7 +32643,10 @@ export namespace Prisma {
     purchaseDate?: Date | string
     expiryDate: Date | string
     remainingSessions: JsonNullValueInput | InputJsonValue
+    salesCode?: string | null
+    notes?: string | null
     packageId: string
+    appointments?: AppointmentUncheckedCreateNestedManyWithoutCustomerPackageInput
     usageHistory?: PackageUsageHistoryUncheckedCreateNestedManyWithoutCustomerPackageInput
   }
 
@@ -32535,6 +32807,8 @@ export namespace Prisma {
     purchaseDate?: DateTimeFilter<"CustomerPackage"> | Date | string
     expiryDate?: DateTimeFilter<"CustomerPackage"> | Date | string
     remainingSessions?: JsonFilter<"CustomerPackage">
+    salesCode?: StringNullableFilter<"CustomerPackage"> | string | null
+    notes?: StringNullableFilter<"CustomerPackage"> | string | null
     customerId?: StringFilter<"CustomerPackage"> | string
     packageId?: StringFilter<"CustomerPackage"> | string
   }
@@ -32734,11 +33008,13 @@ export namespace Prisma {
     duration?: number | null
     status?: $Enums.AppointmentStatus
     notes?: string | null
+    packageServiceId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     branch: BranchCreateNestedOneWithoutAppointmentsInput
     customer: CustomerCreateNestedOneWithoutAppointmentsInput
     staff: UserCreateNestedOneWithoutAppointmentsInput
+    customerPackage?: CustomerPackageCreateNestedOneWithoutAppointmentsInput
     invoice?: InvoiceCreateNestedOneWithoutAppointmentInput
     packageUsage?: PackageUsageHistoryCreateNestedOneWithoutAppointmentInput
   }
@@ -32753,6 +33029,8 @@ export namespace Prisma {
     customerId: string
     staffId: string
     branchId: string
+    customerPackageId?: string | null
+    packageServiceId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     invoice?: InvoiceUncheckedCreateNestedOneWithoutAppointmentInput
@@ -33181,7 +33459,10 @@ export namespace Prisma {
     purchaseDate?: Date | string
     expiryDate: Date | string
     remainingSessions: JsonNullValueInput | InputJsonValue
+    salesCode?: string | null
+    notes?: string | null
     customer: CustomerCreateNestedOneWithoutCustomerPackagesInput
+    appointments?: AppointmentCreateNestedManyWithoutCustomerPackageInput
     usageHistory?: PackageUsageHistoryCreateNestedManyWithoutCustomerPackageInput
   }
 
@@ -33190,7 +33471,10 @@ export namespace Prisma {
     purchaseDate?: Date | string
     expiryDate: Date | string
     remainingSessions: JsonNullValueInput | InputJsonValue
+    salesCode?: string | null
+    notes?: string | null
     customerId: string
+    appointments?: AppointmentUncheckedCreateNestedManyWithoutCustomerPackageInput
     usageHistory?: PackageUsageHistoryUncheckedCreateNestedManyWithoutCustomerPackageInput
   }
 
@@ -33596,6 +33880,52 @@ export namespace Prisma {
     create: XOR<PackageCreateWithoutCustomerPackagesInput, PackageUncheckedCreateWithoutCustomerPackagesInput>
   }
 
+  export type AppointmentCreateWithoutCustomerPackageInput = {
+    id?: string
+    startTime: Date | string
+    endTime: Date | string
+    duration?: number | null
+    status?: $Enums.AppointmentStatus
+    notes?: string | null
+    packageServiceId?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    branch: BranchCreateNestedOneWithoutAppointmentsInput
+    customer: CustomerCreateNestedOneWithoutAppointmentsInput
+    service: ServiceCreateNestedOneWithoutAppointmentsInput
+    staff: UserCreateNestedOneWithoutAppointmentsInput
+    invoice?: InvoiceCreateNestedOneWithoutAppointmentInput
+    packageUsage?: PackageUsageHistoryCreateNestedOneWithoutAppointmentInput
+  }
+
+  export type AppointmentUncheckedCreateWithoutCustomerPackageInput = {
+    id?: string
+    startTime: Date | string
+    endTime: Date | string
+    duration?: number | null
+    status?: $Enums.AppointmentStatus
+    notes?: string | null
+    customerId: string
+    staffId: string
+    branchId: string
+    serviceId: string
+    packageServiceId?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    invoice?: InvoiceUncheckedCreateNestedOneWithoutAppointmentInput
+    packageUsage?: PackageUsageHistoryUncheckedCreateNestedOneWithoutAppointmentInput
+  }
+
+  export type AppointmentCreateOrConnectWithoutCustomerPackageInput = {
+    where: AppointmentWhereUniqueInput
+    create: XOR<AppointmentCreateWithoutCustomerPackageInput, AppointmentUncheckedCreateWithoutCustomerPackageInput>
+  }
+
+  export type AppointmentCreateManyCustomerPackageInputEnvelope = {
+    data: AppointmentCreateManyCustomerPackageInput | AppointmentCreateManyCustomerPackageInput[]
+    skipDuplicates?: boolean
+  }
+
   export type PackageUsageHistoryCreateWithoutCustomerPackageInput = {
     id?: string
     usedAt?: Date | string
@@ -33706,6 +34036,22 @@ export namespace Prisma {
     services?: PackageServiceUncheckedUpdateManyWithoutPackageNestedInput
   }
 
+  export type AppointmentUpsertWithWhereUniqueWithoutCustomerPackageInput = {
+    where: AppointmentWhereUniqueInput
+    update: XOR<AppointmentUpdateWithoutCustomerPackageInput, AppointmentUncheckedUpdateWithoutCustomerPackageInput>
+    create: XOR<AppointmentCreateWithoutCustomerPackageInput, AppointmentUncheckedCreateWithoutCustomerPackageInput>
+  }
+
+  export type AppointmentUpdateWithWhereUniqueWithoutCustomerPackageInput = {
+    where: AppointmentWhereUniqueInput
+    data: XOR<AppointmentUpdateWithoutCustomerPackageInput, AppointmentUncheckedUpdateWithoutCustomerPackageInput>
+  }
+
+  export type AppointmentUpdateManyWithWhereWithoutCustomerPackageInput = {
+    where: AppointmentScalarWhereInput
+    data: XOR<AppointmentUpdateManyMutationInput, AppointmentUncheckedUpdateManyWithoutCustomerPackageInput>
+  }
+
   export type PackageUsageHistoryUpsertWithWhereUniqueWithoutCustomerPackageInput = {
     where: PackageUsageHistoryWhereUniqueInput
     update: XOR<PackageUsageHistoryUpdateWithoutCustomerPackageInput, PackageUsageHistoryUncheckedUpdateWithoutCustomerPackageInput>
@@ -33739,12 +34085,14 @@ export namespace Prisma {
     duration?: number | null
     status?: $Enums.AppointmentStatus
     notes?: string | null
+    packageServiceId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     branch: BranchCreateNestedOneWithoutAppointmentsInput
     customer: CustomerCreateNestedOneWithoutAppointmentsInput
     service: ServiceCreateNestedOneWithoutAppointmentsInput
     staff: UserCreateNestedOneWithoutAppointmentsInput
+    customerPackage?: CustomerPackageCreateNestedOneWithoutAppointmentsInput
     invoice?: InvoiceCreateNestedOneWithoutAppointmentInput
   }
 
@@ -33759,6 +34107,8 @@ export namespace Prisma {
     staffId: string
     branchId: string
     serviceId: string
+    customerPackageId?: string | null
+    packageServiceId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     invoice?: InvoiceUncheckedCreateNestedOneWithoutAppointmentInput
@@ -33774,8 +34124,11 @@ export namespace Prisma {
     purchaseDate?: Date | string
     expiryDate: Date | string
     remainingSessions: JsonNullValueInput | InputJsonValue
+    salesCode?: string | null
+    notes?: string | null
     customer: CustomerCreateNestedOneWithoutCustomerPackagesInput
     package: PackageCreateNestedOneWithoutCustomerPackagesInput
+    appointments?: AppointmentCreateNestedManyWithoutCustomerPackageInput
   }
 
   export type CustomerPackageUncheckedCreateWithoutUsageHistoryInput = {
@@ -33783,8 +34136,11 @@ export namespace Prisma {
     purchaseDate?: Date | string
     expiryDate: Date | string
     remainingSessions: JsonNullValueInput | InputJsonValue
+    salesCode?: string | null
+    notes?: string | null
     customerId: string
     packageId: string
+    appointments?: AppointmentUncheckedCreateNestedManyWithoutCustomerPackageInput
   }
 
   export type CustomerPackageCreateOrConnectWithoutUsageHistoryInput = {
@@ -33810,12 +34166,14 @@ export namespace Prisma {
     duration?: NullableIntFieldUpdateOperationsInput | number | null
     status?: EnumAppointmentStatusFieldUpdateOperationsInput | $Enums.AppointmentStatus
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    packageServiceId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     branch?: BranchUpdateOneRequiredWithoutAppointmentsNestedInput
     customer?: CustomerUpdateOneRequiredWithoutAppointmentsNestedInput
     service?: ServiceUpdateOneRequiredWithoutAppointmentsNestedInput
     staff?: UserUpdateOneRequiredWithoutAppointmentsNestedInput
+    customerPackage?: CustomerPackageUpdateOneWithoutAppointmentsNestedInput
     invoice?: InvoiceUpdateOneWithoutAppointmentNestedInput
   }
 
@@ -33830,6 +34188,8 @@ export namespace Prisma {
     staffId?: StringFieldUpdateOperationsInput | string
     branchId?: StringFieldUpdateOperationsInput | string
     serviceId?: StringFieldUpdateOperationsInput | string
+    customerPackageId?: NullableStringFieldUpdateOperationsInput | string | null
+    packageServiceId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     invoice?: InvoiceUncheckedUpdateOneWithoutAppointmentNestedInput
@@ -33851,8 +34211,11 @@ export namespace Prisma {
     purchaseDate?: DateTimeFieldUpdateOperationsInput | Date | string
     expiryDate?: DateTimeFieldUpdateOperationsInput | Date | string
     remainingSessions?: JsonNullValueInput | InputJsonValue
+    salesCode?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
     customer?: CustomerUpdateOneRequiredWithoutCustomerPackagesNestedInput
     package?: PackageUpdateOneRequiredWithoutCustomerPackagesNestedInput
+    appointments?: AppointmentUpdateManyWithoutCustomerPackageNestedInput
   }
 
   export type CustomerPackageUncheckedUpdateWithoutUsageHistoryInput = {
@@ -33860,8 +34223,11 @@ export namespace Prisma {
     purchaseDate?: DateTimeFieldUpdateOperationsInput | Date | string
     expiryDate?: DateTimeFieldUpdateOperationsInput | Date | string
     remainingSessions?: JsonNullValueInput | InputJsonValue
+    salesCode?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
     customerId?: StringFieldUpdateOperationsInput | string
     packageId?: StringFieldUpdateOperationsInput | string
+    appointments?: AppointmentUncheckedUpdateManyWithoutCustomerPackageNestedInput
   }
 
   export type BranchCreateWithoutAppointmentsInput = {
@@ -34018,6 +34384,35 @@ export namespace Prisma {
   export type UserCreateOrConnectWithoutAppointmentsInput = {
     where: UserWhereUniqueInput
     create: XOR<UserCreateWithoutAppointmentsInput, UserUncheckedCreateWithoutAppointmentsInput>
+  }
+
+  export type CustomerPackageCreateWithoutAppointmentsInput = {
+    id?: string
+    purchaseDate?: Date | string
+    expiryDate: Date | string
+    remainingSessions: JsonNullValueInput | InputJsonValue
+    salesCode?: string | null
+    notes?: string | null
+    customer: CustomerCreateNestedOneWithoutCustomerPackagesInput
+    package: PackageCreateNestedOneWithoutCustomerPackagesInput
+    usageHistory?: PackageUsageHistoryCreateNestedManyWithoutCustomerPackageInput
+  }
+
+  export type CustomerPackageUncheckedCreateWithoutAppointmentsInput = {
+    id?: string
+    purchaseDate?: Date | string
+    expiryDate: Date | string
+    remainingSessions: JsonNullValueInput | InputJsonValue
+    salesCode?: string | null
+    notes?: string | null
+    customerId: string
+    packageId: string
+    usageHistory?: PackageUsageHistoryUncheckedCreateNestedManyWithoutCustomerPackageInput
+  }
+
+  export type CustomerPackageCreateOrConnectWithoutAppointmentsInput = {
+    where: CustomerPackageWhereUniqueInput
+    create: XOR<CustomerPackageCreateWithoutAppointmentsInput, CustomerPackageUncheckedCreateWithoutAppointmentsInput>
   }
 
   export type InvoiceCreateWithoutAppointmentInput = {
@@ -34250,6 +34645,41 @@ export namespace Prisma {
     workHours?: WorkHourUncheckedUpdateManyWithoutStaffNestedInput
   }
 
+  export type CustomerPackageUpsertWithoutAppointmentsInput = {
+    update: XOR<CustomerPackageUpdateWithoutAppointmentsInput, CustomerPackageUncheckedUpdateWithoutAppointmentsInput>
+    create: XOR<CustomerPackageCreateWithoutAppointmentsInput, CustomerPackageUncheckedCreateWithoutAppointmentsInput>
+    where?: CustomerPackageWhereInput
+  }
+
+  export type CustomerPackageUpdateToOneWithWhereWithoutAppointmentsInput = {
+    where?: CustomerPackageWhereInput
+    data: XOR<CustomerPackageUpdateWithoutAppointmentsInput, CustomerPackageUncheckedUpdateWithoutAppointmentsInput>
+  }
+
+  export type CustomerPackageUpdateWithoutAppointmentsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    purchaseDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    expiryDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    remainingSessions?: JsonNullValueInput | InputJsonValue
+    salesCode?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    customer?: CustomerUpdateOneRequiredWithoutCustomerPackagesNestedInput
+    package?: PackageUpdateOneRequiredWithoutCustomerPackagesNestedInput
+    usageHistory?: PackageUsageHistoryUpdateManyWithoutCustomerPackageNestedInput
+  }
+
+  export type CustomerPackageUncheckedUpdateWithoutAppointmentsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    purchaseDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    expiryDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    remainingSessions?: JsonNullValueInput | InputJsonValue
+    salesCode?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    customerId?: StringFieldUpdateOperationsInput | string
+    packageId?: StringFieldUpdateOperationsInput | string
+    usageHistory?: PackageUsageHistoryUncheckedUpdateManyWithoutCustomerPackageNestedInput
+  }
+
   export type InvoiceUpsertWithoutAppointmentInput = {
     update: XOR<InvoiceUpdateWithoutAppointmentInput, InvoiceUncheckedUpdateWithoutAppointmentInput>
     create: XOR<InvoiceCreateWithoutAppointmentInput, InvoiceUncheckedCreateWithoutAppointmentInput>
@@ -34319,12 +34749,14 @@ export namespace Prisma {
     duration?: number | null
     status?: $Enums.AppointmentStatus
     notes?: string | null
+    packageServiceId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     branch: BranchCreateNestedOneWithoutAppointmentsInput
     customer: CustomerCreateNestedOneWithoutAppointmentsInput
     service: ServiceCreateNestedOneWithoutAppointmentsInput
     staff: UserCreateNestedOneWithoutAppointmentsInput
+    customerPackage?: CustomerPackageCreateNestedOneWithoutAppointmentsInput
     packageUsage?: PackageUsageHistoryCreateNestedOneWithoutAppointmentInput
   }
 
@@ -34339,6 +34771,8 @@ export namespace Prisma {
     staffId: string
     branchId: string
     serviceId: string
+    customerPackageId?: string | null
+    packageServiceId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     packageUsage?: PackageUsageHistoryUncheckedCreateNestedOneWithoutAppointmentInput
@@ -34496,12 +34930,14 @@ export namespace Prisma {
     duration?: NullableIntFieldUpdateOperationsInput | number | null
     status?: EnumAppointmentStatusFieldUpdateOperationsInput | $Enums.AppointmentStatus
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    packageServiceId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     branch?: BranchUpdateOneRequiredWithoutAppointmentsNestedInput
     customer?: CustomerUpdateOneRequiredWithoutAppointmentsNestedInput
     service?: ServiceUpdateOneRequiredWithoutAppointmentsNestedInput
     staff?: UserUpdateOneRequiredWithoutAppointmentsNestedInput
+    customerPackage?: CustomerPackageUpdateOneWithoutAppointmentsNestedInput
     packageUsage?: PackageUsageHistoryUpdateOneWithoutAppointmentNestedInput
   }
 
@@ -34516,6 +34952,8 @@ export namespace Prisma {
     staffId?: StringFieldUpdateOperationsInput | string
     branchId?: StringFieldUpdateOperationsInput | string
     serviceId?: StringFieldUpdateOperationsInput | string
+    customerPackageId?: NullableStringFieldUpdateOperationsInput | string | null
+    packageServiceId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     packageUsage?: PackageUsageHistoryUncheckedUpdateOneWithoutAppointmentNestedInput
@@ -35170,6 +35608,8 @@ export namespace Prisma {
     customerId: string
     branchId: string
     serviceId: string
+    customerPackageId?: string | null
+    packageServiceId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -35213,11 +35653,13 @@ export namespace Prisma {
     duration?: NullableIntFieldUpdateOperationsInput | number | null
     status?: EnumAppointmentStatusFieldUpdateOperationsInput | $Enums.AppointmentStatus
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    packageServiceId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     branch?: BranchUpdateOneRequiredWithoutAppointmentsNestedInput
     customer?: CustomerUpdateOneRequiredWithoutAppointmentsNestedInput
     service?: ServiceUpdateOneRequiredWithoutAppointmentsNestedInput
+    customerPackage?: CustomerPackageUpdateOneWithoutAppointmentsNestedInput
     invoice?: InvoiceUpdateOneWithoutAppointmentNestedInput
     packageUsage?: PackageUsageHistoryUpdateOneWithoutAppointmentNestedInput
   }
@@ -35232,6 +35674,8 @@ export namespace Prisma {
     customerId?: StringFieldUpdateOperationsInput | string
     branchId?: StringFieldUpdateOperationsInput | string
     serviceId?: StringFieldUpdateOperationsInput | string
+    customerPackageId?: NullableStringFieldUpdateOperationsInput | string | null
+    packageServiceId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     invoice?: InvoiceUncheckedUpdateOneWithoutAppointmentNestedInput
@@ -35248,6 +35692,8 @@ export namespace Prisma {
     customerId?: StringFieldUpdateOperationsInput | string
     branchId?: StringFieldUpdateOperationsInput | string
     serviceId?: StringFieldUpdateOperationsInput | string
+    customerPackageId?: NullableStringFieldUpdateOperationsInput | string | null
+    packageServiceId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -35360,6 +35806,8 @@ export namespace Prisma {
     customerId: string
     staffId: string
     serviceId: string
+    customerPackageId?: string | null
+    packageServiceId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -35473,11 +35921,13 @@ export namespace Prisma {
     duration?: NullableIntFieldUpdateOperationsInput | number | null
     status?: EnumAppointmentStatusFieldUpdateOperationsInput | $Enums.AppointmentStatus
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    packageServiceId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     customer?: CustomerUpdateOneRequiredWithoutAppointmentsNestedInput
     service?: ServiceUpdateOneRequiredWithoutAppointmentsNestedInput
     staff?: UserUpdateOneRequiredWithoutAppointmentsNestedInput
+    customerPackage?: CustomerPackageUpdateOneWithoutAppointmentsNestedInput
     invoice?: InvoiceUpdateOneWithoutAppointmentNestedInput
     packageUsage?: PackageUsageHistoryUpdateOneWithoutAppointmentNestedInput
   }
@@ -35492,6 +35942,8 @@ export namespace Prisma {
     customerId?: StringFieldUpdateOperationsInput | string
     staffId?: StringFieldUpdateOperationsInput | string
     serviceId?: StringFieldUpdateOperationsInput | string
+    customerPackageId?: NullableStringFieldUpdateOperationsInput | string | null
+    packageServiceId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     invoice?: InvoiceUncheckedUpdateOneWithoutAppointmentNestedInput
@@ -35508,6 +35960,8 @@ export namespace Prisma {
     customerId?: StringFieldUpdateOperationsInput | string
     staffId?: StringFieldUpdateOperationsInput | string
     serviceId?: StringFieldUpdateOperationsInput | string
+    customerPackageId?: NullableStringFieldUpdateOperationsInput | string | null
+    packageServiceId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -35900,6 +36354,8 @@ export namespace Prisma {
     staffId: string
     branchId: string
     serviceId: string
+    customerPackageId?: string | null
+    packageServiceId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -35909,6 +36365,8 @@ export namespace Prisma {
     purchaseDate?: Date | string
     expiryDate: Date | string
     remainingSessions: JsonNullValueInput | InputJsonValue
+    salesCode?: string | null
+    notes?: string | null
     packageId: string
   }
 
@@ -35935,11 +36393,13 @@ export namespace Prisma {
     duration?: NullableIntFieldUpdateOperationsInput | number | null
     status?: EnumAppointmentStatusFieldUpdateOperationsInput | $Enums.AppointmentStatus
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    packageServiceId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     branch?: BranchUpdateOneRequiredWithoutAppointmentsNestedInput
     service?: ServiceUpdateOneRequiredWithoutAppointmentsNestedInput
     staff?: UserUpdateOneRequiredWithoutAppointmentsNestedInput
+    customerPackage?: CustomerPackageUpdateOneWithoutAppointmentsNestedInput
     invoice?: InvoiceUpdateOneWithoutAppointmentNestedInput
     packageUsage?: PackageUsageHistoryUpdateOneWithoutAppointmentNestedInput
   }
@@ -35954,6 +36414,8 @@ export namespace Prisma {
     staffId?: StringFieldUpdateOperationsInput | string
     branchId?: StringFieldUpdateOperationsInput | string
     serviceId?: StringFieldUpdateOperationsInput | string
+    customerPackageId?: NullableStringFieldUpdateOperationsInput | string | null
+    packageServiceId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     invoice?: InvoiceUncheckedUpdateOneWithoutAppointmentNestedInput
@@ -35970,6 +36432,8 @@ export namespace Prisma {
     staffId?: StringFieldUpdateOperationsInput | string
     branchId?: StringFieldUpdateOperationsInput | string
     serviceId?: StringFieldUpdateOperationsInput | string
+    customerPackageId?: NullableStringFieldUpdateOperationsInput | string | null
+    packageServiceId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -35979,7 +36443,10 @@ export namespace Prisma {
     purchaseDate?: DateTimeFieldUpdateOperationsInput | Date | string
     expiryDate?: DateTimeFieldUpdateOperationsInput | Date | string
     remainingSessions?: JsonNullValueInput | InputJsonValue
+    salesCode?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
     package?: PackageUpdateOneRequiredWithoutCustomerPackagesNestedInput
+    appointments?: AppointmentUpdateManyWithoutCustomerPackageNestedInput
     usageHistory?: PackageUsageHistoryUpdateManyWithoutCustomerPackageNestedInput
   }
 
@@ -35988,7 +36455,10 @@ export namespace Prisma {
     purchaseDate?: DateTimeFieldUpdateOperationsInput | Date | string
     expiryDate?: DateTimeFieldUpdateOperationsInput | Date | string
     remainingSessions?: JsonNullValueInput | InputJsonValue
+    salesCode?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
     packageId?: StringFieldUpdateOperationsInput | string
+    appointments?: AppointmentUncheckedUpdateManyWithoutCustomerPackageNestedInput
     usageHistory?: PackageUsageHistoryUncheckedUpdateManyWithoutCustomerPackageNestedInput
   }
 
@@ -35997,6 +36467,8 @@ export namespace Prisma {
     purchaseDate?: DateTimeFieldUpdateOperationsInput | Date | string
     expiryDate?: DateTimeFieldUpdateOperationsInput | Date | string
     remainingSessions?: JsonNullValueInput | InputJsonValue
+    salesCode?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
     packageId?: StringFieldUpdateOperationsInput | string
   }
 
@@ -36124,6 +36596,8 @@ export namespace Prisma {
     customerId: string
     staffId: string
     branchId: string
+    customerPackageId?: string | null
+    packageServiceId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -36144,11 +36618,13 @@ export namespace Prisma {
     duration?: NullableIntFieldUpdateOperationsInput | number | null
     status?: EnumAppointmentStatusFieldUpdateOperationsInput | $Enums.AppointmentStatus
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    packageServiceId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     branch?: BranchUpdateOneRequiredWithoutAppointmentsNestedInput
     customer?: CustomerUpdateOneRequiredWithoutAppointmentsNestedInput
     staff?: UserUpdateOneRequiredWithoutAppointmentsNestedInput
+    customerPackage?: CustomerPackageUpdateOneWithoutAppointmentsNestedInput
     invoice?: InvoiceUpdateOneWithoutAppointmentNestedInput
     packageUsage?: PackageUsageHistoryUpdateOneWithoutAppointmentNestedInput
   }
@@ -36163,6 +36639,8 @@ export namespace Prisma {
     customerId?: StringFieldUpdateOperationsInput | string
     staffId?: StringFieldUpdateOperationsInput | string
     branchId?: StringFieldUpdateOperationsInput | string
+    customerPackageId?: NullableStringFieldUpdateOperationsInput | string | null
+    packageServiceId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     invoice?: InvoiceUncheckedUpdateOneWithoutAppointmentNestedInput
@@ -36179,6 +36657,8 @@ export namespace Prisma {
     customerId?: StringFieldUpdateOperationsInput | string
     staffId?: StringFieldUpdateOperationsInput | string
     branchId?: StringFieldUpdateOperationsInput | string
+    customerPackageId?: NullableStringFieldUpdateOperationsInput | string | null
+    packageServiceId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -36215,6 +36695,8 @@ export namespace Prisma {
     purchaseDate?: Date | string
     expiryDate: Date | string
     remainingSessions: JsonNullValueInput | InputJsonValue
+    salesCode?: string | null
+    notes?: string | null
     customerId: string
   }
 
@@ -36228,7 +36710,10 @@ export namespace Prisma {
     purchaseDate?: DateTimeFieldUpdateOperationsInput | Date | string
     expiryDate?: DateTimeFieldUpdateOperationsInput | Date | string
     remainingSessions?: JsonNullValueInput | InputJsonValue
+    salesCode?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
     customer?: CustomerUpdateOneRequiredWithoutCustomerPackagesNestedInput
+    appointments?: AppointmentUpdateManyWithoutCustomerPackageNestedInput
     usageHistory?: PackageUsageHistoryUpdateManyWithoutCustomerPackageNestedInput
   }
 
@@ -36237,7 +36722,10 @@ export namespace Prisma {
     purchaseDate?: DateTimeFieldUpdateOperationsInput | Date | string
     expiryDate?: DateTimeFieldUpdateOperationsInput | Date | string
     remainingSessions?: JsonNullValueInput | InputJsonValue
+    salesCode?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
     customerId?: StringFieldUpdateOperationsInput | string
+    appointments?: AppointmentUncheckedUpdateManyWithoutCustomerPackageNestedInput
     usageHistory?: PackageUsageHistoryUncheckedUpdateManyWithoutCustomerPackageNestedInput
   }
 
@@ -36246,6 +36734,8 @@ export namespace Prisma {
     purchaseDate?: DateTimeFieldUpdateOperationsInput | Date | string
     expiryDate?: DateTimeFieldUpdateOperationsInput | Date | string
     remainingSessions?: JsonNullValueInput | InputJsonValue
+    salesCode?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
     customerId?: StringFieldUpdateOperationsInput | string
   }
 
@@ -36264,10 +36754,78 @@ export namespace Prisma {
     quantity?: IntFieldUpdateOperationsInput | number
   }
 
+  export type AppointmentCreateManyCustomerPackageInput = {
+    id?: string
+    startTime: Date | string
+    endTime: Date | string
+    duration?: number | null
+    status?: $Enums.AppointmentStatus
+    notes?: string | null
+    customerId: string
+    staffId: string
+    branchId: string
+    serviceId: string
+    packageServiceId?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
   export type PackageUsageHistoryCreateManyCustomerPackageInput = {
     id?: string
     usedAt?: Date | string
     appointmentId: string
+  }
+
+  export type AppointmentUpdateWithoutCustomerPackageInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    startTime?: DateTimeFieldUpdateOperationsInput | Date | string
+    endTime?: DateTimeFieldUpdateOperationsInput | Date | string
+    duration?: NullableIntFieldUpdateOperationsInput | number | null
+    status?: EnumAppointmentStatusFieldUpdateOperationsInput | $Enums.AppointmentStatus
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    packageServiceId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    branch?: BranchUpdateOneRequiredWithoutAppointmentsNestedInput
+    customer?: CustomerUpdateOneRequiredWithoutAppointmentsNestedInput
+    service?: ServiceUpdateOneRequiredWithoutAppointmentsNestedInput
+    staff?: UserUpdateOneRequiredWithoutAppointmentsNestedInput
+    invoice?: InvoiceUpdateOneWithoutAppointmentNestedInput
+    packageUsage?: PackageUsageHistoryUpdateOneWithoutAppointmentNestedInput
+  }
+
+  export type AppointmentUncheckedUpdateWithoutCustomerPackageInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    startTime?: DateTimeFieldUpdateOperationsInput | Date | string
+    endTime?: DateTimeFieldUpdateOperationsInput | Date | string
+    duration?: NullableIntFieldUpdateOperationsInput | number | null
+    status?: EnumAppointmentStatusFieldUpdateOperationsInput | $Enums.AppointmentStatus
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    customerId?: StringFieldUpdateOperationsInput | string
+    staffId?: StringFieldUpdateOperationsInput | string
+    branchId?: StringFieldUpdateOperationsInput | string
+    serviceId?: StringFieldUpdateOperationsInput | string
+    packageServiceId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    invoice?: InvoiceUncheckedUpdateOneWithoutAppointmentNestedInput
+    packageUsage?: PackageUsageHistoryUncheckedUpdateOneWithoutAppointmentNestedInput
+  }
+
+  export type AppointmentUncheckedUpdateManyWithoutCustomerPackageInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    startTime?: DateTimeFieldUpdateOperationsInput | Date | string
+    endTime?: DateTimeFieldUpdateOperationsInput | Date | string
+    duration?: NullableIntFieldUpdateOperationsInput | number | null
+    status?: EnumAppointmentStatusFieldUpdateOperationsInput | $Enums.AppointmentStatus
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    customerId?: StringFieldUpdateOperationsInput | string
+    staffId?: StringFieldUpdateOperationsInput | string
+    branchId?: StringFieldUpdateOperationsInput | string
+    serviceId?: StringFieldUpdateOperationsInput | string
+    packageServiceId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type PackageUsageHistoryUpdateWithoutCustomerPackageInput = {
