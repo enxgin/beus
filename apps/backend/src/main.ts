@@ -13,9 +13,14 @@ async function bootstrap() {
   // Log API prefix
   console.log(`API Prefix: api/v1`);
   
-  // Frontend'den (localhost:3002) gelen isteklere izin ver
+  // Frontend'den gelen isteklere izin ver
   app.enableCors({
-    origin: ['http://localhost:3000', 'http://localhost:4200', '*'],
+    origin: [
+      'http://localhost:3000', // Lokal Next.js frontend
+      'http://localhost:4200', // Lokal Angular/React frontend (varsa)
+      'https://next-2ehl5ugsc-enxgins-projects.vercel.app', // Vercel Preview URL'si
+      'https://beus-frontend.vercel.app' // Vercel Production URL'niz (tahmini)
+    ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
     credentials: true,
   });
