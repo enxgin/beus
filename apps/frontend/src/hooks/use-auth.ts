@@ -1,22 +1,8 @@
 import { useEffect, useState } from 'react';
 import { jwtDecode } from 'jwt-decode';
 import { useRouter } from 'next/navigation';
-import axios from 'axios';
 import { useAuthStore } from '@/stores/auth.store';
-
-// API ayarları - geliştirme ortamında doğrudan belirtiyoruz
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
-
-export const api = axios.create({
-  baseURL: API_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  // CORS için withCredentials ekle
-  withCredentials: true,
-  // Timeout değerini artır
-  timeout: 10000,
-});
+import { api } from '@/lib/api'; // Merkezi API istemcisini kullan
 
 // Global User tipi ile tutarlı olması için buradaki arayüzü @/types/user'dan import etmek daha iyi olacaktır
 // User tipini auth.store.ts'den import et
@@ -42,14 +28,8 @@ export function useAuth() {
   // Zustand store'dan auth bilgilerini al
   const { user, token, login: storeLogin, logout: storeLogout, isHydrated } = useAuthStore();
 
-  // API interceptor - token ile istekleri gönder
-  useEffect(() => {
-    if (token) {
-      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-    } else {
-      delete api.defaults.headers.common['Authorization'];
-    }
-  }, [token]);
+  // Token yönetimi artık /lib/api.ts içindeki interceptor tarafından
+  // her istekte otomatik olarak yapıldığı için bu useEffect'e gerek kalmadı.
 
   // Sayfa yüklenirken token kontrolü
   useEffect(() => {
