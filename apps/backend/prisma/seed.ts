@@ -12,9 +12,6 @@ async function main() {
   // İlişkisel olarak bağımlı olanlardan başla
   await prisma.appointment.deleteMany({});
   await prisma.customerTag.deleteMany({});
-  // Diğer potansiyel tablolar (varsa)
-  // await prisma.Invoice.deleteMany({});
-  // await prisma.CashRegisterLog.deleteMany({});
   // await prisma.CustomerPackage.deleteMany({});
   await prisma.service.deleteMany({});
   await prisma.serviceCategory.deleteMany({});
