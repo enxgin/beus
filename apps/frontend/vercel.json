@@ -1,5 +1,5 @@
 {
-  "buildCommand": "npm run build",
+  "buildCommand": "npm install @radix-ui/react-tabs @radix-ui/react-separator react-hot-toast use-debounce && npm run build",
   "installCommand": "npm install",
   "outputDirectory": ".next"
 }
