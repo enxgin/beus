@@ -1,6 +1,6 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CommissionType } from '@prisma/client';
+import { CommissionType } from '../prisma/prisma-types';
 import { CreateCommissionRuleDto } from './dto/create-commission-rule.dto';
 
 @Injectable()
