@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { Package, getPackage } from "../api";
+import { getPackage } from "../api";
+import type { Package } from "@/types";
 import { useAuth } from "../../../../hooks/use-auth";
 import { Button } from "../../../../components/ui/button";
 import {
@@ -208,7 +209,7 @@ const PackageDetailPage = () => {
               
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Oluşturulma Tarihi</p>
-                <p className="text-lg font-medium">{new Date(packageData.createdAt).toLocaleDateString('tr-TR')}</p>
+                <p className="text-lg font-medium">{packageData.createdAt ? new Date(packageData.createdAt).toLocaleDateString('tr-TR') : '-'}</p>
               </div>
             </div>
             
@@ -232,8 +233,8 @@ const PackageDetailPage = () => {
                 {packageData.services.map((serviceItem) => (
                   <div key={serviceItem.serviceId} className="flex justify-between items-center border-b pb-2">
                     <div>
-                      <p className="font-medium">{serviceItem.service.name}</p>
-                      <p className="text-sm text-muted-foreground">Birim Fiyat: {formatTurkishLira(serviceItem.service.price)}</p>
+                      <p className="font-medium">{serviceItem.service?.name || 'Hizmet Adı'}</p>
+                      <p className="text-sm text-muted-foreground">Birim Fiyat: {formatTurkishLira(serviceItem.service?.price || 0)}</p>
                     </div>
                     <Badge variant="secondary">{serviceItem.quantity} adet</Badge>
                   </div>

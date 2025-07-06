@@ -213,8 +213,8 @@ const EditPackagePage = () => {
       quantity: data.type === PackageType.SESSION ? Number(data.totalSessions) || 1 : 1
     }));
     
-    // Tüm sayısal değerleri Number tipine çevirelim
-    const payload = {
+    // Paket tipine göre farklı payload oluştur
+    const basePayload = {
       name: data.name,
       description: data.description || "", // Boş string olarak gönder
       branchId: data.branchId,
@@ -225,14 +225,19 @@ const EditPackagePage = () => {
     };
 
     // Paket tipine göre totalSessions veya totalMinutes ekleyelim
+    let payload;
     if (data.type === PackageType.SESSION) {
-      payload.totalSessions = Number(data.totalSessions);
-      // totalMinutes alanını göndermeyelim
-    } else if (data.type === PackageType.TIME) {
-      payload.totalMinutes = Number(data.totalMinutes);
-      // totalSessions alanını göndermeyelim
+      payload = {
+        ...basePayload,
+        totalSessions: Number(data.totalSessions)
+      };
+    } else {
+      payload = {
+        ...basePayload,
+        totalMinutes: Number(data.totalMinutes)
+      };
     }
-    
+
     setIsSaving(true);
     try {
       if (typeof id === "string") {

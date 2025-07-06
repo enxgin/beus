@@ -17,7 +17,9 @@ import { useEffect, useMemo } from "react";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { UserRole } from "@/types/user";
 
+// Form şeması tanımı
 const formSchema = z.object({
   name: z.string().min(2, { message: 'Hizmet adı en az 2 karakter olmalıdır.' }),
   duration: z.coerce.number().min(5, { message: 'Süre en az 5 dakika olmalıdır.' }),
@@ -27,6 +29,9 @@ const formSchema = z.object({
   staffIds: z.array(z.string()).min(1, { message: 'En az bir personel seçilmelidir.' }),
   isActive: z.boolean().default(true),
 });
+
+// Form için tip tanımı
+type FormValues = z.infer<typeof formSchema>;
 
 interface ApiData {
   categories: { id: string; name: string }[];
@@ -41,97 +46,119 @@ const EditServicePage = () => {
   const user = useAuthStore((state) => state.user);
   const token = useAuthStore((state) => state.token);
 
-  const canSelectBranch = user?.role === 'ADMIN' || user?.role === 'OWNER';
-
-  const form = useForm<z.infer<typeof formSchema>>({
+  // Sadece ADMIN rolü şube seçebilir
+  const canSelectBranch = user?.role === UserRole.ADMIN;
+  
+  // Form tanımı
+  const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
-      duration: 30,
+      duration: 0,
       price: 0,
       categoryId: "",
-      branchId: canSelectBranch ? "" : user?.branchId,
-      staffIds: [],
+      branchId: "",
+      staffIds: [] as string[],
       isActive: true,
-    },
+    } as FormValues,
   });
 
-  const { data: formData, isLoading: isFormDataLoading } = useQuery<ApiData>({
-    queryKey: ["service-form-data", user?.id],
+  // Hizmet verilerini getirme
+  const { data: service, isLoading: isServiceLoading } = useQuery({
+    queryKey: ["service", id],
     queryFn: async () => {
-      if (!token) return { categories: [], staff: [], branches: [] };
-      try {
-        const requests = [
-          api.get("/service-categories", { headers: { Authorization: `Bearer ${token}` } }),
-          api.get("/staff", { headers: { Authorization: `Bearer ${token}` } }),
-        ];
+      const response = await api.get(`/services/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.data;
+    },
+    enabled: !!id && !!token,
+  });
 
-        if (canSelectBranch) {
-          requests.push(api.get("/branches", { headers: { Authorization: `Bearer ${token}` } }));
-        }
+  // Kategori, personel ve şube verilerini getirme
+  const { data: apiData, isLoading: isApiDataLoading } = useQuery({
+    queryKey: ["service-edit-data"],
+    queryFn: async () => {
+      const [categoriesRes, staffRes, branchesRes] = await Promise.all([
+        api.get("/categories", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }),
+        api.get("/staff", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }),
+        api.get("/branches", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }),
+      ]);
 
-        const responses = await Promise.all(requests);
-        
-        return {
-          categories: responses[0].data,
-          staff: responses[1].data,
-          branches: canSelectBranch ? responses[2].data : [],
-        };
-      } catch (error) {
-        toast.error("Form verileri yüklenirken bir hata oluştu.");
-        return { categories: [], staff: [], branches: [] };
-      }
+      return {
+        categories: categoriesRes.data,
+        staff: staffRes.data,
+        branches: branchesRes.data,
+      } as ApiData;
     },
     enabled: !!token,
   });
 
+  // Form verilerini doldurma
   useEffect(() => {
-    const fetchService = async () => {
-      if (id && token) {
-        try {
-          const { data: service } = await api.get(`/services/${id}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          form.reset({
-            name: service.name,
-            duration: service.duration,
-            price: service.price,
-            categoryId: service.categoryId,
-            branchId: service.branchId,
-            staffIds: service.staff?.map((s: any) => s.id) || [],
-            isActive: service.isActive,
-          });
-        } catch (error) {
-          toast.error("Hizmet bilgileri yüklenirken bir hata oluştu.");
-        }
-      }
-    };
-    fetchService();
-  }, [id, token, form]);
+    if (service) {
+      form.reset({
+        name: service.name,
+        duration: service.duration,
+        price: service.price,
+        categoryId: service.categoryId,
+        branchId: service.branchId,
+        staffIds: service.staffIds,
+        isActive: service.isActive,
+      } as FormValues);
+    }
+  }, [service, form]);
 
-  const watchedBranchId = form.watch('branchId');
-
+  // Şubeye göre personel filtreleme
   const filteredStaff = useMemo(() => {
-    if (!watchedBranchId || !formData?.staff) return [];
-    return formData.staff.filter((s) => s.branchId === watchedBranchId);
-  }, [watchedBranchId, formData?.staff]);
+    if (!apiData?.staff) return [];
+    const branchId = form.watch("branchId");
+    if (!branchId) return [];
+    return apiData.staff.filter((staff) => staff.branchId === branchId);
+  }, [apiData?.staff, form.watch("branchId")]);
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    const toastId = toast.loading('Hizmet güncelleniyor...');
+  // Form gönderimi
+  const handleSubmit = async (data: FormValues) => {
     try {
-      await api.patch(`/services/${id}`, values, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      toast.success('Hizmet başarıyla güncellendi.', { id: toastId });
-      queryClient.invalidateQueries({ queryKey: ['services'] });
-      queryClient.invalidateQueries({ queryKey: ['service', id] });
-      router.push('/dashboard/services');
+      await api.put(
+        `/services/${id}`,
+        {
+          ...data,
+          duration: Number(data.duration),
+          price: Number(data.price),
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      toast.success("Hizmet başarıyla güncellendi");
+      queryClient.invalidateQueries({ queryKey: ["service", id] });
+      queryClient.invalidateQueries({ queryKey: ["services"] });
+      router.push("/dashboard/services");
     } catch (error) {
-      toast.error('Hizmet güncellenirken bir hata oluştu.', { id: toastId });
+      console.error(error);
+      toast.error("Hizmet güncellenirken bir hata oluştu");
     }
   };
 
-  if (isFormDataLoading) {
+  if (isServiceLoading || isApiDataLoading) {
     return <div className="flex justify-center items-center h-full"><Loader2 className="h-8 w-8 animate-spin" /></div>;
   }
 
@@ -147,7 +174,7 @@ const EditServicePage = () => {
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
@@ -175,7 +202,7 @@ const EditServicePage = () => {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {formData?.categories?.map((category) => (
+                          {apiData?.categories?.map((category: { id: string; name: string }) => (
                             <SelectItem key={category.id} value={category.id}>
                               {category.name}
                             </SelectItem>
@@ -226,7 +253,7 @@ const EditServicePage = () => {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {formData?.branches?.map((branch) => (
+                            {apiData?.branches?.map((branch: { id: string; name: string }) => (
                               <SelectItem key={branch.id} value={branch.id}>
                                 {branch.name}
                               </SelectItem>
@@ -250,7 +277,7 @@ const EditServicePage = () => {
                           selected={field.value || []}
                           onChange={field.onChange}
                           placeholder="Personel seçin"
-                          emptyIndicator={watchedBranchId ? "Bu şubede personel bulunamadı." : "Önce şube seçmelisiniz."}
+                          emptyIndicator={form.watch("branchId") ? "Bu şubede personel bulunamadı." : "Önce şube seçmelisiniz."}
                         />
                       </FormControl>
                       <FormMessage />

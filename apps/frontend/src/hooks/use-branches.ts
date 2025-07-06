@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/api";
-import { Branch } from "@/types/branch";
+import { Branch } from "@/types";
 import { User, UserRole } from "@/types/user";
 import { useAuthStore } from "@/stores/auth.store";
 
@@ -13,10 +13,10 @@ const fetchBranches = async (user: User | null): Promise<Branch[]> => {
     return response.data;
   }
 
-  // SUPER_BRANCH_MANAGER kendi ve altındaki şubeleri görür
+  // SUPER_BRANCH_MANAGER kendi şubesini görür
   if (user.role === UserRole.SUPER_BRANCH_MANAGER) {
-    // user objesi zaten yönetilen şubeleri içermeli
-    return user.branches || [];
+    // user objesi zaten şube bilgisini içeriyor
+    return user.branch ? [user.branch] : [];
   }
 
   // Diğer roller için şube listesi getirmeye gerek yok
