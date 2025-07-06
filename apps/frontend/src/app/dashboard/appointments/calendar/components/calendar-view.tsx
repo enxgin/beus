@@ -198,12 +198,12 @@ export function CalendarView({ branchId }: CalendarViewProps) {
 
   return (
     <div className="bg-white rounded-lg shadow-md">
-      <div className="p-4 flex flex-wrap gap-4 justify-between items-center border-b">
+      <div className="p-4 flex flex-col sm:flex-row sm:flex-wrap gap-3 justify-between items-start sm:items-center border-b">
         <h2 className="text-xl font-bold">Randevu Takvimi</h2>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap w-full sm:w-auto gap-2 mt-2 sm:mt-0">
           <Popover open={isFilterOpen} onOpenChange={setIsFilterOpen}>
             <PopoverTrigger asChild>
-              <Button variant="outline" className="w-[200px] justify-between" disabled={!branchId}>
+              <Button variant="outline" className="w-full sm:w-[160px] md:w-[200px] justify-between text-sm" disabled={!branchId}>
                 Personel Filtrele
                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
               </Button>
@@ -277,8 +277,12 @@ export function CalendarView({ branchId }: CalendarViewProps) {
             </PopoverContent>
           </Popover>
 
-          <Button onClick={() => router.push(`/dashboard/appointments/create?branchId=${branchId}`)} disabled={!branchId}>
-            <Plus className="h-4 w-4 mr-2" />
+          <Button 
+            onClick={() => router.push(`/dashboard/appointments/create?branchId=${branchId}`)} 
+            disabled={!branchId}
+            className="w-full sm:w-auto text-sm"
+          >
+            <Plus className="h-4 w-4 mr-1 sm:mr-2" />
             Yeni Randevu
           </Button>
         </div>
@@ -301,44 +305,55 @@ export function CalendarView({ branchId }: CalendarViewProps) {
 
       <div className="p-4 relative min-h-[600px]">
         <div id="main-calendar" className={cn('shadcn-calendar-container transition-opacity', { 'opacity-50': isFetching && !!branchId })}>
-          {/* Özel takvim kontrolleri (tüm ekran boyutlarında görünür) */}
-          <div className="mb-4 flex flex-col space-y-2 sm:space-y-0 sm:flex-row sm:justify-between sm:items-center">
-            <div className="flex justify-between items-center sm:w-auto sm:flex-1">
-              <div className="flex items-center gap-2">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => calendarRef.current?.getApi().prev()}
-                  className="h-8 w-8 p-0"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
+          {/* Özel takvim kontrolleri - mobil için optimize edilmiş */}
+          <div className="mb-4 flex flex-col space-y-3 sm:space-y-0 sm:flex-row sm:justify-between sm:items-center">
+            {/* Takvim başlığı - mobilde üst kısımda */}
+            <div className="text-sm font-medium text-center sm:hidden">
+              {calendarTitle || 'Takvim'}
+            </div>
+            
+            {/* Navigasyon kontrolleri ve görünüm seçicileri */}
+            <div className="flex flex-col space-y-3 sm:space-y-0 sm:flex-row sm:items-center sm:w-full">
+              {/* Navigasyon butonları */}
+              <div className="flex justify-between sm:justify-start items-center sm:flex-none">
+                <div className="flex items-center gap-1">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => calendarRef.current?.getApi().prev()}
+                    className="h-8 w-8 p-0"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => calendarRef.current?.getApi().next()}
+                    className="h-8 w-8 p-0"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                  
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => calendarRef.current?.getApi().today()}
+                    className="text-xs h-8 px-2"
+                  >
+                    <CalendarIcon className="mr-1 h-3 w-3" />
+                    Bugün
+                  </Button>
+                </div>
                 
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => calendarRef.current?.getApi().next()}
-                  className="h-8 w-8 p-0"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-                
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => calendarRef.current?.getApi().today()}
-                  className="text-xs h-8 sm:h-9 sm:text-sm"
-                >
-                  <CalendarIcon className="mr-1 h-3 w-3 sm:h-4 sm:w-4" />
-                  Bugün
-                </Button>
+                {/* Takvim başlığı - masaüstünde ortada */}
+                <div className="hidden sm:block text-base font-semibold mx-4 flex-1 text-center">
+                  {calendarTitle || 'Takvim'}
+                </div>
               </div>
               
-              <div className="text-sm font-medium sm:text-base sm:font-semibold sm:mx-4 sm:flex-1 sm:text-center">
-                {calendarTitle || 'Takvim'}
-              </div>
-              
-              <div className="flex gap-1 sm:gap-2">
+              {/* Görünüm seçicileri */}
+              <div className="grid grid-cols-3 gap-1 sm:flex sm:gap-2 sm:ml-auto">
                 <Button 
                   variant={activeView === 'resourceTimeGridDay' ? 'default' : 'outline'}
                   size="sm"
@@ -346,7 +361,7 @@ export function CalendarView({ branchId }: CalendarViewProps) {
                     calendarRef.current?.getApi().changeView('resourceTimeGridDay');
                     setActiveView('resourceTimeGridDay');
                   }}
-                  className="text-xs h-8 px-2 sm:text-sm sm:h-9 sm:px-3"
+                  className="text-xs h-8 px-1 sm:px-3"
                 >
                   Gün
                 </Button>
@@ -357,7 +372,7 @@ export function CalendarView({ branchId }: CalendarViewProps) {
                     calendarRef.current?.getApi().changeView('timeGridWeek');
                     setActiveView('timeGridWeek');
                   }}
-                  className="text-xs h-8 px-2 sm:text-sm sm:h-9 sm:px-3"
+                  className="text-xs h-8 px-1 sm:px-3"
                 >
                   Hafta
                 </Button>
@@ -368,7 +383,7 @@ export function CalendarView({ branchId }: CalendarViewProps) {
                     calendarRef.current?.getApi().changeView('dayGridMonth');
                     setActiveView('dayGridMonth');
                   }}
-                  className="text-xs h-8 px-2 sm:text-sm sm:h-9 sm:px-3"
+                  className="text-xs h-8 px-1 sm:px-3"
                 >
                   Ay
                 </Button>
@@ -410,7 +425,9 @@ export function CalendarView({ branchId }: CalendarViewProps) {
              {!branchId ? (
                <p className="text-lg font-medium text-muted-foreground">Lütfen takvimi görüntülemek için bir şube seçin.</p>
              ) : (
-               <CalendarSkeleton />
+               <div className="w-full h-full p-4">
+                 <CalendarSkeleton />
+               </div>
              )}
            </div>
         )}

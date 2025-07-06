@@ -8,6 +8,8 @@ import * as z from "zod";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import { toast } from "sonner";
+import axios from "axios";
+import api from "@/lib/api";
 import { useDebounce } from "use-debounce";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -298,6 +300,41 @@ export default function SellPackagePage() {
     fetchPackages();
   }, [token, user?.branch?.id]);
   
+  // Otomatik fatura oluşturma işlemi
+  const createInvoice = async (customerPackage: any) => {
+    try {
+      // Backend'in beklediği formatta ID'leri gönderelim
+      // customerPackage nesnesinden paket ID'sini alıyoruz, customerPackage ID'sini değil
+      const invoiceData = {
+        invoiceType: "package",
+        customerId: selectedCustomer!.id,
+        packageId: customerPackage.packageId, // Müşteri paketinin bağlı olduğu asıl paket ID'si
+        discountRate: Number(selectedCustomer?.discountRate || 0)
+      };
+      
+      console.log("Fatura oluşturuluyor:", invoiceData);
+      console.log("Müşteri ID:", invoiceData.customerId);
+      console.log("Paket ID:", invoiceData.packageId);
+      console.log("Indirim oranı:", invoiceData.discountRate, "tipi:", typeof invoiceData.discountRate);
+      
+      // JSON olarak gönder
+      const response = await api.post('/invoices/from-service', invoiceData, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      console.log("Fatura oluşturma yanıtı:", response.data);
+      toast.success("Paket satışı ve faturası başarıyla oluşturuldu.");
+      return response.data;
+    } catch (error: any) {
+      console.error("Fatura oluşturma hatası:", error.response?.data || error);
+      const errorMessage = error.response?.data?.message || "Fatura oluşturulurken bir hata oluştu.";
+      toast.error(errorMessage);
+      throw error;
+    }
+  };
+
   // Form gönderimi
   const onSubmit = async (values: FormValues) => {
     console.log("Form gönderiliyor:", values);
@@ -323,7 +360,12 @@ export default function SellPackagePage() {
       const response = await createCustomerPackage(submissionData);
       console.log("API yanıtı:", response);
       
-      toast.success("Paket satışı başarıyla oluşturuldu.");
+      // Paket satışı başarılı olduktan sonra otomatik fatura oluştur
+      if (response && response.id) {
+        // Tüm müşteri paketi nesnesini gönder, sadece ID değil
+        await createInvoice(response);
+      }
+      
       router.push("/dashboard/packages");
     } catch (error: any) {
       console.error("Form gönderimi hatası:", error);

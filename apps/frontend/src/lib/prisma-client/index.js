@@ -414,7 +414,7 @@ const config = {
   },
   "relativeEnvPaths": {
     "rootEnvPath": null,
-    "schemaEnvPath": "../../../../backend/.env"
+    "schemaEnvPath": "../../../.env"
   },
   "relativePath": "../../../../backend/prisma",
   "clientVersion": "6.11.0",
@@ -442,8 +442,8 @@ const fs = require('fs')
 config.dirname = __dirname
 if (!fs.existsSync(path.join(__dirname, 'schema.prisma'))) {
   const alternativePaths = [
-    "../frontend/src/lib/prisma-client",
-    "frontend/src/lib/prisma-client",
+    "src/lib/prisma-client",
+    "lib/prisma-client",
   ]
   
   const alternativePath = alternativePaths.find((altPath) => {
@@ -473,11 +473,11 @@ Object.assign(exports, Prisma)
 
 // file annotations for bundling tools to include these files
 path.join(__dirname, "libquery_engine-darwin-arm64.dylib.node");
-path.join(process.cwd(), "../frontend/src/lib/prisma-client/libquery_engine-darwin-arm64.dylib.node")
+path.join(process.cwd(), "src/lib/prisma-client/libquery_engine-darwin-arm64.dylib.node")
 
 // file annotations for bundling tools to include these files
 path.join(__dirname, "query_engine-windows.dll.node");
-path.join(process.cwd(), "../frontend/src/lib/prisma-client/query_engine-windows.dll.node")
+path.join(process.cwd(), "src/lib/prisma-client/query_engine-windows.dll.node")
 // file annotations for bundling tools to include these files
 path.join(__dirname, "schema.prisma");
-path.join(process.cwd(), "../frontend/src/lib/prisma-client/schema.prisma")
+path.join(process.cwd(), "src/lib/prisma-client/schema.prisma")

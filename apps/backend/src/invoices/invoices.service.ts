@@ -4,6 +4,7 @@ import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { UpdateInvoiceDto } from './dto/update-invoice.dto';
 import { CreatePaymentDto } from './dto/create-payment.dto';
 import { FindInvoicesDto } from './dto/find-invoices.dto';
+import { CreateInvoiceFromServiceDto, InvoiceSourceType } from './dto/create-invoice-from-service.dto';
 import { PaymentStatus, CashLogType } from '../prisma/prisma-types';
 import { CashRegisterLogsService } from '../cash-register-logs/cash-register-logs.service';
 
@@ -567,7 +568,6 @@ export class InvoicesService {
     // Faturanın var olup olmadığını kontrol et
     const invoice = await this.prisma.invoice.findUnique({
       where: { id: invoiceId },
-      include: { commission: true },
     });
 
     if (!invoice) {
@@ -583,24 +583,20 @@ export class InvoicesService {
       throw new NotFoundException(`Personel bulunamadı: ID ${staffId}`);
     }
 
-    // Bu fatura için daha önce bir prim kaydı var mı kontrol et
-    if (invoice.commission) {
-      throw new BadRequestException(`Bu fatura için zaten bir prim kaydı var: ID ${invoice.commission.id}`);
-    }
-
-    // Prim tutarı geçerli mi kontrol et
+    // Komisyon tutarının geçerli olup olmadığını kontrol et
     if (amount <= 0) {
-      throw new BadRequestException('Prim tutarı pozitif bir değer olmalıdır');
+      throw new BadRequestException('Komisyon tutarı pozitif bir değer olmalıdır');
     }
 
-    // Prim kaydını oluştur
+    // Komisyonu oluştur
     return this.prisma.staffCommission.create({
       data: {
         amount,
-        staffId,
         invoiceId,
+        staffId,
       },
       include: {
+        invoice: true,
         staff: {
           select: {
             id: true,
@@ -608,11 +604,189 @@ export class InvoicesService {
             email: true,
           },
         },
-        invoice: true,
       },
     });
   }
+
+  /**
+   * Paket satışından fatura oluşturur
+   */
+  async createInvoiceFromPackage(customerId: string, packageId: string, discountRate: number = 0) {
+    // Müşterinin var olup olmadığını kontrol et
+    const customer = await this.prisma.customer.findUnique({
+      where: { id: customerId },
+    });
+
+    if (!customer) {
+      throw new NotFoundException(`Müşteri bulunamadı: ID ${customerId}`);
+    }
+
+    // Paketin var olup olmadığını kontrol et
+    const packageItem = await this.prisma.package.findUnique({
+      where: { id: packageId },
+    });
+
+    if (!packageItem) {
+      throw new NotFoundException(`Paket bulunamadı: ID ${packageId}`);
+    }
+
+    // Müşterinin şubesini bul
+    const branch = await this.prisma.branch.findFirst({
+      where: { id: customer.branchId },
+    });
+
+    if (!branch) {
+      throw new NotFoundException(`Müşterinin bağlı olduğu şube bulunamadı`);
+    }
+
+    // İndirim oranını kontrol et
+    if (discountRate < 0 || discountRate > 100) {
+      throw new BadRequestException('İndirim oranı 0-100 arasında olmalıdır');
+    }
+
+    // Müşterinin indirim oranı yoksa ve parametre olarak gelen indirim oranı 0 ise, 
+    // müşterinin indirim oranını kullan
+    if (discountRate === 0 && customer.discountRate > 0) {
+      discountRate = customer.discountRate;
+    }
+
+    // İndirimli fiyatı hesapla
+    const originalPrice = packageItem.price;
+    const discountAmount = originalPrice * (discountRate / 100);
+    const finalPrice = originalPrice - discountAmount;
+
+    // Fatura oluştur
+    const invoice = await this.prisma.invoice.create({
+      data: {
+        totalAmount: finalPrice,
+        amountPaid: 0,
+        debt: finalPrice,
+        status: PaymentStatus.UNPAID,
+        customerId: customer.id,
+        branchId: branch.id,
+      },
+      include: {
+        customer: true,
+        branch: true,
+      },
+    });
+
+    // CustomerPackage oluştur ve fatura ile ilişkilendir
+    const validityDays = packageItem.validityDays || 30; // Varsayılan 30 gün
+    const expiryDate = new Date();
+    expiryDate.setDate(expiryDate.getDate() + validityDays);
+
+    // Paket tipine göre remainingSessions değerini ayarla
+    // SESSION tipinde ise totalSessions değerini, TIME tipinde ise totalMinutes değerini kullan
+    const remainingSessions = packageItem.type === 'SESSION' 
+      ? { sessions: packageItem.totalSessions || 0 }
+      : { minutes: packageItem.totalMinutes || 0 };
+
+    const customerPackage = await this.prisma.customerPackage.create({
+      data: {
+        customerId: customer.id,
+        packageId: packageItem.id,
+        expiryDate,
+        remainingSessions: remainingSessions,
+      },
+      include: {
+        customer: true,
+        package: true,
+      },
+    });
+
+    return { invoice, customerPackage };
+  }
+
+  /**
+   * Tamamlanan randevudan fatura oluşturur
+   */
+  async createInvoiceFromAppointment(appointmentId: string, discountRate: number = 0) {
+    // Randevunun var olup olmadığını kontrol et
+    const appointment = await this.prisma.appointment.findUnique({
+      where: { id: appointmentId },
+      include: {
+        customer: true,
+        service: true,
+        branch: true,
+        invoice: true,
+      },
+    });
+
+    if (!appointment) {
+      throw new NotFoundException(`Randevu bulunamadı: ID ${appointmentId}`);
+    }
+
+    // Randevunun durumunu kontrol et
+    if (appointment.status !== 'COMPLETED') {
+      throw new BadRequestException('Sadece tamamlanmış randevular için fatura oluşturulabilir');
+    }
+
+    // Randevunun zaten bir faturası var mı kontrol et
+    if (appointment.invoice) {
+      throw new BadRequestException(`Bu randevu için zaten bir fatura oluşturulmuş: ID ${appointment.invoice.id}`);
+    }
+
+    // İndirim oranını kontrol et
+    if (discountRate < 0 || discountRate > 100) {
+      throw new BadRequestException('İndirim oranı 0-100 arasında olmalıdır');
+    }
+
+    // Müşterinin indirim oranı yoksa ve parametre olarak gelen indirim oranı 0 ise, 
+    // müşterinin indirim oranını kullan
+    if (discountRate === 0 && appointment.customer.discountRate > 0) {
+      discountRate = appointment.customer.discountRate;
+    }
+
+    // İndirimli fiyatı hesapla
+    const originalPrice = appointment.service.price;
+    const discountAmount = originalPrice * (discountRate / 100);
+    const finalPrice = originalPrice - discountAmount;
+
+    // Fatura oluştur
+    const invoice = await this.prisma.invoice.create({
+      data: {
+        totalAmount: finalPrice,
+        amountPaid: 0,
+        debt: finalPrice,
+        status: PaymentStatus.UNPAID,
+        customerId: appointment.customerId,
+        branchId: appointment.branchId,
+        appointmentId: appointment.id,
+      },
+      include: {
+        customer: true,
+        branch: true,
+        appointment: {
+          include: {
+            service: true,
+            staff: true,
+          },
+        },
+      },
+    });
+
+    return invoice;
+  }
+
+  /**
+   * Paket satışı veya tamamlanan randevudan fatura oluşturur
+   */
+  async createInvoiceFromService(createInvoiceDto: CreateInvoiceFromServiceDto) {
+    const { invoiceType, customerId, packageId, appointmentId, discountRate = 0 } = createInvoiceDto;
+
+    if (invoiceType === InvoiceSourceType.PACKAGE) {
+      if (!packageId) {
+        throw new BadRequestException('Paket satışı için paket ID gereklidir');
+      }
+      return this.createInvoiceFromPackage(customerId, packageId, discountRate);
+    } else if (invoiceType === InvoiceSourceType.SERVICE) {
+      if (!appointmentId) {
+        throw new BadRequestException('Hizmet faturası için randevu ID gereklidir');
+      }
+      return this.createInvoiceFromAppointment(appointmentId, discountRate);
+    } else {
+      throw new BadRequestException('Geçersiz fatura kaynağı türü');
+    }
+  }
 }
-
-
-

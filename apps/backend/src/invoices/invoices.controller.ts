@@ -14,6 +14,7 @@ import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { UpdateInvoiceDto } from './dto/update-invoice.dto';
 import { CreatePaymentDto } from './dto/create-payment.dto';
 import { FindInvoicesDto } from './dto/find-invoices.dto';
+import { CreateInvoiceFromServiceDto } from './dto/create-invoice-from-service.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -98,6 +99,17 @@ export class InvoicesController {
     @Body() createPaymentDto: CreatePaymentDto,
   ) {
     return this.invoicesService.createPayment(id, createPaymentDto);
+  }
+
+  @ApiOperation({ summary: 'Paket satışı veya tamamlanan randevudan fatura oluştur' })
+  @ApiResponse({ status: 201, description: 'Fatura başarıyla oluşturuldu' })
+  @ApiResponse({ status: 400, description: 'Geçersiz veri' })
+  @ApiResponse({ status: 404, description: 'Müşteri, paket veya randevu bulunamadı' })
+  @ApiResponse({ status: 403, description: 'Erişim reddedildi' })
+  @Roles(UserRole.ADMIN, UserRole.BRANCH_MANAGER, UserRole.SUPER_BRANCH_MANAGER, UserRole.RECEPTION)
+  @Post('from-service')
+  createInvoiceFromService(@Body() createInvoiceFromServiceDto: CreateInvoiceFromServiceDto) {
+    return this.invoicesService.createInvoiceFromService(createInvoiceFromServiceDto);
   }
 
   @ApiOperation({ summary: 'Faturadan iade al' })

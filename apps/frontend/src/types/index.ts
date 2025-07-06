@@ -73,6 +73,7 @@ export interface Customer {
   phone?: string;
   branchId: string;
   branch?: Branch;
+  discountRate?: number;
   createdAt: string;
   updatedAt: string;
 }

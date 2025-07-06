@@ -34,10 +34,31 @@ interface StepServiceProps {
 
 async function fetchServices(branchId?: string): Promise<Service[]> {
   if (!branchId) return [];
-  // API artık { data: Service[], totalCount: number } formatında bir nesne döndürüyor
-  // ve tüm hizmetleri getirmek için 'take' parametresi gerekiyor.
-  const { data } = await api.get('/services', { params: { branchId, take: 1000 } });
-  return data.data; // Dönen nesnenin içindeki 'data' dizisini döndür
+  try {
+    // API artık { data: Service[], totalCount: number } formatında bir nesne döndürüyor
+    // ve tüm hizmetleri getirmek için 'take' parametresi gerekiyor.
+    const response = await api.get('/services', { params: { branchId, take: 1000 } });
+    
+    // API yanıtının yapısını kontrol et ve doğru veriyi döndür
+    console.log('API yanıtı:', response.data);
+    
+    // Eğer response.data bir dizi ise doğrudan onu döndür
+    if (Array.isArray(response.data)) {
+      return response.data;
+    }
+    
+    // Eğer response.data.data bir dizi ise onu döndür
+    if (response.data && Array.isArray(response.data.data)) {
+      return response.data.data;
+    }
+    
+    // Hiçbir uygun veri bulunamazsa boş dizi döndür
+    console.error('API yanıtı beklenen formatta değil:', response.data);
+    return [];
+  } catch (error) {
+    console.error('Hizmetler getirilirken hata:', error);
+    return [];
+  }
 }
 
 async function fetchCustomerPackages(customerId?: string): Promise<CustomerPackage[]> {
@@ -103,7 +124,9 @@ export function StepService({ formData, onSelectService }: StepServiceProps) {
           <TabsContent value="services">
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {isLoadingServices && Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-24 w-full" />)}
-              {services?.map((service) => (
+              
+              {/* Array.isArray kontrolü ekleyerek güvenli bir şekilde map fonksiyonunu çağırıyoruz */}
+              {Array.isArray(services) && services.map((service) => (
                 <div
                   key={service.id}
                   onClick={() => onSelectService(service)}
@@ -117,7 +140,9 @@ export function StepService({ formData, onSelectService }: StepServiceProps) {
                   <p className="text-sm font-medium">{service.price} TL</p>
                 </div>
               ))}
-              {services?.length === 0 && !isLoadingServices && (
+              
+              {/* Boş veya dizi olmayan services durumunu kontrol ediyoruz */}
+              {(!Array.isArray(services) || services.length === 0) && !isLoadingServices && (
                 <div className="col-span-full text-center py-8 text-muted-foreground">
                   <p>Kayıtlı hizmet bulunamadı</p>
                 </div>

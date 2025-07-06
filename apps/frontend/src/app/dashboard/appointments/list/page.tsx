@@ -304,7 +304,11 @@ export default function AppointmentsList() {
       <div className="flex items-center">
         <h1 className="font-semibold text-lg md:text-2xl">Randevular</h1>
         <div className="ml-auto flex items-center gap-2">
-          <Button size="sm" onClick={() => router.push('/dashboard/appointments/new')}>
+          <Button 
+            size="sm" 
+            onClick={() => router.push(`/dashboard/appointments/create?branchId=${selectedBranchId}`)}
+            disabled={!selectedBranchId}
+          >
             <PlusCircle className="h-4 w-4 mr-2" />
             Yeni Randevu
           </Button>

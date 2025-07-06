@@ -55,21 +55,25 @@ export default function CreateAppointmentPage() {
 
   return (
     <div className="container px-4 md:px-6 py-4 md:py-6">
-      <div className="flex flex-col space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <Button variant="ghost" onClick={handleGoBack} className="mb-2 pl-0">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Takvime Dön
-            </Button>
-            <h1 className="text-2xl font-bold">Yeni Randevu Oluştur</h1>
-            <p className="text-muted-foreground">Aşağıdaki adımları takip ederek yeni bir randevu oluşturun</p>
-          </div>
-        </div>
+      <div className="flex flex-col space-y-4">
+        {/* Breadcrumbs */}
+        <nav className="flex" aria-label="Breadcrumb">
+          <ol className="flex items-center space-x-2 text-sm text-gray-500">
+            <li>
+              <a href="/dashboard" className="hover:text-gray-700">Dashboard</a>
+            </li>
+            <li className="flex items-center">
+              <span className="mx-1">/</span>
+              <a href="/dashboard/appointments/calendar" className="hover:text-gray-700">Randevular</a>
+            </li>
+            <li className="flex items-center">
+              <span className="mx-1">/</span>
+              <span className="text-gray-900">Yeni Randevu</span>
+            </li>
+          </ol>
+        </nav>
         
-        <Separator />
-        
-        <div className="py-4">
+        <div className="py-2">
           <AppointmentWizard
             branchId={branchId}
             selectedDate={selectedDate}

@@ -102,6 +102,34 @@ export class CustomersService {
             tag: true,
           },
         },
+        appointments: {
+          include: {
+            service: true,
+            staff: true,
+            customerPackage: true,
+            invoice: true
+          },
+          orderBy: {
+            startTime: 'desc'
+          }
+        },
+        customerPackages: {
+          include: {
+            package: true,
+            usageHistory: true
+          },
+          orderBy: {
+            purchaseDate: 'desc'
+          }
+        },
+        invoices: {
+          include: {
+            payments: true
+          },
+          orderBy: {
+            createdAt: 'desc'
+          }
+        }
       },
     });
     if (!customer) {

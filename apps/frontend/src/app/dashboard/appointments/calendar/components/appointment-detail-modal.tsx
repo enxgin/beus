@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
+import api from '@/lib/api';
 import { useAuthStore } from '@/stores/auth.store';
 import { useToast } from '@/components/ui/use-toast';
 import {
@@ -81,13 +82,8 @@ export function AppointmentDetailModal({
   // Randevu durumunu değiştirme işlemi
   const updateStatusMutation = useMutation({
     mutationFn: async (newStatus: string) => {
-      await axios.patch(`/appointments/${appointment.id}/status`, 
-        { status: newStatus },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+      await api.patch(`/appointments/${appointment.id}/status`, 
+        { status: newStatus }
       );
     },
     onSuccess: () => {
@@ -114,11 +110,7 @@ export function AppointmentDetailModal({
   // Randevu silme işlemi
   const deleteAppointmentMutation = useMutation({
     mutationFn: async () => {
-      await axios.delete(`/appointments/${appointment.id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      await api.delete(`/appointments/${appointment.id}`);
     },
     onSuccess: () => {
       toast({
@@ -140,17 +132,127 @@ export function AppointmentDetailModal({
 
   // Component mount olduğunda randevu durumunu state'e ata
   useEffect(() => {
-    if (appointment?.status) {
+    if (appointment) {
       setStatus(appointment.status);
+      console.log('Randevu detayları:', JSON.stringify(appointment, null, 2));
+      console.log('Randevu ID:', appointment.id);
+      console.log('Müşteri ID:', appointment.customer?.id);
+      console.log('Randevu durumu:', appointment.status);
     }
-    // Debug için randevu verilerini konsola yazdır
-    console.log("Randevu detayları:", appointment);
   }, [appointment]);
+
+  // Randevu tamamlandığında otomatik fatura oluşturma
+  const createInvoiceMutation = useMutation({
+    mutationFn: async () => {
+      // Önce güncel randevu bilgilerini al
+      const updatedAppointment = await fetchUpdatedAppointment();
+      
+      if (!updatedAppointment) {
+        throw new Error('Güncel randevu bilgileri alınamadı');
+      }
+      
+      // Randevu ve müşteri bilgilerini kontrol et
+      console.log('Fatura oluşturma öncesi güncel randevu:', updatedAppointment);
+      console.log('Fatura oluşturma öncesi güncel müşteri:', updatedAppointment.customer);
+      
+      if (!updatedAppointment.customer || !updatedAppointment.customer.id) {
+        throw new Error('Randevuya ait müşteri bilgisi bulunamadı');
+      }
+      
+      // Backend'in beklediği formatta ID'leri gönderelim
+      // discountRate değerini sayı olarak gönderelim
+      const invoiceData = {
+        invoiceType: 'service',
+        customerId: updatedAppointment.customer.id,
+        appointmentId: updatedAppointment.id,
+        discountRate: Number(updatedAppointment.customer.discountRate || 0)
+      };
+      
+      console.log('Fatura oluşturma isteği gönderiliyor:', invoiceData);
+      console.log('Müşteri ID:', invoiceData.customerId);
+      console.log('Randevu ID:', invoiceData.appointmentId);
+      console.log('Indirim oranı:', invoiceData.discountRate, 'tipi:', typeof invoiceData.discountRate);
+      
+      try {
+        // JSON olarak gönder
+        const response = await api.post('/invoices/from-service', invoiceData, {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        console.log('Fatura oluşturma yanıtı:', response.data);
+        return response;
+      } catch (error: any) {
+        console.error('Fatura oluşturma API hatası:', error.response?.data || error.message);
+        throw error;
+      }
+    },
+    onSuccess: () => {
+      toast({
+        title: "Başarılı",
+        description: "Fatura başarıyla oluşturuldu",
+      });
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+    },
+    onError: (error: any) => {
+      const errorMessage = error.response?.data?.message || "Fatura oluşturulurken bir hata oluştu";
+      toast({
+        title: "Hata",
+        description: Array.isArray(errorMessage) ? errorMessage.join(', ') : errorMessage,
+        variant: "destructive",
+      });
+      console.error('Fatura oluşturma hatası detayları:', error.response?.data);
+    }
+  });
+
+  // Güncel randevu bilgilerini almak için bir fonksiyon
+  const fetchUpdatedAppointment = async () => {
+    try {
+      const response = await api.get(`/appointments/${appointment.id}`);
+      console.log('Güncel randevu bilgileri alındı:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Randevu bilgileri alınırken hata oluştu:', error);
+      return null;
+    }
+  };
 
   // Durum değiştiğinde API'yi çağır
   const handleStatusChange = (newStatus: string) => {
     setStatus(newStatus);
-    updateStatusMutation.mutate(newStatus);
+    
+    // Önce randevu durumunu güncelle
+    updateStatusMutation.mutate(newStatus, {
+      onSuccess: async () => {
+        // Randevu durumu güncellendikten sonra, güncel randevu bilgilerini al
+        const updatedAppointment = await fetchUpdatedAppointment();
+        
+        // Eğer durum COMPLETED olarak değiştiyse ve randevu ücretli ise otomatik fatura oluştur
+        if (newStatus === AppointmentStatus.COMPLETED && 
+            updatedAppointment && 
+            updatedAppointment.service && 
+            !updatedAppointment.invoiceId) {
+          
+          // Güncel randevu bilgileriyle fatura oluştur
+          setTimeout(() => {
+            // Randevu ve müşteri bilgilerini kontrol et
+            console.log('Fatura oluşturma için güncel randevu:', updatedAppointment);
+            
+            const invoiceData = {
+              invoiceType: 'service',
+              customerId: updatedAppointment.customer?.id,
+              appointmentId: updatedAppointment.id,
+              discountRate: updatedAppointment.customer?.discountRate || 0
+            };
+            
+            console.log('Fatura oluşturma için hazırlanan veri:', invoiceData);
+            
+            // Fatura oluştur
+            createInvoiceMutation.mutate();
+          }, 500);
+        }
+      }
+    });
   };
 
   // Randevu düzenleme sayfasına git

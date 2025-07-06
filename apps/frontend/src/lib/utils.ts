@@ -17,3 +17,18 @@ export function formatTurkishLira(amount: number): string {
     minimumFractionDigits: 2
   }).format(amount);
 }
+
+/**
+ * Bir sayıyı para birimi formatında formatlayan fonksiyon
+ * @param amount Formatlanacak miktar
+ * @param currency Para birimi kodu (varsayılan: TRY)
+ * @param locale Yerel ayar (varsayılan: tr-TR)
+ * @returns Formatlı para birimi değeri
+ */
+export function formatCurrency(amount: number, currency: string = 'TRY', locale: string = 'tr-TR'): string {
+  return new Intl.NumberFormat(locale, {
+    style: 'currency',
+    currency: currency,
+    minimumFractionDigits: 2
+  }).format(amount);
+}

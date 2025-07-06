@@ -178,9 +178,42 @@
 @media (max-width: 640px) {
   .shadcn-calendar-container {
     font-size: 0.875rem;
+    overflow-x: hidden;
   }
   
-  .shadcn-calendar-container .fc .fc-view-harness {
-    min-height: 400px !important;
+  /* Takvim içeriğinin mobil ekranlarda taşmaması için */
+  .shadcn-calendar-container .fc-view-harness {
+    min-width: 0;
+    width: 100%;
+    overflow-x: auto;
   }
+  
+  /* Kaynak görünümünde (personel sütunları) mobil optimizasyonu */
+  .shadcn-calendar-container .fc-resource-timeline .fc-resource-group,
+  .shadcn-calendar-container .fc-resource-timeline .fc-resource-cell,
+  .shadcn-calendar-container .fc-timegrid-axis,
+  .shadcn-calendar-container .fc-timegrid-slot-label {
+    font-size: 0.75rem;
+  }
+  
+  /* Kaynak başlıkları için minimum genişlik */
+  .shadcn-calendar-container .fc-resource-timeline .fc-resource-cell,
+  .shadcn-calendar-container .fc-timegrid-axis {
+    min-width: 60px;
+    max-width: 100px;
+  }
+  
+  /* Zaman çizelgesi için mobil optimizasyonu */
+  .shadcn-calendar-container .fc-timegrid-slot-label-frame {
+    padding: 0 2px;
+  }
+  
+  /* Randevu içeriği için mobil optimizasyonu */
+  .shadcn-calendar-container .fc-event-main {
+    padding: 1px;
+  }
+}
+
+.shadcn-calendar-container .fc .fc-view-harness {
+  min-height: 400px !important;
 }

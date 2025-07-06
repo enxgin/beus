@@ -13,6 +13,7 @@ import { InvoicesModule } from './invoices/invoices.module';
 import { TagsModule } from './tags/tags.module';
 import { ServiceCategoriesModule } from './service-categories/service-categories.module';
 import { StaffModule } from './staff/staff.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { StaffModule } from './staff/staff.module';
     TagsModule,
     ServiceCategoriesModule,
     StaffModule,
+    DashboardModule,
   ],
   controllers: [],
   providers: [],
