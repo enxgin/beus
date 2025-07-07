@@ -17,15 +17,12 @@ export class CashRegisterService {
     const { branchId, openingBalance, notes } = openCashDayDto;
 
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    
+    const { startOfDay } = this.getStartAndEndOfDay(today);
+
     const existingOpeningLog = await this.prisma.cashRegisterLog.findFirst({
       where: {
         branchId,
-        createdAt: { gte: today, lt: tomorrow },
+        createdAt: { gte: startOfDay },
         type: CashLogType.OPENING,
       },
     });
@@ -57,56 +54,31 @@ export class CashRegisterService {
     const { branchId, actualBalance, notes } = closeCashDayDto;
 
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
+    const { startOfDay, endOfDay } = this.getStartAndEndOfDay(today);
 
     const openingLog = await this.prisma.cashRegisterLog.findFirst({
       where: {
         branchId,
-        createdAt: { gte: today, lt: tomorrow },
+        createdAt: { gte: startOfDay, lte: endOfDay },
         type: CashLogType.OPENING,
       },
     });
 
     if (!openingLog) {
-      throw new BadRequestException('Bu şube için bugün kasa açılmamış.');
+      throw new NotFoundException('Bugün için kasa açılışı bulunamadı.');
     }
 
     const existingClosingLog = await this.prisma.cashRegisterLog.findFirst({
       where: {
         branchId,
-        createdAt: { gte: today, lt: tomorrow },
+        createdAt: { gte: startOfDay, lte: endOfDay },
         type: CashLogType.CLOSING,
       },
     });
 
     if (existingClosingLog) {
-      throw new BadRequestException('Bu şube için kasa zaten kapatılmış.');
+      throw new BadRequestException('Bu kasa zaten kapatılmış.');
     }
-
-    const transactions = await this.prisma.cashRegisterLog.findMany({
-      where: {
-        branchId,
-        createdAt: { gte: today, lt: tomorrow },
-        type: { in: [CashLogType.INCOME, CashLogType.OUTCOME, CashLogType.MANUAL_IN, CashLogType.MANUAL_OUT] },
-      },
-    });
-
-    const incomeTypes: CashLogType[] = [CashLogType.INCOME, CashLogType.MANUAL_IN];
-    const outcomeTypes: CashLogType[] = [CashLogType.OUTCOME, CashLogType.MANUAL_OUT];
-
-    const totalIncome = transactions
-      .filter(t => incomeTypes.includes(t.type))
-      .reduce((sum, t) => sum + t.amount, 0);
-
-    const totalOutcome = transactions
-      .filter(t => outcomeTypes.includes(t.type))
-      .reduce((sum, t) => sum + t.amount, 0);
-
-    const expectedBalance = openingLog.amount + totalIncome - totalOutcome;
-    const difference = actualBalance - expectedBalance;
 
     const closingLog = await this.prisma.cashRegisterLog.create({
       data: {
@@ -114,13 +86,9 @@ export class CashRegisterService {
         userId,
         type: CashLogType.CLOSING,
         amount: actualBalance,
-        description: `Günlük kasa kapanışı. Beklenen: ${expectedBalance}, Fark: ${difference}`,
+        description: notes ? `Günlük kasa kapanışı: ${notes}` : 'Günlük kasa kapanışı',
       },
     });
-
-    this.logger.log(
-      `Kasa kapanış kaydı oluşturuldu: ${closingLog.id}, Şube: ${branchId}, Kullanıcı: ${userId}`
-    );
 
     return closingLog;
   }
@@ -128,103 +96,77 @@ export class CashRegisterService {
   async createTransaction(createTransactionDto: CreateTransactionDto, userId: string) {
     const { branchId, type, amount, description, referenceId, referenceType } = createTransactionDto;
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-
-    const openingLog = await this.prisma.cashRegisterLog.findFirst({
-      where: {
-        branchId,
-        createdAt: { gte: today, lt: tomorrow },
-        type: CashLogType.OPENING,
-      },
-    });
-
-    if (!openingLog) {
-      throw new BadRequestException('İşlem yapabilmek için kasanın açık olması gerekir.');
-    }
-
-    const closingLog = await this.prisma.cashRegisterLog.findFirst({
-      where: {
-        branchId,
-        createdAt: { gte: today, lt: tomorrow },
-        type: CashLogType.CLOSING,
-      },
-    });
-
-    if (closingLog) {
-      throw new BadRequestException('Kasa kapatıldığı için yeni işlem yapılamaz.');
-    }
-
-    const transaction = await this.prisma.cashRegisterLog.create({
+    return this.prisma.cashRegisterLog.create({
       data: {
         branchId,
         userId,
         type,
         amount,
         description,
+        referenceId,
+        referenceType,
       },
     });
-
-    this.logger.log(
-      `Yeni kasa işlemi oluşturuldu: ${transaction.id}, Tip: ${type}, Tutar: ${amount}`
-    );
-
-    return transaction;
   }
 
-  async getCashDayDetails(day: Date, branchId: string) {
-    const startDate = new Date(day);
-    startDate.setHours(0, 0, 0, 0);
-    const endDate = new Date(day);
-    endDate.setHours(23, 59, 59, 999);
+  private getStartAndEndOfDay(date: Date) {
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    return { startOfDay, endOfDay };
+  }
+
+  async getCashDayDetails(date: Date, branchId: string) {
+    const { startOfDay, endOfDay } = this.getStartAndEndOfDay(date);
 
     const transactions = await this.prisma.cashRegisterLog.findMany({
       where: {
         branchId,
-        createdAt: { gte: startDate, lt: endDate },
+        createdAt: {
+          gte: startOfDay,
+          lte: endOfDay,
+        },
       },
-      orderBy: { createdAt: 'asc' },
-      include: { User: true, Branch: true },
+      include: {
+        User: { select: { name: true, id: true } },
+      },
+      orderBy: {
+        createdAt: 'asc',
+      },
     });
 
-    const openingLog = transactions.find(t => t.type === CashLogType.OPENING) || null;
-    const closingLog = transactions.find(t => t.type === CashLogType.CLOSING) || null;
+    const openingLog = transactions.find((t) => t.type === CashLogType.OPENING);
+    const closingLog = transactions.find((t) => t.type === CashLogType.CLOSING);
 
-    const incomeTypes: CashLogType[] = [CashLogType.INCOME, CashLogType.MANUAL_IN];
-    const outcomeTypes: CashLogType[] = [CashLogType.OUTCOME, CashLogType.MANUAL_OUT];
+    const incomeTypes = [CashLogType.INCOME, CashLogType.MANUAL_IN, CashLogType.INVOICE_PAYMENT];
+    const outcomeTypes = [CashLogType.OUTCOME, CashLogType.MANUAL_OUT];
 
-    const incomeTransactions = transactions.filter(t => incomeTypes.includes(t.type));
-    const outcomeTransactions = transactions.filter(t => outcomeTypes.includes(t.type));
+    const dailyIncome = transactions
+      .filter(t => incomeTypes.includes(t.type))
+      .reduce((sum, t) => sum + t.amount, 0);
 
-    const totalIncome = incomeTransactions.reduce((sum, t) => sum + t.amount, 0);
-    const totalOutcome = outcomeTransactions.reduce((sum, t) => sum + t.amount, 0);
-    const expectedBalance = openingLog ? openingLog.amount + totalIncome - totalOutcome : null;
-    const actualBalance = closingLog ? closingLog.amount : null;
-    const difference = actualBalance !== null && expectedBalance !== null ? actualBalance - expectedBalance : null;
-    const status = closingLog ? 'CLOSED' : 'OPEN';
+    const dailyOutcome = transactions
+      .filter(t => outcomeTypes.includes(t.type))
+      .reduce((sum, t) => sum + t.amount, 0);
+    
+    const openingBalance = openingLog?.amount || 0;
+    const currentBalance = openingBalance + dailyIncome - dailyOutcome;
 
     return {
-      date: day,
-      status,
-      openingBalance: openingLog ? openingLog.amount : null,
-      expectedBalance,
-      actualBalance,
-      difference,
-      branch: openingLog ? openingLog.Branch : null,
-      openedBy: openingLog ? openingLog.User : null,
-      closedBy: closingLog ? closingLog.User : null,
-      openedAt: openingLog ? openingLog.createdAt : null,
+      status: closingLog ? 'CLOSED' : openingLog ? 'OPEN' : 'NOT_OPENED',
+      currentBalance,
+      dailyIncome,
+      dailyOutcome,
+      netChange: dailyIncome - dailyOutcome,
+      transactions,
+      // Eski getCashReports metodunun kullandığı bazı alanları koruyalım
+      actualBalance: closingLog ? closingLog.amount : null,
       closedAt: closingLog ? closingLog.createdAt : null,
-      notes: null, 
-      transactions: {
-        all: transactions,
-        opening: openingLog,
-        closing: closingLog,
-        income: incomeTransactions,
-        outcome: outcomeTransactions,
-      },
+      closedBy: closingLog ? (closingLog as any).User : null,
+      expectedBalance: currentBalance
     };
   }
 
@@ -238,6 +180,7 @@ export class CashRegisterService {
     return this.createTransaction(
       {
         branchId,
+        userId,
         type: CashLogType.INCOME,
         amount,
         description,
@@ -248,8 +191,8 @@ export class CashRegisterService {
     );
   }
 
-  async getCashReports(dto: GetCashReportsDto) {
-    const { branchId, userId, startDate, endDate, page = 1, limit = 10 } = dto;
+  async getCashReports(getCashReportsDto: GetCashReportsDto) {
+    const { page = 1, limit = 10, branchId, userId, startDate, endDate } = getCashReportsDto;
     const skip = (page - 1) * limit;
 
     const where: Prisma.CashRegisterLogWhereInput = {};
@@ -304,7 +247,7 @@ export class CashRegisterService {
           openingBalance: log.amount,
           expectedBalance: details.expectedBalance || log.amount,
           actualBalance: details.actualBalance || null,
-          difference: details.difference || null,
+          difference: details.actualBalance !== null ? details.actualBalance - (details.expectedBalance || 0) : null,
           openedBy: log.userId,
           closedBy: details.closedBy?.id || null,
           branchId: log.branchId,
