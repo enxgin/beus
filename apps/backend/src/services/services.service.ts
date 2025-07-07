@@ -4,6 +4,7 @@ import { CreateServiceDto } from './dto/create-service.dto';
 import { UpdateServiceDto } from './dto/update-service.dto';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
+import { ServiceType } from '../prisma/prisma-types';
 
 @Injectable()
 export class ServicesService {
@@ -14,7 +15,7 @@ export class ServicesService {
     const { staffIds, branchId, categoryId, type, maxCapacity, ...serviceData } = createServiceDto;
 
     // Varsayılan değerler atama
-    const serviceType = type || 'STANDARD';
+    const serviceType = type || ServiceType.TIME_BASED;
     const serviceMaxCapacity = maxCapacity || 1;
 
     return this.prisma.service.create({
