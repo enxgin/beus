@@ -97,9 +97,7 @@ async function main() {
     await prisma.service.create({
       data: {
         name: `${faker.commerce.productName()}`,
-        type: 'TIME_BASED',
 
-        maxCapacity: 1,
         duration: faker.helpers.arrayElement([30, 45, 60, 90]),
         price: faker.number.int({ min: 100, max: 1500 }),
         commissionRate: 0.1,
@@ -125,8 +123,7 @@ async function main() {
     await prisma.service.create({
       data: {
         name: `${faker.commerce.productName()}`,
-        type: 'TIME_BASED',
-        maxCapacity: 1,
+
         duration: faker.helpers.arrayElement([30, 45, 60, 90]),
         price: faker.number.int({ min: 100, max: 1500 }),
         commissionRate: 0.1,

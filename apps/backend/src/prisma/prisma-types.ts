@@ -5,7 +5,6 @@ import {
   UserRole,
   PaymentMethod,
   CashLogType,
-  ServiceType,
   AppointmentStatus,
   PaymentStatus,
   CommissionType,
