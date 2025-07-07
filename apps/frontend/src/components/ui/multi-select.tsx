@@ -36,8 +36,6 @@ const MultiSelect = React.forwardRef<HTMLDivElement, MultiSelectProps>(
     
     // Öğe seçme işlemi
     const selectItem = (value: string) => {
-      console.log("Seçilmeye çalışılan personel ID:", value);
-      
       // ID'nin geçerli olup olmadığını kontrol et
       if (!value || !isValidID(value)) {
         console.error("Geçersiz ID değeri:", value);
@@ -47,12 +45,8 @@ const MultiSelect = React.forwardRef<HTMLDivElement, MultiSelectProps>(
       // Zaten seçili değilse listeye ekle
       if (!selected.includes(value)) {
         const newSelected = [...selected, value];
-        console.log("Yeni seçili personel listesi:", newSelected);
         onChange(newSelected);
-      } else {
-        console.log("Bu personel zaten seçili:", value);
-      }
-      
+      }      
       // Seçim yapıldığında dropdown'u kapat
       setIsOpen(false);
     };
@@ -71,21 +65,21 @@ const MultiSelect = React.forwardRef<HTMLDivElement, MultiSelectProps>(
       };
     }, []);
 
-    // Seçilmemiş öğeler
+    // Seçilebilecek opsiyonları filtrele
     const availableOptions = options.filter(option => !selected.includes(option.value));
 
     return (
       <div ref={containerRef} className="relative w-full">
         {/* Seçici kutu */}
-        <div 
+        <div
           className="flex flex-wrap gap-2 p-2 min-h-10 w-full border rounded-md cursor-pointer"
           onClick={() => setIsOpen(!isOpen)}
         >
           {selected.length > 0 ? (
-            selected.map((value) => {
+            selected.map((value, index) => {
               const option = options.find((o) => o.value === value);
               return (
-                <Badge key={value} variant="secondary" className="flex items-center gap-1">
+                <Badge key={`${value}-${index}`} variant="secondary" className="flex items-center gap-1">
                   {option?.label || value}
                   <button
                     type="button"
@@ -109,9 +103,9 @@ const MultiSelect = React.forwardRef<HTMLDivElement, MultiSelectProps>(
         {isOpen && (
           <div className="absolute z-10 w-full mt-1 p-1 bg-background border rounded-md shadow-md max-h-[200px] overflow-auto">
             {availableOptions.length > 0 ? (
-              availableOptions.map((option) => (
+              availableOptions.map((option, index) => (
                 <div
-                  key={option.value}
+                  key={`${option.value}-${index}`}
                   className="px-3 py-2 cursor-pointer hover:bg-accent hover:text-accent-foreground rounded-sm text-sm flex items-center justify-between transition-colors duration-150"
                   onClick={() => selectItem(option.value)}
                 >

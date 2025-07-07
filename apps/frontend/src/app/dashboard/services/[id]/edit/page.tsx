@@ -19,7 +19,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { UserRole } from "@/types/user";
 
-// Form schema definition
 const formSchema = z.object({
   name: z.string().min(2, { message: 'Hizmet adı en az 2 karakter olmalıdır.' }),
   duration: z.coerce.number().min(5, { message: 'Süre en az 5 dakika olmalıdır.' }),
@@ -30,130 +29,127 @@ const formSchema = z.object({
   isActive: z.boolean().default(true),
 });
 
-// Form type definition
 type FormValues = z.infer<typeof formSchema>;
 
 interface ApiData {
-  categories: { id: string; name: string }[];
+  categories: { id: string; name: string; branchId: string }[];
   staff: { id: string; name: string; branchId: string }[];
   branches: { id: string; name: string }[];
+  service: Service;
+}
+
+interface Service {
+    id: string;
+    name: string;
+    duration: number;
+    price: number;
+    categoryId: string;
+    branchId: string;
+    staff: { id: string }[];
+    isActive: boolean;
 }
 
 const EditServicePage = () => {
-  const router = useRouter();
   const { id } = useParams();
+  const { token, user } = useAuthStore();
   const queryClient = useQueryClient();
-  const user = useAuthStore((state) => state.user);
-  const token = useAuthStore((state) => state.token);
+  const router = useRouter();
 
-  const canSelectBranch = user?.role === UserRole.ADMIN;
+  const { data: apiData, isLoading, isError } = useQuery<ApiData>({
+    queryKey: ['edit-service-data', id],
+    queryFn: async () => {
+      const [service, categories, staff, branches] = await Promise.all([
+        api.get(`/services/${id}`, { headers: { Authorization: `Bearer ${token}` } }).then(res => res.data),
+        api.get('/categories', { headers: { Authorization: `Bearer ${token}` } }).then(res => res.data),
+        api.get('/staff', { headers: { Authorization: `Bearer ${token}` } }).then(res => res.data),
+        user?.role === UserRole.SUPERADMIN ? api.get('/branches', { headers: { Authorization: `Bearer ${token}` } }).then(res => res.data) : Promise.resolve(null)
+      ]);
+      return { service, categories, staff, branches };
+    },
+    enabled: !!token && !!id,
+  });
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "",
+      name: '',
       duration: 0,
       price: 0,
-      type: ServiceType.TIME_BASED, // Add default for type
-      maxCapacity: 1, // Add default for maxCapacity
-      categoryId: "",
-      branchId: "",
+      categoryId: '',
+      branchId: '',
       staffIds: [],
       isActive: true,
     },
   });
 
-  // Fetch service data
-  const { data: service, isLoading: isServiceLoading } = useQuery({
-    queryKey: ["service", id],
-    queryFn: async () => {
-      const response = await api.get(`/services/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      return response.data;
-    },
-    enabled: !!id && !!token,
-  });
-
-  // Fetch related data (categories, staff, branches)
-  const { data: apiData, isLoading: isApiDataLoading } = useQuery<ApiData>({
-    queryKey: ["service-edit-data"],
-    queryFn: async () => {
-      const [categoriesRes, staffRes, branchesRes] = await Promise.all([
-        api.get("/service-categories", { headers: { Authorization: `Bearer ${token}` } }),
-        api.get("/staff", { headers: { Authorization: `Bearer ${token}` } }),
-        api.get("/branches", { headers: { Authorization: `Bearer ${token}` } }),
-      ]);
-      return {
-        categories: categoriesRes.data,
-        staff: staffRes.data,
-        branches: branchesRes.data,
-      };
-    },
-    enabled: !!token,
-  });
-
-  // Populate form when both service and api data are available
   useEffect(() => {
-    if (service && apiData) {
-      const staffIds = service.staff ? service.staff.map((s: any) => s.userId) : [];
+    if (apiData?.service) {
+      const service = apiData.service;
       form.reset({
         name: service.name,
         duration: service.duration,
         price: service.price,
-        type: service.type, // Ensure type is passed
-        maxCapacity: service.maxCapacity, // Ensure maxCapacity is passed
         categoryId: service.categoryId,
         branchId: service.branchId,
-        staffIds: staffIds,
+        staffIds: service.staff.map(s => s.id),
         isActive: service.isActive,
       });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [service, apiData]);
+  }, [apiData?.service, form]);
 
-  // Filter staff based on selected branch
-  const watchedBranchId = form.watch("branchId");
-  const filteredStaff = useMemo(() => {
-    if (!apiData?.staff) return [];
-    if (!watchedBranchId) {
-        if (canSelectBranch) return [];
-        return apiData.staff;
+  const watchedBranchId = form.watch('branchId');
+
+  const categoryOptions = useMemo(() => {
+    if (!apiData?.categories) return [];
+    const filtered = apiData.categories.filter(c => c.branchId === watchedBranchId);
+    const selectedCategoryId = form.getValues('categoryId');
+    if (selectedCategoryId && !filtered.some(c => c.id === selectedCategoryId)) {
+      const selectedCategory = apiData.categories.find(c => c.id === selectedCategoryId);
+      if (selectedCategory) {
+        filtered.unshift(selectedCategory);
+      }
     }
-    return apiData.staff.filter((s) => s.branchId === watchedBranchId);
-  }, [apiData?.staff, watchedBranchId, canSelectBranch]);
+    return filtered.map(c => ({ value: c.id, label: c.name }));
+  }, [apiData?.categories, watchedBranchId, form.watch('categoryId')]);
 
-  // Form submission handler
-  const handleSubmit = async (data: FormValues) => {
+  const staffOptions = useMemo(() => {
+    if (!apiData?.staff) return [];
+    const staffInBranch = apiData.staff.filter(s => s.branchId === watchedBranchId);
+    const selectedStaffIds = form.getValues('staffIds') || [];
+    const selectedStaffObjects = apiData.staff.filter(s => selectedStaffIds.includes(s.id));
+    const combined = [...staffInBranch, ...selectedStaffObjects];
+    const uniqueStaff = Array.from(new Map(combined.map(item => [item.id, item])).values());
+    return uniqueStaff.map(s => ({ value: s.id, label: s.name }));
+  }, [watchedBranchId, apiData?.staff, form.watch('staffIds')]);
+
+  const onSubmit = async (values: FormValues) => {
     try {
-      await api.patch(`/services/${id}`, data, {
+      await api.patch(`/services/${id}`, values, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      toast.success("Hizmet başarıyla güncellendi");
-      // Invalidate queries to refetch data
-      queryClient.invalidateQueries({ queryKey: ["services"] });
-      queryClient.invalidateQueries({ queryKey: ["service", id] });
+      toast.success("Hizmet başarıyla güncellendi!");
+      queryClient.invalidateQueries({ queryKey: ['services'] });
       router.push("/dashboard/services");
-    } catch (error) {
-      console.error(error);
-      toast.error("Hizmet güncellenirken bir hata oluştu");
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Hizmet güncellenirken bir hata oluştu.");
     }
   };
 
-  if (isServiceLoading || isApiDataLoading) {
-    return <div className="flex justify-center items-center h-full"><Loader2 className="h-8 w-8 animate-spin" /></div>;
-  }
+  if (isLoading) return <div className="flex items-center justify-center h-full"><Loader2 className="h-8 w-8 animate-spin" /></div>;
+  if (isError || !apiData) return <div>Veri yüklenirken bir hata oluştu.</div>;
 
   return (
-    <div className="p-4">
-      <Button variant="ghost" onClick={() => router.back()} className="mb-4">
-        <ArrowLeft className="mr-2 h-4 w-4" /> Geri
+    <div className="space-y-4">
+      <Button variant="outline" onClick={() => router.back()}>
+        <ArrowLeft className="mr-2 h-4 w-4" /> Geri Dön
       </Button>
       <Card>
-        <CardHeader><CardTitle>Hizmeti Düzenle</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle>Hizmet Düzenle</CardTitle>
+        </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
@@ -161,58 +157,45 @@ const EditServicePage = () => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Hizmet Adı</FormLabel>
-                      <FormControl><Input placeholder="Örn: Saç Kesimi" {...field} /></FormControl>
-                      <FormMessage />
-                      </FormItem>
-                      )}
-                      />
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              </div>
-                
-                <FormField
-                  control={form.control}
-                  name="categoryId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Kategori</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value || ''} key={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Kategori seçin" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {apiData?.categories?.map((category) => (
-                            <SelectItem key={category.id} value={category.id}>
-                              {category.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <FormControl><Input placeholder="Saç Kesimi" {...field} /></FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-
-                <FormField control={form.control} name="duration" render={({ field }) => (<FormItem><FormLabel>Süre (dakika)</FormLabel><FormControl><Input type="number" {...field} value={field.value || ''} /></FormControl><FormMessage /></FormItem>)} />
-                <FormField control={form.control} name="price" render={({ field }) => (<FormItem><FormLabel>Fiyat (TL)</FormLabel><FormControl><Input type="number" {...field} value={field.value || ''} /></FormControl><FormMessage /></FormItem>)} />
-
-                {canSelectBranch && (
+                <FormField
+                  control={form.control}
+                  name="duration"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Süre (dakika)</FormLabel>
+                      <FormControl><Input type="number" placeholder="30" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="price"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Fiyat (₺)</FormLabel>
+                      <FormControl><Input type="number" placeholder="100" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                {user?.role === UserRole.SUPERADMIN && apiData.branches && (
                   <FormField
                     control={form.control}
                     name="branchId"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Şube</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value || ''} key={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Şube seçin" />
-                            </SelectTrigger>
-                          </FormControl>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl><SelectTrigger><SelectValue placeholder="Şube seçin" /></SelectTrigger></FormControl>
                           <SelectContent>
-                            {apiData?.branches?.map((branch) => (
+                            {apiData.branches.map(branch => (
                               <SelectItem key={branch.id} value={branch.id}>
                                 {branch.name}
                               </SelectItem>
@@ -227,13 +210,34 @@ const EditServicePage = () => {
 
                 <FormField
                   control={form.control}
+                  name="categoryId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Kategori</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value} disabled={!watchedBranchId}>
+                        <FormControl><SelectTrigger><SelectValue placeholder="Kategori seçin" /></SelectTrigger></FormControl>
+                        <SelectContent>
+                          {categoryOptions.map(option => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
                   name="staffIds"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Personel</FormLabel>
                       <FormControl>
                         <MultiSelect
-                          options={filteredStaff.map(s => ({ value: s.id, label: s.name }))}
+                          options={staffOptions}
                           selected={field.value || []}
                           onChange={field.onChange}
                           placeholder="Personel seçin"
