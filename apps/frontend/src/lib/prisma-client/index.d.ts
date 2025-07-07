@@ -143,14 +143,6 @@ export const UserRole: {
 export type UserRole = (typeof UserRole)[keyof typeof UserRole]
 
 
-export const ServiceType: {
-  TIME_BASED: 'TIME_BASED',
-  UNIT_BASED: 'UNIT_BASED'
-};
-
-export type ServiceType = (typeof ServiceType)[keyof typeof ServiceType]
-
-
 export const PackageType: {
   SESSION: 'SESSION',
   TIME: 'TIME'
@@ -217,10 +209,6 @@ export const CommissionStatus: typeof $Enums.CommissionStatus
 export type UserRole = $Enums.UserRole
 
 export const UserRole: typeof $Enums.UserRole
-
-export type ServiceType = $Enums.ServiceType
-
-export const ServiceType: typeof $Enums.ServiceType
 
 export type PackageType = $Enums.PackageType
 
@@ -11543,7 +11531,6 @@ export namespace Prisma {
   export type ServiceAvgAggregateOutputType = {
     duration: number | null
     price: number | null
-    maxCapacity: number | null
     unitCount: number | null
     commissionFixed: number | null
     commissionRate: number | null
@@ -11552,7 +11539,6 @@ export namespace Prisma {
   export type ServiceSumAggregateOutputType = {
     duration: number | null
     price: number | null
-    maxCapacity: number | null
     unitCount: number | null
     commissionFixed: number | null
     commissionRate: number | null
@@ -11565,8 +11551,6 @@ export namespace Prisma {
     duration: number | null
     price: number | null
     isActive: boolean | null
-    type: $Enums.ServiceType | null
-    maxCapacity: number | null
     unitCount: number | null
     commissionFixed: number | null
     commissionRate: number | null
@@ -11583,8 +11567,6 @@ export namespace Prisma {
     duration: number | null
     price: number | null
     isActive: boolean | null
-    type: $Enums.ServiceType | null
-    maxCapacity: number | null
     unitCount: number | null
     commissionFixed: number | null
     commissionRate: number | null
@@ -11601,8 +11583,6 @@ export namespace Prisma {
     duration: number
     price: number
     isActive: number
-    type: number
-    maxCapacity: number
     unitCount: number
     commissionFixed: number
     commissionRate: number
@@ -11617,7 +11597,6 @@ export namespace Prisma {
   export type ServiceAvgAggregateInputType = {
     duration?: true
     price?: true
-    maxCapacity?: true
     unitCount?: true
     commissionFixed?: true
     commissionRate?: true
@@ -11626,7 +11605,6 @@ export namespace Prisma {
   export type ServiceSumAggregateInputType = {
     duration?: true
     price?: true
-    maxCapacity?: true
     unitCount?: true
     commissionFixed?: true
     commissionRate?: true
@@ -11639,8 +11617,6 @@ export namespace Prisma {
     duration?: true
     price?: true
     isActive?: true
-    type?: true
-    maxCapacity?: true
     unitCount?: true
     commissionFixed?: true
     commissionRate?: true
@@ -11657,8 +11633,6 @@ export namespace Prisma {
     duration?: true
     price?: true
     isActive?: true
-    type?: true
-    maxCapacity?: true
     unitCount?: true
     commissionFixed?: true
     commissionRate?: true
@@ -11675,8 +11649,6 @@ export namespace Prisma {
     duration?: true
     price?: true
     isActive?: true
-    type?: true
-    maxCapacity?: true
     unitCount?: true
     commissionFixed?: true
     commissionRate?: true
@@ -11780,8 +11752,6 @@ export namespace Prisma {
     duration: number
     price: number
     isActive: boolean
-    type: $Enums.ServiceType
-    maxCapacity: number
     unitCount: number | null
     commissionFixed: number | null
     commissionRate: number | null
@@ -11817,8 +11787,6 @@ export namespace Prisma {
     duration?: boolean
     price?: boolean
     isActive?: boolean
-    type?: boolean
-    maxCapacity?: boolean
     unitCount?: boolean
     commissionFixed?: boolean
     commissionRate?: boolean
@@ -11843,8 +11811,6 @@ export namespace Prisma {
     duration?: boolean
     price?: boolean
     isActive?: boolean
-    type?: boolean
-    maxCapacity?: boolean
     unitCount?: boolean
     commissionFixed?: boolean
     commissionRate?: boolean
@@ -11863,8 +11829,6 @@ export namespace Prisma {
     duration?: boolean
     price?: boolean
     isActive?: boolean
-    type?: boolean
-    maxCapacity?: boolean
     unitCount?: boolean
     commissionFixed?: boolean
     commissionRate?: boolean
@@ -11883,8 +11847,6 @@ export namespace Prisma {
     duration?: boolean
     price?: boolean
     isActive?: boolean
-    type?: boolean
-    maxCapacity?: boolean
     unitCount?: boolean
     commissionFixed?: boolean
     commissionRate?: boolean
@@ -11894,7 +11856,7 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type ServiceOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "description" | "duration" | "price" | "isActive" | "type" | "maxCapacity" | "unitCount" | "commissionFixed" | "commissionRate" | "categoryId" | "branchId" | "createdAt" | "updatedAt", ExtArgs["result"]["service"]>
+  export type ServiceOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "description" | "duration" | "price" | "isActive" | "unitCount" | "commissionFixed" | "commissionRate" | "categoryId" | "branchId" | "createdAt" | "updatedAt", ExtArgs["result"]["service"]>
   export type ServiceInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     branch?: boolean | BranchDefaultArgs<ExtArgs>
     category?: boolean | ServiceCategoryDefaultArgs<ExtArgs>
@@ -11932,8 +11894,6 @@ export namespace Prisma {
       duration: number
       price: number
       isActive: boolean
-      type: $Enums.ServiceType
-      maxCapacity: number
       unitCount: number | null
       commissionFixed: number | null
       commissionRate: number | null
@@ -12377,8 +12337,6 @@ export namespace Prisma {
     readonly duration: FieldRef<"Service", 'Int'>
     readonly price: FieldRef<"Service", 'Float'>
     readonly isActive: FieldRef<"Service", 'Boolean'>
-    readonly type: FieldRef<"Service", 'ServiceType'>
-    readonly maxCapacity: FieldRef<"Service", 'Int'>
     readonly unitCount: FieldRef<"Service", 'Int'>
     readonly commissionFixed: FieldRef<"Service", 'Float'>
     readonly commissionRate: FieldRef<"Service", 'Float'>
@@ -25924,8 +25882,6 @@ export namespace Prisma {
     duration: 'duration',
     price: 'price',
     isActive: 'isActive',
-    type: 'type',
-    maxCapacity: 'maxCapacity',
     unitCount: 'unitCount',
     commissionFixed: 'commissionFixed',
     commissionRate: 'commissionRate',
@@ -26209,20 +26165,6 @@ export namespace Prisma {
    * Reference to a field of type 'Float[]'
    */
   export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
-    
-
-
-  /**
-   * Reference to a field of type 'ServiceType'
-   */
-  export type EnumServiceTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ServiceType'>
-    
-
-
-  /**
-   * Reference to a field of type 'ServiceType[]'
-   */
-  export type ListEnumServiceTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ServiceType[]'>
     
 
 
@@ -26881,8 +26823,6 @@ export namespace Prisma {
     duration?: IntFilter<"Service"> | number
     price?: FloatFilter<"Service"> | number
     isActive?: BoolFilter<"Service"> | boolean
-    type?: EnumServiceTypeFilter<"Service"> | $Enums.ServiceType
-    maxCapacity?: IntFilter<"Service"> | number
     unitCount?: IntNullableFilter<"Service"> | number | null
     commissionFixed?: FloatNullableFilter<"Service"> | number | null
     commissionRate?: FloatNullableFilter<"Service"> | number | null
@@ -26906,8 +26846,6 @@ export namespace Prisma {
     duration?: SortOrder
     price?: SortOrder
     isActive?: SortOrder
-    type?: SortOrder
-    maxCapacity?: SortOrder
     unitCount?: SortOrderInput | SortOrder
     commissionFixed?: SortOrderInput | SortOrder
     commissionRate?: SortOrderInput | SortOrder
@@ -26934,8 +26872,6 @@ export namespace Prisma {
     duration?: IntFilter<"Service"> | number
     price?: FloatFilter<"Service"> | number
     isActive?: BoolFilter<"Service"> | boolean
-    type?: EnumServiceTypeFilter<"Service"> | $Enums.ServiceType
-    maxCapacity?: IntFilter<"Service"> | number
     unitCount?: IntNullableFilter<"Service"> | number | null
     commissionFixed?: FloatNullableFilter<"Service"> | number | null
     commissionRate?: FloatNullableFilter<"Service"> | number | null
@@ -26959,8 +26895,6 @@ export namespace Prisma {
     duration?: SortOrder
     price?: SortOrder
     isActive?: SortOrder
-    type?: SortOrder
-    maxCapacity?: SortOrder
     unitCount?: SortOrderInput | SortOrder
     commissionFixed?: SortOrderInput | SortOrder
     commissionRate?: SortOrderInput | SortOrder
@@ -26985,8 +26919,6 @@ export namespace Prisma {
     duration?: IntWithAggregatesFilter<"Service"> | number
     price?: FloatWithAggregatesFilter<"Service"> | number
     isActive?: BoolWithAggregatesFilter<"Service"> | boolean
-    type?: EnumServiceTypeWithAggregatesFilter<"Service"> | $Enums.ServiceType
-    maxCapacity?: IntWithAggregatesFilter<"Service"> | number
     unitCount?: IntNullableWithAggregatesFilter<"Service"> | number | null
     commissionFixed?: FloatNullableWithAggregatesFilter<"Service"> | number | null
     commissionRate?: FloatNullableWithAggregatesFilter<"Service"> | number | null
@@ -28430,8 +28362,6 @@ export namespace Prisma {
     duration: number
     price: number
     isActive?: boolean
-    type?: $Enums.ServiceType
-    maxCapacity: number
     unitCount?: number | null
     commissionFixed?: number | null
     commissionRate?: number | null
@@ -28453,8 +28383,6 @@ export namespace Prisma {
     duration: number
     price: number
     isActive?: boolean
-    type?: $Enums.ServiceType
-    maxCapacity: number
     unitCount?: number | null
     commissionFixed?: number | null
     commissionRate?: number | null
@@ -28476,8 +28404,6 @@ export namespace Prisma {
     duration?: IntFieldUpdateOperationsInput | number
     price?: FloatFieldUpdateOperationsInput | number
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    type?: EnumServiceTypeFieldUpdateOperationsInput | $Enums.ServiceType
-    maxCapacity?: IntFieldUpdateOperationsInput | number
     unitCount?: NullableIntFieldUpdateOperationsInput | number | null
     commissionFixed?: NullableFloatFieldUpdateOperationsInput | number | null
     commissionRate?: NullableFloatFieldUpdateOperationsInput | number | null
@@ -28499,8 +28425,6 @@ export namespace Prisma {
     duration?: IntFieldUpdateOperationsInput | number
     price?: FloatFieldUpdateOperationsInput | number
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    type?: EnumServiceTypeFieldUpdateOperationsInput | $Enums.ServiceType
-    maxCapacity?: IntFieldUpdateOperationsInput | number
     unitCount?: NullableIntFieldUpdateOperationsInput | number | null
     commissionFixed?: NullableFloatFieldUpdateOperationsInput | number | null
     commissionRate?: NullableFloatFieldUpdateOperationsInput | number | null
@@ -28522,8 +28446,6 @@ export namespace Prisma {
     duration: number
     price: number
     isActive?: boolean
-    type?: $Enums.ServiceType
-    maxCapacity: number
     unitCount?: number | null
     commissionFixed?: number | null
     commissionRate?: number | null
@@ -28540,8 +28462,6 @@ export namespace Prisma {
     duration?: IntFieldUpdateOperationsInput | number
     price?: FloatFieldUpdateOperationsInput | number
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    type?: EnumServiceTypeFieldUpdateOperationsInput | $Enums.ServiceType
-    maxCapacity?: IntFieldUpdateOperationsInput | number
     unitCount?: NullableIntFieldUpdateOperationsInput | number | null
     commissionFixed?: NullableFloatFieldUpdateOperationsInput | number | null
     commissionRate?: NullableFloatFieldUpdateOperationsInput | number | null
@@ -28556,8 +28476,6 @@ export namespace Prisma {
     duration?: IntFieldUpdateOperationsInput | number
     price?: FloatFieldUpdateOperationsInput | number
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    type?: EnumServiceTypeFieldUpdateOperationsInput | $Enums.ServiceType
-    maxCapacity?: IntFieldUpdateOperationsInput | number
     unitCount?: NullableIntFieldUpdateOperationsInput | number | null
     commissionFixed?: NullableFloatFieldUpdateOperationsInput | number | null
     commissionRate?: NullableFloatFieldUpdateOperationsInput | number | null
@@ -30008,13 +29926,6 @@ export namespace Prisma {
     branchId?: SortOrder
   }
 
-  export type EnumServiceTypeFilter<$PrismaModel = never> = {
-    equals?: $Enums.ServiceType | EnumServiceTypeFieldRefInput<$PrismaModel>
-    in?: $Enums.ServiceType[] | ListEnumServiceTypeFieldRefInput<$PrismaModel>
-    notIn?: $Enums.ServiceType[] | ListEnumServiceTypeFieldRefInput<$PrismaModel>
-    not?: NestedEnumServiceTypeFilter<$PrismaModel> | $Enums.ServiceType
-  }
-
   export type IntNullableFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel> | null
     in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
@@ -30059,8 +29970,6 @@ export namespace Prisma {
     duration?: SortOrder
     price?: SortOrder
     isActive?: SortOrder
-    type?: SortOrder
-    maxCapacity?: SortOrder
     unitCount?: SortOrder
     commissionFixed?: SortOrder
     commissionRate?: SortOrder
@@ -30073,7 +29982,6 @@ export namespace Prisma {
   export type ServiceAvgOrderByAggregateInput = {
     duration?: SortOrder
     price?: SortOrder
-    maxCapacity?: SortOrder
     unitCount?: SortOrder
     commissionFixed?: SortOrder
     commissionRate?: SortOrder
@@ -30086,8 +29994,6 @@ export namespace Prisma {
     duration?: SortOrder
     price?: SortOrder
     isActive?: SortOrder
-    type?: SortOrder
-    maxCapacity?: SortOrder
     unitCount?: SortOrder
     commissionFixed?: SortOrder
     commissionRate?: SortOrder
@@ -30104,8 +30010,6 @@ export namespace Prisma {
     duration?: SortOrder
     price?: SortOrder
     isActive?: SortOrder
-    type?: SortOrder
-    maxCapacity?: SortOrder
     unitCount?: SortOrder
     commissionFixed?: SortOrder
     commissionRate?: SortOrder
@@ -30118,20 +30022,9 @@ export namespace Prisma {
   export type ServiceSumOrderByAggregateInput = {
     duration?: SortOrder
     price?: SortOrder
-    maxCapacity?: SortOrder
     unitCount?: SortOrder
     commissionFixed?: SortOrder
     commissionRate?: SortOrder
-  }
-
-  export type EnumServiceTypeWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: $Enums.ServiceType | EnumServiceTypeFieldRefInput<$PrismaModel>
-    in?: $Enums.ServiceType[] | ListEnumServiceTypeFieldRefInput<$PrismaModel>
-    notIn?: $Enums.ServiceType[] | ListEnumServiceTypeFieldRefInput<$PrismaModel>
-    not?: NestedEnumServiceTypeWithAggregatesFilter<$PrismaModel> | $Enums.ServiceType
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedEnumServiceTypeFilter<$PrismaModel>
-    _max?: NestedEnumServiceTypeFilter<$PrismaModel>
   }
 
   export type IntNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -32027,10 +31920,6 @@ export namespace Prisma {
     connect?: StaffCommissionWhereUniqueInput | StaffCommissionWhereUniqueInput[]
   }
 
-  export type EnumServiceTypeFieldUpdateOperationsInput = {
-    set?: $Enums.ServiceType
-  }
-
   export type NullableIntFieldUpdateOperationsInput = {
     set?: number | null
     increment?: number
@@ -33197,13 +33086,6 @@ export namespace Prisma {
     _max?: NestedFloatFilter<$PrismaModel>
   }
 
-  export type NestedEnumServiceTypeFilter<$PrismaModel = never> = {
-    equals?: $Enums.ServiceType | EnumServiceTypeFieldRefInput<$PrismaModel>
-    in?: $Enums.ServiceType[] | ListEnumServiceTypeFieldRefInput<$PrismaModel>
-    notIn?: $Enums.ServiceType[] | ListEnumServiceTypeFieldRefInput<$PrismaModel>
-    not?: NestedEnumServiceTypeFilter<$PrismaModel> | $Enums.ServiceType
-  }
-
   export type NestedFloatNullableFilter<$PrismaModel = never> = {
     equals?: number | FloatFieldRefInput<$PrismaModel> | null
     in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
@@ -33213,16 +33095,6 @@ export namespace Prisma {
     gt?: number | FloatFieldRefInput<$PrismaModel>
     gte?: number | FloatFieldRefInput<$PrismaModel>
     not?: NestedFloatNullableFilter<$PrismaModel> | number | null
-  }
-
-  export type NestedEnumServiceTypeWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: $Enums.ServiceType | EnumServiceTypeFieldRefInput<$PrismaModel>
-    in?: $Enums.ServiceType[] | ListEnumServiceTypeFieldRefInput<$PrismaModel>
-    notIn?: $Enums.ServiceType[] | ListEnumServiceTypeFieldRefInput<$PrismaModel>
-    not?: NestedEnumServiceTypeWithAggregatesFilter<$PrismaModel> | $Enums.ServiceType
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedEnumServiceTypeFilter<$PrismaModel>
-    _max?: NestedEnumServiceTypeFilter<$PrismaModel>
   }
 
   export type NestedIntNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -34350,8 +34222,6 @@ export namespace Prisma {
     duration: number
     price: number
     isActive?: boolean
-    type?: $Enums.ServiceType
-    maxCapacity: number
     unitCount?: number | null
     commissionFixed?: number | null
     commissionRate?: number | null
@@ -34372,8 +34242,6 @@ export namespace Prisma {
     duration: number
     price: number
     isActive?: boolean
-    type?: $Enums.ServiceType
-    maxCapacity: number
     unitCount?: number | null
     commissionFixed?: number | null
     commissionRate?: number | null
@@ -34739,8 +34607,6 @@ export namespace Prisma {
     duration?: IntFilter<"Service"> | number
     price?: FloatFilter<"Service"> | number
     isActive?: BoolFilter<"Service"> | boolean
-    type?: EnumServiceTypeFilter<"Service"> | $Enums.ServiceType
-    maxCapacity?: IntFilter<"Service"> | number
     unitCount?: IntNullableFilter<"Service"> | number | null
     commissionFixed?: FloatNullableFilter<"Service"> | number | null
     commissionRate?: FloatNullableFilter<"Service"> | number | null
@@ -35312,8 +35178,6 @@ export namespace Prisma {
     duration: number
     price: number
     isActive?: boolean
-    type?: $Enums.ServiceType
-    maxCapacity: number
     unitCount?: number | null
     commissionFixed?: number | null
     commissionRate?: number | null
@@ -35334,8 +35198,6 @@ export namespace Prisma {
     duration: number
     price: number
     isActive?: boolean
-    type?: $Enums.ServiceType
-    maxCapacity: number
     unitCount?: number | null
     commissionFixed?: number | null
     commissionRate?: number | null
@@ -35871,8 +35733,6 @@ export namespace Prisma {
     duration: number
     price: number
     isActive?: boolean
-    type?: $Enums.ServiceType
-    maxCapacity: number
     unitCount?: number | null
     commissionFixed?: number | null
     commissionRate?: number | null
@@ -35893,8 +35753,6 @@ export namespace Prisma {
     duration: number
     price: number
     isActive?: boolean
-    type?: $Enums.ServiceType
-    maxCapacity: number
     unitCount?: number | null
     commissionFixed?: number | null
     commissionRate?: number | null
@@ -35968,8 +35826,6 @@ export namespace Prisma {
     duration?: IntFieldUpdateOperationsInput | number
     price?: FloatFieldUpdateOperationsInput | number
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    type?: EnumServiceTypeFieldUpdateOperationsInput | $Enums.ServiceType
-    maxCapacity?: IntFieldUpdateOperationsInput | number
     unitCount?: NullableIntFieldUpdateOperationsInput | number | null
     commissionFixed?: NullableFloatFieldUpdateOperationsInput | number | null
     commissionRate?: NullableFloatFieldUpdateOperationsInput | number | null
@@ -35990,8 +35846,6 @@ export namespace Prisma {
     duration?: IntFieldUpdateOperationsInput | number
     price?: FloatFieldUpdateOperationsInput | number
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    type?: EnumServiceTypeFieldUpdateOperationsInput | $Enums.ServiceType
-    maxCapacity?: IntFieldUpdateOperationsInput | number
     unitCount?: NullableIntFieldUpdateOperationsInput | number | null
     commissionFixed?: NullableFloatFieldUpdateOperationsInput | number | null
     commissionRate?: NullableFloatFieldUpdateOperationsInput | number | null
@@ -36276,8 +36130,6 @@ export namespace Prisma {
     duration: number
     price: number
     isActive?: boolean
-    type?: $Enums.ServiceType
-    maxCapacity: number
     unitCount?: number | null
     commissionFixed?: number | null
     commissionRate?: number | null
@@ -36298,8 +36150,6 @@ export namespace Prisma {
     duration: number
     price: number
     isActive?: boolean
-    type?: $Enums.ServiceType
-    maxCapacity: number
     unitCount?: number | null
     commissionFixed?: number | null
     commissionRate?: number | null
@@ -36381,8 +36231,6 @@ export namespace Prisma {
     duration?: IntFieldUpdateOperationsInput | number
     price?: FloatFieldUpdateOperationsInput | number
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    type?: EnumServiceTypeFieldUpdateOperationsInput | $Enums.ServiceType
-    maxCapacity?: IntFieldUpdateOperationsInput | number
     unitCount?: NullableIntFieldUpdateOperationsInput | number | null
     commissionFixed?: NullableFloatFieldUpdateOperationsInput | number | null
     commissionRate?: NullableFloatFieldUpdateOperationsInput | number | null
@@ -36403,8 +36251,6 @@ export namespace Prisma {
     duration?: IntFieldUpdateOperationsInput | number
     price?: FloatFieldUpdateOperationsInput | number
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    type?: EnumServiceTypeFieldUpdateOperationsInput | $Enums.ServiceType
-    maxCapacity?: IntFieldUpdateOperationsInput | number
     unitCount?: NullableIntFieldUpdateOperationsInput | number | null
     commissionFixed?: NullableFloatFieldUpdateOperationsInput | number | null
     commissionRate?: NullableFloatFieldUpdateOperationsInput | number | null
@@ -36933,8 +36779,6 @@ export namespace Prisma {
     duration: number
     price: number
     isActive?: boolean
-    type?: $Enums.ServiceType
-    maxCapacity: number
     unitCount?: number | null
     commissionFixed?: number | null
     commissionRate?: number | null
@@ -36955,8 +36799,6 @@ export namespace Prisma {
     duration: number
     price: number
     isActive?: boolean
-    type?: $Enums.ServiceType
-    maxCapacity: number
     unitCount?: number | null
     commissionFixed?: number | null
     commissionRate?: number | null
@@ -37203,8 +37045,6 @@ export namespace Prisma {
     duration?: IntFieldUpdateOperationsInput | number
     price?: FloatFieldUpdateOperationsInput | number
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    type?: EnumServiceTypeFieldUpdateOperationsInput | $Enums.ServiceType
-    maxCapacity?: IntFieldUpdateOperationsInput | number
     unitCount?: NullableIntFieldUpdateOperationsInput | number | null
     commissionFixed?: NullableFloatFieldUpdateOperationsInput | number | null
     commissionRate?: NullableFloatFieldUpdateOperationsInput | number | null
@@ -37225,8 +37065,6 @@ export namespace Prisma {
     duration?: IntFieldUpdateOperationsInput | number
     price?: FloatFieldUpdateOperationsInput | number
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    type?: EnumServiceTypeFieldUpdateOperationsInput | $Enums.ServiceType
-    maxCapacity?: IntFieldUpdateOperationsInput | number
     unitCount?: NullableIntFieldUpdateOperationsInput | number | null
     commissionFixed?: NullableFloatFieldUpdateOperationsInput | number | null
     commissionRate?: NullableFloatFieldUpdateOperationsInput | number | null
@@ -37897,8 +37735,6 @@ export namespace Prisma {
     duration: number
     price: number
     isActive?: boolean
-    type?: $Enums.ServiceType
-    maxCapacity: number
     unitCount?: number | null
     commissionFixed?: number | null
     commissionRate?: number | null
@@ -37919,8 +37755,6 @@ export namespace Prisma {
     duration: number
     price: number
     isActive?: boolean
-    type?: $Enums.ServiceType
-    maxCapacity: number
     unitCount?: number | null
     commissionFixed?: number | null
     commissionRate?: number | null
@@ -38028,8 +37862,6 @@ export namespace Prisma {
     duration?: IntFieldUpdateOperationsInput | number
     price?: FloatFieldUpdateOperationsInput | number
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    type?: EnumServiceTypeFieldUpdateOperationsInput | $Enums.ServiceType
-    maxCapacity?: IntFieldUpdateOperationsInput | number
     unitCount?: NullableIntFieldUpdateOperationsInput | number | null
     commissionFixed?: NullableFloatFieldUpdateOperationsInput | number | null
     commissionRate?: NullableFloatFieldUpdateOperationsInput | number | null
@@ -38050,8 +37882,6 @@ export namespace Prisma {
     duration?: IntFieldUpdateOperationsInput | number
     price?: FloatFieldUpdateOperationsInput | number
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    type?: EnumServiceTypeFieldUpdateOperationsInput | $Enums.ServiceType
-    maxCapacity?: IntFieldUpdateOperationsInput | number
     unitCount?: NullableIntFieldUpdateOperationsInput | number | null
     commissionFixed?: NullableFloatFieldUpdateOperationsInput | number | null
     commissionRate?: NullableFloatFieldUpdateOperationsInput | number | null
@@ -38197,8 +38027,6 @@ export namespace Prisma {
     duration: number
     price: number
     isActive?: boolean
-    type?: $Enums.ServiceType
-    maxCapacity: number
     unitCount?: number | null
     commissionFixed?: number | null
     commissionRate?: number | null
@@ -38219,8 +38047,6 @@ export namespace Prisma {
     duration: number
     price: number
     isActive?: boolean
-    type?: $Enums.ServiceType
-    maxCapacity: number
     unitCount?: number | null
     commissionFixed?: number | null
     commissionRate?: number | null
@@ -38368,8 +38194,6 @@ export namespace Prisma {
     duration?: IntFieldUpdateOperationsInput | number
     price?: FloatFieldUpdateOperationsInput | number
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    type?: EnumServiceTypeFieldUpdateOperationsInput | $Enums.ServiceType
-    maxCapacity?: IntFieldUpdateOperationsInput | number
     unitCount?: NullableIntFieldUpdateOperationsInput | number | null
     commissionFixed?: NullableFloatFieldUpdateOperationsInput | number | null
     commissionRate?: NullableFloatFieldUpdateOperationsInput | number | null
@@ -38390,8 +38214,6 @@ export namespace Prisma {
     duration?: IntFieldUpdateOperationsInput | number
     price?: FloatFieldUpdateOperationsInput | number
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    type?: EnumServiceTypeFieldUpdateOperationsInput | $Enums.ServiceType
-    maxCapacity?: IntFieldUpdateOperationsInput | number
     unitCount?: NullableIntFieldUpdateOperationsInput | number | null
     commissionFixed?: NullableFloatFieldUpdateOperationsInput | number | null
     commissionRate?: NullableFloatFieldUpdateOperationsInput | number | null
@@ -39003,8 +38825,6 @@ export namespace Prisma {
     duration: number
     price: number
     isActive?: boolean
-    type?: $Enums.ServiceType
-    maxCapacity: number
     unitCount?: number | null
     commissionFixed?: number | null
     commissionRate?: number | null
@@ -39314,8 +39134,6 @@ export namespace Prisma {
     duration?: IntFieldUpdateOperationsInput | number
     price?: FloatFieldUpdateOperationsInput | number
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    type?: EnumServiceTypeFieldUpdateOperationsInput | $Enums.ServiceType
-    maxCapacity?: IntFieldUpdateOperationsInput | number
     unitCount?: NullableIntFieldUpdateOperationsInput | number | null
     commissionFixed?: NullableFloatFieldUpdateOperationsInput | number | null
     commissionRate?: NullableFloatFieldUpdateOperationsInput | number | null
@@ -39336,8 +39154,6 @@ export namespace Prisma {
     duration?: IntFieldUpdateOperationsInput | number
     price?: FloatFieldUpdateOperationsInput | number
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    type?: EnumServiceTypeFieldUpdateOperationsInput | $Enums.ServiceType
-    maxCapacity?: IntFieldUpdateOperationsInput | number
     unitCount?: NullableIntFieldUpdateOperationsInput | number | null
     commissionFixed?: NullableFloatFieldUpdateOperationsInput | number | null
     commissionRate?: NullableFloatFieldUpdateOperationsInput | number | null
@@ -39358,8 +39174,6 @@ export namespace Prisma {
     duration?: IntFieldUpdateOperationsInput | number
     price?: FloatFieldUpdateOperationsInput | number
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    type?: EnumServiceTypeFieldUpdateOperationsInput | $Enums.ServiceType
-    maxCapacity?: IntFieldUpdateOperationsInput | number
     unitCount?: NullableIntFieldUpdateOperationsInput | number | null
     commissionFixed?: NullableFloatFieldUpdateOperationsInput | number | null
     commissionRate?: NullableFloatFieldUpdateOperationsInput | number | null
@@ -39675,8 +39489,6 @@ export namespace Prisma {
     duration: number
     price: number
     isActive?: boolean
-    type?: $Enums.ServiceType
-    maxCapacity: number
     unitCount?: number | null
     commissionFixed?: number | null
     commissionRate?: number | null
@@ -39692,8 +39504,6 @@ export namespace Prisma {
     duration?: IntFieldUpdateOperationsInput | number
     price?: FloatFieldUpdateOperationsInput | number
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    type?: EnumServiceTypeFieldUpdateOperationsInput | $Enums.ServiceType
-    maxCapacity?: IntFieldUpdateOperationsInput | number
     unitCount?: NullableIntFieldUpdateOperationsInput | number | null
     commissionFixed?: NullableFloatFieldUpdateOperationsInput | number | null
     commissionRate?: NullableFloatFieldUpdateOperationsInput | number | null
@@ -39714,8 +39524,6 @@ export namespace Prisma {
     duration?: IntFieldUpdateOperationsInput | number
     price?: FloatFieldUpdateOperationsInput | number
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    type?: EnumServiceTypeFieldUpdateOperationsInput | $Enums.ServiceType
-    maxCapacity?: IntFieldUpdateOperationsInput | number
     unitCount?: NullableIntFieldUpdateOperationsInput | number | null
     commissionFixed?: NullableFloatFieldUpdateOperationsInput | number | null
     commissionRate?: NullableFloatFieldUpdateOperationsInput | number | null
@@ -39736,8 +39544,6 @@ export namespace Prisma {
     duration?: IntFieldUpdateOperationsInput | number
     price?: FloatFieldUpdateOperationsInput | number
     isActive?: BoolFieldUpdateOperationsInput | boolean
-    type?: EnumServiceTypeFieldUpdateOperationsInput | $Enums.ServiceType
-    maxCapacity?: IntFieldUpdateOperationsInput | number
     unitCount?: NullableIntFieldUpdateOperationsInput | number | null
     commissionFixed?: NullableFloatFieldUpdateOperationsInput | number | null
     commissionRate?: NullableFloatFieldUpdateOperationsInput | number | null

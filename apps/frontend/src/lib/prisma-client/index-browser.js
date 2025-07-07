@@ -197,8 +197,6 @@ exports.Prisma.ServiceScalarFieldEnum = {
   duration: 'duration',
   price: 'price',
   isActive: 'isActive',
-  type: 'type',
-  maxCapacity: 'maxCapacity',
   unitCount: 'unitCount',
   commissionFixed: 'commissionFixed',
   commissionRate: 'commissionRate',
@@ -358,11 +356,6 @@ exports.UserRole = exports.$Enums.UserRole = {
   RECEPTION: 'RECEPTION',
   STAFF: 'STAFF',
   CUSTOMER: 'CUSTOMER'
-};
-
-exports.ServiceType = exports.$Enums.ServiceType = {
-  TIME_BASED: 'TIME_BASED',
-  UNIT_BASED: 'UNIT_BASED'
 };
 
 exports.PackageType = exports.$Enums.PackageType = {

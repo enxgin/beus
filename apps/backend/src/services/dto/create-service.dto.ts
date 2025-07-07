@@ -9,9 +9,7 @@ import {
   IsArray,
   ArrayNotEmpty,
   Min,
-  IsEnum,
 } from 'class-validator';
-import { ServiceType } from '../../prisma/prisma-types';
 
 export class CreateServiceDto {
   @ApiProperty({ description: 'Hizmet adı', example: 'Cilt Bakımı' })
@@ -70,25 +68,7 @@ export class CreateServiceDto {
   @IsString({ each: true, message: 'Her personel ID değeri string olmalıdır' })
   staffIds: string[];
 
-  @ApiProperty({
-    description: 'Hizmet türü',
-    enum: ServiceType,
-    example: ServiceType.TIME_BASED,
-    required: false,
-  })
-  @IsEnum(ServiceType, { message: 'Geçersiz hizmet türü' })
-  @IsOptional()
-  serviceType?: ServiceType;
 
-  @ApiProperty({
-    description: 'Maksimum kapasite',
-    example: 1,
-    required: false,
-  })
-  @IsNumber({}, { message: 'Kapasite sayısal bir değer olmalıdır' })
-  @Min(1, { message: 'Kapasite en az 1 olmalıdır' })
-  @IsOptional()
-  maxCapacity?: number;
 }
 
 

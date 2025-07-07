@@ -120,14 +120,12 @@ model ServiceCategory {
 }
 
 model Service {
-  id              String      @id @default(cuid())
+  id              String  @id @default(cuid())
   name            String
   description     String?
   duration        Int
   price           Float
-  isActive        Boolean     @default(true)
-  type            ServiceType @default(TIME_BASED)
-  maxCapacity     Int
+  isActive        Boolean @default(true)
   unitCount       Int?
   commissionFixed Float?
   commissionRate  Float?
@@ -343,11 +341,6 @@ enum UserRole {
   RECEPTION
   STAFF
   CUSTOMER
-}
-
-enum ServiceType {
-  TIME_BASED
-  UNIT_BASED
 }
 
 enum PackageType {

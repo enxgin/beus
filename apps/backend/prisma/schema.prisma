@@ -127,8 +127,6 @@ model Service {
   duration        Int
   price           Float
   isActive        Boolean          @default(true)
-  type            ServiceType      @default(TIME_BASED)
-  maxCapacity     Int
   unitCount       Int?
   commissionFixed Float?
   commissionRate  Float?
@@ -344,11 +342,6 @@ enum UserRole {
   RECEPTION
   STAFF
   CUSTOMER
-}
-
-enum ServiceType {
-  TIME_BASED
-  UNIT_BASED
 }
 
 enum PackageType {

@@ -34,8 +34,6 @@ const formSchema = z.object({
   price: z.coerce.number().min(0, {
     message: 'Fiyat 0 veya daha büyük olmalıdır.',
   }),
-  type: z.string().min(1, { message: 'Hizmet türü seçimi zorunludur.' }),
-  maxCapacity: z.coerce.number().min(1, { message: 'Kapasite en az 1 olmalıdır.' }),
   categoryId: z.string().min(1, { message: 'Kategori seçimi zorunludur.' }),
   branchId: z.string().min(1, { message: 'Şube seçimi zorunludur.' }),
   staffIds: z.array(z.string()).min(1, { message: 'En az bir personel seçilmelidir.' }),
@@ -446,37 +444,7 @@ const CreateServicePage = () => {
               />
             </div>
             
-            {/* Hizmet Türü */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Hizmet Türü*</label>
-              <Select 
-                name="type"
-                value={formValues.type} 
-                onValueChange={(value) => handleSelectChange('type', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Hizmet türü seçin" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="STANDARD">Standart</SelectItem>
-                  <SelectItem value="PREMIUM">Premium</SelectItem>
-                  <SelectItem value="VIP">VIP</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            {/* Kapasite */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Kapasite*</label>
-              <Input 
-                type="number" 
-                name="maxCapacity"
-                value={formValues.maxCapacity}
-                onChange={handleInputChange}
-                min="1"
-              />
-            </div>
-            
+
             <Button type="submit" disabled={mutation.isPending}>
               {mutation.isPending ? "Oluşturuluyor..." : "Hizmeti Oluştur"}
             </Button>
