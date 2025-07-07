@@ -3,7 +3,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { ServiceType } from "@/lib/prisma-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,8 +24,6 @@ const formSchema = z.object({
   name: z.string().min(2, { message: 'Hizmet adı en az 2 karakter olmalıdır.' }),
   duration: z.coerce.number().min(5, { message: 'Süre en az 5 dakika olmalıdır.' }),
   price: z.coerce.number().min(0, { message: 'Fiyat 0 veya daha büyük olmalıdır.' }),
-  type: z.nativeEnum(ServiceType, { required_error: 'Hizmet türü zorunludur.' }),
-  maxCapacity: z.coerce.number().min(1, { message: 'Kapasite en az 1 olmalıdır.' }),
   categoryId: z.string().min(1, { message: 'Kategori seçimi zorunludur.' }),
   branchId: z.string().min(1, { message: 'Şube seçimi zorunludur.' }),
   staffIds: z.array(z.string()).min(1, { message: 'En az bir personel seçilmelidir.' }),
@@ -171,40 +168,6 @@ const EditServicePage = () => {
                       />
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="type"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Hizmet Türü</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Hizmet türü seçin" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value={ServiceType.TIME_BASED}>Zaman Bazlı</SelectItem>
-                          <SelectItem value={ServiceType.UNIT_BASED}>Birim Bazlı</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="maxCapacity"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Maksimum Kapasite</FormLabel>
-                      <FormControl>
-                        <Input type="number" placeholder="Örn: 1" {...field} onChange={e => field.onChange(parseInt(e.target.value, 10) || 0)} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
               </div>
                 
                 <FormField
