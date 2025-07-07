@@ -54,8 +54,12 @@ export class CashRegisterLogsService {
         type,
         amount,
         description,
-        branchId,
-        userId,
+        branch: {
+          connect: { id: branchId }
+        },
+        user: {
+          connect: { id: userId }
+        },
       },
       include: {
         branch: true,
@@ -414,8 +418,12 @@ export class CashRegisterLogsService {
         type: CashLogType.OPENING,
         amount: initialAmount,
         description,
-        branchId,
-        userId,
+        branch: {
+          connect: { id: branchId }
+        },
+        user: {
+          connect: { id: userId }
+        },
       },
       include: {
         branch: true,
@@ -502,8 +510,12 @@ export class CashRegisterLogsService {
         type: CashLogType.CLOSING,
         amount: finalAmount,
         description: description + (differenceDescription ? ` (${differenceDescription})` : ''),
-        branchId,
-        userId,
+        branch: {
+          connect: { id: branchId }
+        },
+        user: {
+          connect: { id: userId }
+        },
       },
       include: {
         branch: true,

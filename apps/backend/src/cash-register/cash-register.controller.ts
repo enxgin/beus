@@ -14,7 +14,7 @@ import { CashRegisterService } from './cash-register.service';
 import { OpenCashDayDto } from './dto/open-cash-day.dto';
 import { CloseCashDayDto } from './dto/close-cash-day.dto';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { CashLogType } from '../prisma/prisma-types';
 
@@ -64,7 +64,7 @@ export class CashRegisterController {
   createManualIncome(@Body() dto: Omit<CreateTransactionDto, 'type'>, @Request() req) {
     const createTransactionDto = {
       ...dto,
-      type: CashLogType.MANUAL_INCOME,
+      type: CashLogType.MANUAL_IN,
     };
     return this.cashRegisterService.createTransaction(createTransactionDto, req.user.id);
   }
@@ -78,19 +78,23 @@ export class CashRegisterController {
   createManualExpense(@Body() dto: Omit<CreateTransactionDto, 'type'>, @Request() req) {
     const createTransactionDto = {
       ...dto,
-      type: CashLogType.MANUAL_EXPENSE,
+      type: CashLogType.MANUAL_OUT,
     };
     return this.cashRegisterService.createTransaction(createTransactionDto, req.user.id);
   }
 
-  @Get('day/:id')
-  @ApiOperation({ summary: 'Kasa günü detaylarını getir' })
+  @Get('day-details')
+  @ApiOperation({ summary: 'Belirli bir tarihteki kasa günü detaylarını getir' })
   @ApiResponse({
     status: 200,
     description: 'Kasa günü detayları başarıyla getirildi',
   })
-  getCashDayDetails(@Param('id', ParseUUIDPipe) id: string) {
-    return this.cashRegisterService.getCashDayDetails(id);
+  getCashDayDetails(
+    @Query('date') dateStr: string,
+    @Query('branchId') branchId: string,
+  ) {
+    const date = dateStr ? new Date(dateStr) : new Date();
+    return this.cashRegisterService.getCashDayDetails(date, branchId);
   }
 
   @Get('current')
@@ -110,18 +114,19 @@ export class CashRegisterController {
     description: 'Kasa raporları başarıyla getirildi',
   })
   getCashReports(
-    @Query('startDate') startDate: Date,
-    @Query('endDate') endDate: Date,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
     @Query('branchId') branchId?: string,
     @Query('page', new ParseIntPipe({ optional: true })) page = 1,
     @Query('limit', new ParseIntPipe({ optional: true })) limit = 10,
   ) {
-    return this.cashRegisterService.getCashReports(
+    const dto = {
       startDate,
       endDate,
       branchId,
       page,
       limit,
-    );
+    };
+    return this.cashRegisterService.getCashReports(dto);
   }
 }

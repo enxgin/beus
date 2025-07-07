@@ -6,7 +6,7 @@ export class CreateTransactionDto {
   @ApiProperty({
     description: 'İşlem tipi',
     enum: CashLogType,
-    example: CashLogType.MANUAL_INCOME,
+    example: CashLogType.MANUAL_IN,
   })
   @IsEnum(CashLogType, { message: 'Geçerli bir işlem tipi giriniz' })
   @IsNotEmpty({ message: 'İşlem tipi boş olamaz' })

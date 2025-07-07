@@ -48,8 +48,12 @@ export class CashRegisterService {
         type: CashLogType.OPENING,
         amount: openingBalance,
         description: notes ? `Günlük kasa açılışı: ${notes}` : 'Günlük kasa açılışı',
-        branchId,
-        userId,
+        branch: {
+          connect: { id: branchId }
+        },
+        user: {
+          connect: { id: userId }
+        },
       },
     });
     
@@ -148,8 +152,12 @@ export class CashRegisterService {
         type: CashLogType.CLOSING,
         amount: actualBalance,
         description: `Günlük kasa kapanışı. Beklenen: ${expectedBalance}, Fark: ${difference}`,
-        branchId,
-        userId,
+        branch: {
+          connect: { id: branchId }
+        },
+        user: {
+          connect: { id: userId }
+        },
       },
     });
 
@@ -206,8 +214,12 @@ export class CashRegisterService {
         type,
         amount,
         description,
-        branchId,
-        userId,
+        branch: {
+          connect: { id: branchId }
+        },
+        user: {
+          connect: { id: userId }
+        },
       },
     });
 
@@ -383,8 +395,12 @@ export class CashRegisterService {
           type: 'INCOME' as CashLogType, // Geçici olarak INCOME kullanıyoruz, INVOICE_PAYMENT yerine
           amount,
           description,
-          branchId,
-          userId,
+          branch: {
+            connect: { id: branchId }
+          },
+          user: {
+            connect: { id: userId }
+          },
           // referenceId ve referenceType alanlarını Prisma migrasyonu sonrası ekleyeceğiz
         },
       });
@@ -444,12 +460,7 @@ export class CashRegisterService {
       },
       include: {
         branch: true,
-        user: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
+        user: true,
       },
     });
 
@@ -472,8 +483,8 @@ export class CashRegisterService {
           branchId: log.branchId,
           openedAt: log.createdAt,
           closedAt: details.closedAt || null,
-          branch: log.branch,
-          openedByUser: log.user,
+          branch: log.branch || { id: log.branchId, name: 'Bilinmeyen Şube' },
+          openedByUser: log.user || { id: log.userId, name: 'Bilinmeyen Kullanıcı' },
           closedByUser: details.closedBy || null,
         };
       })
