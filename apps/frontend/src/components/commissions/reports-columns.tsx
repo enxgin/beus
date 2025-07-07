@@ -10,23 +10,23 @@ const statusMap: { [key: string]: { text: string; variant: "default" | "secondar
   PENDING: { text: "Beklemede", variant: "secondary" },
   APPROVED: { text: "Onaylandı", variant: "outline" },
   PAID: { text: "Ödendi", variant: "default" },
-  CANCELLED: { text: "İptal Edildi", variant: "destructive" },
+  CANCELED: { text: "İptal Edildi", variant: "destructive" },
 };
 
 export const columns: ColumnDef<Commission>[] = [
   {
-    accessorKey: "user",
+    accessorKey: "staff",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Personel" />
     ),
-    cell: ({ row }) => row.original.user.name,
+    cell: ({ row }) => row.original.staff.name,
   },
   {
-    accessorKey: "invoice.date",
+    accessorKey: "createdAt",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="İşlem Tarihi" />
     ),
-    cell: ({ row }) => new Date(row.original.invoice.date).toLocaleDateString(),
+    cell: ({ row }) => new Date(row.original.createdAt).toLocaleDateString(),
   },
   {
     accessorKey: "service",

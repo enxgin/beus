@@ -22,11 +22,28 @@ export class CommissionsController {
     @Query('status') status?: string,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
   ) {
     const filters: any = {};
     
     if (userId) filters.userId = userId;
     if (serviceId) filters.serviceId = serviceId;
+    
+    // Sayfalama parametreleri
+    if (page) {
+      filters.page = parseInt(page, 10);
+      if (isNaN(filters.page) || filters.page < 1) {
+        throw new BadRequestException('Geçersiz sayfa numarası');
+      }
+    }
+    
+    if (limit) {
+      filters.limit = parseInt(limit, 10);
+      if (isNaN(filters.limit) || filters.limit < 1 || filters.limit > 100) {
+        throw new BadRequestException('Geçersiz limit değeri (1-100 arası olmalı)');
+      }
+    }
     
     if (status && Object.values(CommissionStatus).includes(status as CommissionStatus)) {
       filters.status = status;
@@ -51,6 +68,7 @@ export class CommissionsController {
       }
     }
     
+    this.logger.log(`Prim listesi alınıyor. Filtreler: ${JSON.stringify(filters)}`);
     return this.commissionsService.findAll(filters);
   }
 

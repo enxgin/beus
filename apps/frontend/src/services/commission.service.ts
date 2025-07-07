@@ -33,11 +33,12 @@ export const getCommissionRules = async (params: { page: number; limit: number; 
 export interface Commission {
   id: string;
   amount: number;
-  status: 'PENDING' | 'APPROVED' | 'PAID' | 'CANCELLED';
+  status: 'PENDING' | 'APPROVED' | 'PAID' | 'CANCELED';
   createdAt: string;
-  user: { id: string; name: string };
+  staff: { id: string; name: string; email: string };
   service: { id: string; name: string };
-  invoice: { id: string; invoiceNumber: string; date: string };
+  invoice: { id: string; totalAmount: number; status: string };
+  appliedRule?: { id: string; type: string; value: number; description?: string };
 }
 
 export interface GetCommissionsParams {

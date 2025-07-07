@@ -241,6 +241,7 @@ export class CommissionsService {
       limit,
     };
   }
+  }
 
   // Prim detayı
   async findOne(id: string) {

@@ -28,11 +28,24 @@ export default function CommissionReportsPage() {
 
   const { page, limit, ...filters } = parsedParams.data;
 
-  const { data, isLoading, isError, error } = useQuery({
+  const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["commissions", { page, limit, ...filters }],
     queryFn: () => getCommissions({ page, limit, ...filters }),
-    keepPreviousData: true,
+    staleTime: 0, // Her zaman güncel veri almak için
+    refetchOnMount: true, // Bileşen mount olduğunda yeniden veri çek
+    refetchOnWindowFocus: true, // Pencere odaklandığında yeniden veri çek
   });
+  
+  // Sayfa yüklendiğinde verileri yeniden çek
+  React.useEffect(() => {
+    console.log('Prim raporları sayfası yüklendi, veriler yenileniyor...');
+    refetch();
+  }, [refetch]);
+  
+  // Filtrelerde değişiklik olduğunda loglama yap
+  React.useEffect(() => {
+    console.log('Prim raporları filtreleri değişti:', { page, limit, ...filters });
+  }, [page, limit, filters]);
 
   if (isLoading) {
     return <div>Yükleniyor...</div>;
