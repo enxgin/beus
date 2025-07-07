@@ -12,6 +12,12 @@ import {
   Prisma,
 } from '@prisma/client';
 
+// Uygulama içinde kullanılacak ek enum'lar
+export enum CashDayStatus {
+  OPEN = 'OPEN',
+  CLOSED = 'CLOSED'
+}
+
 // Re-export enums and types for centralized access throughout the application.
 export {
   User,

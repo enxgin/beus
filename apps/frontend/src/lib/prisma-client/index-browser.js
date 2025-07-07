@@ -193,17 +193,17 @@ exports.Prisma.ServiceCategoryScalarFieldEnum = {
 exports.Prisma.ServiceScalarFieldEnum = {
   id: 'id',
   name: 'name',
-  description: 'description',
   duration: 'duration',
   price: 'price',
-  isActive: 'isActive',
-  unitCount: 'unitCount',
-  commissionFixed: 'commissionFixed',
-  commissionRate: 'commissionRate',
   categoryId: 'categoryId',
   branchId: 'branchId',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  isActive: 'isActive',
+  updatedAt: 'updatedAt',
+  commissionFixed: 'commissionFixed',
+  commissionRate: 'commissionRate',
+  description: 'description',
+  unitCount: 'unitCount'
 };
 
 exports.Prisma.StaffServiceScalarFieldEnum = {
@@ -238,10 +238,10 @@ exports.Prisma.CustomerPackageScalarFieldEnum = {
   purchaseDate: 'purchaseDate',
   expiryDate: 'expiryDate',
   remainingSessions: 'remainingSessions',
-  salesCode: 'salesCode',
-  notes: 'notes',
   customerId: 'customerId',
-  packageId: 'packageId'
+  packageId: 'packageId',
+  notes: 'notes',
+  salesCode: 'salesCode'
 };
 
 exports.Prisma.PackageUsageHistoryScalarFieldEnum = {
@@ -255,17 +255,17 @@ exports.Prisma.AppointmentScalarFieldEnum = {
   id: 'id',
   startTime: 'startTime',
   endTime: 'endTime',
-  duration: 'duration',
   status: 'status',
   notes: 'notes',
   customerId: 'customerId',
   staffId: 'staffId',
   branchId: 'branchId',
   serviceId: 'serviceId',
-  customerPackageId: 'customerPackageId',
-  packageServiceId: 'packageServiceId',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  duration: 'duration',
+  customerPackageId: 'customerPackageId',
+  packageServiceId: 'packageServiceId'
 };
 
 exports.Prisma.InvoiceScalarFieldEnum = {
@@ -305,13 +305,13 @@ exports.Prisma.CommissionRuleScalarFieldEnum = {
 exports.Prisma.StaffCommissionScalarFieldEnum = {
   id: 'id',
   amount: 'amount',
-  status: 'status',
   isReversed: 'isReversed',
-  appliedRuleId: 'appliedRuleId',
   staffId: 'staffId',
-  serviceId: 'serviceId',
   invoiceId: 'invoiceId',
   createdAt: 'createdAt',
+  appliedRuleId: 'appliedRuleId',
+  serviceId: 'serviceId',
+  status: 'status',
   updatedAt: 'updatedAt'
 };
 
@@ -364,13 +364,13 @@ exports.PackageType = exports.$Enums.PackageType = {
 };
 
 exports.AppointmentStatus = exports.$Enums.AppointmentStatus = {
-  SCHEDULED: 'SCHEDULED',
-  ARRIVED: 'ARRIVED',
-  CANCELED: 'CANCELED',
   CONFIRMED: 'CONFIRMED',
   COMPLETED: 'COMPLETED',
   CANCELLED: 'CANCELLED',
-  NO_SHOW: 'NO_SHOW'
+  NO_SHOW: 'NO_SHOW',
+  SCHEDULED: 'SCHEDULED',
+  ARRIVED: 'ARRIVED',
+  CANCELED: 'CANCELED'
 };
 
 exports.PaymentStatus = exports.$Enums.PaymentStatus = {
