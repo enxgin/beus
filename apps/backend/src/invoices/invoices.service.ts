@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger, forwardRef, Inject } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { UpdateInvoiceDto } from './dto/update-invoice.dto';
@@ -16,6 +16,7 @@ export class InvoicesService {
   constructor(
     private prisma: PrismaService,
     private cashRegisterLogsService: CashRegisterLogsService,
+    @Inject(forwardRef(() => CommissionsService))
     private commissionsService: CommissionsService
   ) {}
 

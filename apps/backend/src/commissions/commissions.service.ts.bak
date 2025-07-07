@@ -1,4 +1,4 @@
-import { Injectable, Logger, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException, NotFoundException, forwardRef, Inject } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CommissionStatus, CommissionType } from '../prisma/prisma-types';
 import { UpdateCommissionStatusDto } from './dto/update-commission-status.dto';
@@ -240,7 +240,6 @@ export class CommissionsService {
       page,
       limit,
     };
-  }
   }
 
   // Prim detayı
