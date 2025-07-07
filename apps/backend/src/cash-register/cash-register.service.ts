@@ -99,7 +99,7 @@ export class CashRegisterService {
     return this.prisma.cashRegisterLog.create({
       data: {
         branchId,
-        userId,
+        userId, // Bu userId DTO'dan değil, guard'dan gelen auth user'dan alınır.
         type,
         amount,
         description,
@@ -141,15 +141,15 @@ export class CashRegisterService {
     const openingLog = transactions.find((t) => t.type === CashLogType.OPENING);
     const closingLog = transactions.find((t) => t.type === CashLogType.CLOSING);
 
-    const incomeTypes = [CashLogType.INCOME, CashLogType.MANUAL_IN, CashLogType.INVOICE_PAYMENT];
-    const outcomeTypes = [CashLogType.OUTCOME, CashLogType.MANUAL_OUT];
+    const incomeTypes = [CashLogType.INCOME, CashLogType.MANUAL_IN, CashLogType.INVOICE_PAYMENT] as const;
+    const outcomeTypes = [CashLogType.OUTCOME, CashLogType.MANUAL_OUT] as const;
 
     const dailyIncome = transactions
-      .filter(t => incomeTypes.includes(t.type))
+      .filter(t => incomeTypes.includes(t.type as typeof incomeTypes[number]))
       .reduce((sum, t) => sum + t.amount, 0);
 
     const dailyOutcome = transactions
-      .filter(t => outcomeTypes.includes(t.type))
+      .filter(t => outcomeTypes.includes(t.type as typeof outcomeTypes[number]))
       .reduce((sum, t) => sum + t.amount, 0);
     
     const openingBalance = openingLog?.amount || 0;
@@ -162,7 +162,6 @@ export class CashRegisterService {
       dailyOutcome,
       netChange: dailyIncome - dailyOutcome,
       transactions,
-      // Eski getCashReports metodunun kullandığı bazı alanları koruyalım
       actualBalance: closingLog ? closingLog.amount : null,
       closedAt: closingLog ? closingLog.createdAt : null,
       closedBy: closingLog ? (closingLog as any).User : null,
@@ -177,18 +176,15 @@ export class CashRegisterService {
 
   async createInvoicePaymentTransaction(invoiceId: string, amount: number, branchId: string, userId: string) {
     const description = `Fatura ödemesi #${invoiceId}`;
-    return this.createTransaction(
-      {
-        branchId,
-        userId,
-        type: CashLogType.INCOME,
-        amount,
-        description,
-        referenceId: invoiceId,
-        referenceType: 'INVOICE',
-      },
-      userId
-    );
+    const transactionDto: CreateTransactionDto = {
+      branchId,
+      type: CashLogType.INVOICE_PAYMENT,
+      amount,
+      description,
+      referenceId: invoiceId,
+      referenceType: 'INVOICE',
+    };
+    return this.createTransaction(transactionDto, userId);
   }
 
   async getCashReports(getCashReportsDto: GetCashReportsDto) {

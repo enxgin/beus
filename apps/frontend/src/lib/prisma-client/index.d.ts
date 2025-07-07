@@ -24643,6 +24643,8 @@ export namespace Prisma {
     branchId: string | null
     userId: string | null
     createdAt: Date | null
+    referenceId: string | null
+    referenceType: string | null
   }
 
   export type CashRegisterLogMaxAggregateOutputType = {
@@ -24653,6 +24655,8 @@ export namespace Prisma {
     branchId: string | null
     userId: string | null
     createdAt: Date | null
+    referenceId: string | null
+    referenceType: string | null
   }
 
   export type CashRegisterLogCountAggregateOutputType = {
@@ -24663,6 +24667,8 @@ export namespace Prisma {
     branchId: number
     userId: number
     createdAt: number
+    referenceId: number
+    referenceType: number
     _all: number
   }
 
@@ -24683,6 +24689,8 @@ export namespace Prisma {
     branchId?: true
     userId?: true
     createdAt?: true
+    referenceId?: true
+    referenceType?: true
   }
 
   export type CashRegisterLogMaxAggregateInputType = {
@@ -24693,6 +24701,8 @@ export namespace Prisma {
     branchId?: true
     userId?: true
     createdAt?: true
+    referenceId?: true
+    referenceType?: true
   }
 
   export type CashRegisterLogCountAggregateInputType = {
@@ -24703,6 +24713,8 @@ export namespace Prisma {
     branchId?: true
     userId?: true
     createdAt?: true
+    referenceId?: true
+    referenceType?: true
     _all?: true
   }
 
@@ -24800,6 +24812,8 @@ export namespace Prisma {
     branchId: string
     userId: string
     createdAt: Date
+    referenceId: string | null
+    referenceType: string | null
     _count: CashRegisterLogCountAggregateOutputType | null
     _avg: CashRegisterLogAvgAggregateOutputType | null
     _sum: CashRegisterLogSumAggregateOutputType | null
@@ -24829,6 +24843,8 @@ export namespace Prisma {
     branchId?: boolean
     userId?: boolean
     createdAt?: boolean
+    referenceId?: boolean
+    referenceType?: boolean
     Branch?: boolean | BranchDefaultArgs<ExtArgs>
     User?: boolean | UserDefaultArgs<ExtArgs>
     payments?: boolean | CashRegisterLog$paymentsArgs<ExtArgs>
@@ -24843,6 +24859,8 @@ export namespace Prisma {
     branchId?: boolean
     userId?: boolean
     createdAt?: boolean
+    referenceId?: boolean
+    referenceType?: boolean
     Branch?: boolean | BranchDefaultArgs<ExtArgs>
     User?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["cashRegisterLog"]>
@@ -24855,6 +24873,8 @@ export namespace Prisma {
     branchId?: boolean
     userId?: boolean
     createdAt?: boolean
+    referenceId?: boolean
+    referenceType?: boolean
     Branch?: boolean | BranchDefaultArgs<ExtArgs>
     User?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["cashRegisterLog"]>
@@ -24867,9 +24887,11 @@ export namespace Prisma {
     branchId?: boolean
     userId?: boolean
     createdAt?: boolean
+    referenceId?: boolean
+    referenceType?: boolean
   }
 
-  export type CashRegisterLogOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "type" | "amount" | "description" | "branchId" | "userId" | "createdAt", ExtArgs["result"]["cashRegisterLog"]>
+  export type CashRegisterLogOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "type" | "amount" | "description" | "branchId" | "userId" | "createdAt" | "referenceId" | "referenceType", ExtArgs["result"]["cashRegisterLog"]>
   export type CashRegisterLogInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     Branch?: boolean | BranchDefaultArgs<ExtArgs>
     User?: boolean | UserDefaultArgs<ExtArgs>
@@ -24900,6 +24922,8 @@ export namespace Prisma {
       branchId: string
       userId: string
       createdAt: Date
+      referenceId: string | null
+      referenceType: string | null
     }, ExtArgs["result"]["cashRegisterLog"]>
     composites: {}
   }
@@ -25333,6 +25357,8 @@ export namespace Prisma {
     readonly branchId: FieldRef<"CashRegisterLog", 'String'>
     readonly userId: FieldRef<"CashRegisterLog", 'String'>
     readonly createdAt: FieldRef<"CashRegisterLog", 'DateTime'>
+    readonly referenceId: FieldRef<"CashRegisterLog", 'String'>
+    readonly referenceType: FieldRef<"CashRegisterLog", 'String'>
   }
     
 
@@ -26041,7 +26067,9 @@ export namespace Prisma {
     description: 'description',
     branchId: 'branchId',
     userId: 'userId',
-    createdAt: 'createdAt'
+    createdAt: 'createdAt',
+    referenceId: 'referenceId',
+    referenceType: 'referenceType'
   };
 
   export type CashRegisterLogScalarFieldEnum = (typeof CashRegisterLogScalarFieldEnum)[keyof typeof CashRegisterLogScalarFieldEnum]
@@ -27723,6 +27751,8 @@ export namespace Prisma {
     branchId?: StringFilter<"CashRegisterLog"> | string
     userId?: StringFilter<"CashRegisterLog"> | string
     createdAt?: DateTimeFilter<"CashRegisterLog"> | Date | string
+    referenceId?: StringNullableFilter<"CashRegisterLog"> | string | null
+    referenceType?: StringNullableFilter<"CashRegisterLog"> | string | null
     Branch?: XOR<BranchScalarRelationFilter, BranchWhereInput>
     User?: XOR<UserScalarRelationFilter, UserWhereInput>
     payments?: PaymentListRelationFilter
@@ -27736,6 +27766,8 @@ export namespace Prisma {
     branchId?: SortOrder
     userId?: SortOrder
     createdAt?: SortOrder
+    referenceId?: SortOrderInput | SortOrder
+    referenceType?: SortOrderInput | SortOrder
     Branch?: BranchOrderByWithRelationInput
     User?: UserOrderByWithRelationInput
     payments?: PaymentOrderByRelationAggregateInput
@@ -27752,6 +27784,8 @@ export namespace Prisma {
     branchId?: StringFilter<"CashRegisterLog"> | string
     userId?: StringFilter<"CashRegisterLog"> | string
     createdAt?: DateTimeFilter<"CashRegisterLog"> | Date | string
+    referenceId?: StringNullableFilter<"CashRegisterLog"> | string | null
+    referenceType?: StringNullableFilter<"CashRegisterLog"> | string | null
     Branch?: XOR<BranchScalarRelationFilter, BranchWhereInput>
     User?: XOR<UserScalarRelationFilter, UserWhereInput>
     payments?: PaymentListRelationFilter
@@ -27765,6 +27799,8 @@ export namespace Prisma {
     branchId?: SortOrder
     userId?: SortOrder
     createdAt?: SortOrder
+    referenceId?: SortOrderInput | SortOrder
+    referenceType?: SortOrderInput | SortOrder
     _count?: CashRegisterLogCountOrderByAggregateInput
     _avg?: CashRegisterLogAvgOrderByAggregateInput
     _max?: CashRegisterLogMaxOrderByAggregateInput
@@ -27783,6 +27819,8 @@ export namespace Prisma {
     branchId?: StringWithAggregatesFilter<"CashRegisterLog"> | string
     userId?: StringWithAggregatesFilter<"CashRegisterLog"> | string
     createdAt?: DateTimeWithAggregatesFilter<"CashRegisterLog"> | Date | string
+    referenceId?: StringNullableWithAggregatesFilter<"CashRegisterLog"> | string | null
+    referenceType?: StringNullableWithAggregatesFilter<"CashRegisterLog"> | string | null
   }
 
   export type UserCreateInput = {
@@ -29267,6 +29305,8 @@ export namespace Prisma {
     amount: number
     description?: string | null
     createdAt?: Date | string
+    referenceId?: string | null
+    referenceType?: string | null
     Branch: BranchCreateNestedOneWithoutCashRegisterLogInput
     User: UserCreateNestedOneWithoutCashRegisterLogInput
     payments?: PaymentCreateNestedManyWithoutCashRegisterLogInput
@@ -29280,6 +29320,8 @@ export namespace Prisma {
     branchId: string
     userId: string
     createdAt?: Date | string
+    referenceId?: string | null
+    referenceType?: string | null
     payments?: PaymentUncheckedCreateNestedManyWithoutCashRegisterLogInput
   }
 
@@ -29289,6 +29331,8 @@ export namespace Prisma {
     amount?: FloatFieldUpdateOperationsInput | number
     description?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    referenceId?: NullableStringFieldUpdateOperationsInput | string | null
+    referenceType?: NullableStringFieldUpdateOperationsInput | string | null
     Branch?: BranchUpdateOneRequiredWithoutCashRegisterLogNestedInput
     User?: UserUpdateOneRequiredWithoutCashRegisterLogNestedInput
     payments?: PaymentUpdateManyWithoutCashRegisterLogNestedInput
@@ -29302,6 +29346,8 @@ export namespace Prisma {
     branchId?: StringFieldUpdateOperationsInput | string
     userId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    referenceId?: NullableStringFieldUpdateOperationsInput | string | null
+    referenceType?: NullableStringFieldUpdateOperationsInput | string | null
     payments?: PaymentUncheckedUpdateManyWithoutCashRegisterLogNestedInput
   }
 
@@ -29313,6 +29359,8 @@ export namespace Prisma {
     branchId: string
     userId: string
     createdAt?: Date | string
+    referenceId?: string | null
+    referenceType?: string | null
   }
 
   export type CashRegisterLogUpdateManyMutationInput = {
@@ -29321,6 +29369,8 @@ export namespace Prisma {
     amount?: FloatFieldUpdateOperationsInput | number
     description?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    referenceId?: NullableStringFieldUpdateOperationsInput | string | null
+    referenceType?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type CashRegisterLogUncheckedUpdateManyInput = {
@@ -29331,6 +29381,8 @@ export namespace Prisma {
     branchId?: StringFieldUpdateOperationsInput | string
     userId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    referenceId?: NullableStringFieldUpdateOperationsInput | string | null
+    referenceType?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type StringFilter<$PrismaModel = never> = {
@@ -30721,6 +30773,8 @@ export namespace Prisma {
     branchId?: SortOrder
     userId?: SortOrder
     createdAt?: SortOrder
+    referenceId?: SortOrder
+    referenceType?: SortOrder
   }
 
   export type CashRegisterLogAvgOrderByAggregateInput = {
@@ -30735,6 +30789,8 @@ export namespace Prisma {
     branchId?: SortOrder
     userId?: SortOrder
     createdAt?: SortOrder
+    referenceId?: SortOrder
+    referenceType?: SortOrder
   }
 
   export type CashRegisterLogMinOrderByAggregateInput = {
@@ -30745,6 +30801,8 @@ export namespace Prisma {
     branchId?: SortOrder
     userId?: SortOrder
     createdAt?: SortOrder
+    referenceId?: SortOrder
+    referenceType?: SortOrder
   }
 
   export type CashRegisterLogSumOrderByAggregateInput = {
@@ -33324,6 +33382,8 @@ export namespace Prisma {
     amount: number
     description?: string | null
     createdAt?: Date | string
+    referenceId?: string | null
+    referenceType?: string | null
     Branch: BranchCreateNestedOneWithoutCashRegisterLogInput
     payments?: PaymentCreateNestedManyWithoutCashRegisterLogInput
   }
@@ -33335,6 +33395,8 @@ export namespace Prisma {
     description?: string | null
     branchId: string
     createdAt?: Date | string
+    referenceId?: string | null
+    referenceType?: string | null
     payments?: PaymentUncheckedCreateNestedManyWithoutCashRegisterLogInput
   }
 
@@ -33574,6 +33636,8 @@ export namespace Prisma {
     branchId?: StringFilter<"CashRegisterLog"> | string
     userId?: StringFilter<"CashRegisterLog"> | string
     createdAt?: DateTimeFilter<"CashRegisterLog"> | Date | string
+    referenceId?: StringNullableFilter<"CashRegisterLog"> | string | null
+    referenceType?: StringNullableFilter<"CashRegisterLog"> | string | null
   }
 
   export type CommissionRuleUpsertWithWhereUniqueWithoutUserInput = {
@@ -34068,6 +34132,8 @@ export namespace Prisma {
     amount: number
     description?: string | null
     createdAt?: Date | string
+    referenceId?: string | null
+    referenceType?: string | null
     User: UserCreateNestedOneWithoutCashRegisterLogInput
     payments?: PaymentCreateNestedManyWithoutCashRegisterLogInput
   }
@@ -34079,6 +34145,8 @@ export namespace Prisma {
     description?: string | null
     userId: string
     createdAt?: Date | string
+    referenceId?: string | null
+    referenceType?: string | null
     payments?: PaymentUncheckedCreateNestedManyWithoutCashRegisterLogInput
   }
 
@@ -37607,6 +37675,8 @@ export namespace Prisma {
     amount: number
     description?: string | null
     createdAt?: Date | string
+    referenceId?: string | null
+    referenceType?: string | null
     Branch: BranchCreateNestedOneWithoutCashRegisterLogInput
     User: UserCreateNestedOneWithoutCashRegisterLogInput
   }
@@ -37619,6 +37689,8 @@ export namespace Prisma {
     branchId: string
     userId: string
     createdAt?: Date | string
+    referenceId?: string | null
+    referenceType?: string | null
   }
 
   export type CashRegisterLogCreateOrConnectWithoutPaymentsInput = {
@@ -37676,6 +37748,8 @@ export namespace Prisma {
     amount?: FloatFieldUpdateOperationsInput | number
     description?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    referenceId?: NullableStringFieldUpdateOperationsInput | string | null
+    referenceType?: NullableStringFieldUpdateOperationsInput | string | null
     Branch?: BranchUpdateOneRequiredWithoutCashRegisterLogNestedInput
     User?: UserUpdateOneRequiredWithoutCashRegisterLogNestedInput
   }
@@ -37688,6 +37762,8 @@ export namespace Prisma {
     branchId?: StringFieldUpdateOperationsInput | string
     userId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    referenceId?: NullableStringFieldUpdateOperationsInput | string | null
+    referenceType?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type InvoiceUpsertWithoutPaymentsInput = {
@@ -38508,6 +38584,8 @@ export namespace Prisma {
     description?: string | null
     branchId: string
     createdAt?: Date | string
+    referenceId?: string | null
+    referenceType?: string | null
   }
 
   export type CommissionRuleCreateManyUserInput = {
@@ -38606,6 +38684,8 @@ export namespace Prisma {
     amount?: FloatFieldUpdateOperationsInput | number
     description?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    referenceId?: NullableStringFieldUpdateOperationsInput | string | null
+    referenceType?: NullableStringFieldUpdateOperationsInput | string | null
     Branch?: BranchUpdateOneRequiredWithoutCashRegisterLogNestedInput
     payments?: PaymentUpdateManyWithoutCashRegisterLogNestedInput
   }
@@ -38617,6 +38697,8 @@ export namespace Prisma {
     description?: NullableStringFieldUpdateOperationsInput | string | null
     branchId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    referenceId?: NullableStringFieldUpdateOperationsInput | string | null
+    referenceType?: NullableStringFieldUpdateOperationsInput | string | null
     payments?: PaymentUncheckedUpdateManyWithoutCashRegisterLogNestedInput
   }
 
@@ -38627,6 +38709,8 @@ export namespace Prisma {
     description?: NullableStringFieldUpdateOperationsInput | string | null
     branchId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    referenceId?: NullableStringFieldUpdateOperationsInput | string | null
+    referenceType?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type CommissionRuleUpdateWithoutUserInput = {
@@ -38778,6 +38862,8 @@ export namespace Prisma {
     description?: string | null
     userId: string
     createdAt?: Date | string
+    referenceId?: string | null
+    referenceType?: string | null
   }
 
   export type CustomerCreateManyBranchInput = {
@@ -38972,6 +39058,8 @@ export namespace Prisma {
     amount?: FloatFieldUpdateOperationsInput | number
     description?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    referenceId?: NullableStringFieldUpdateOperationsInput | string | null
+    referenceType?: NullableStringFieldUpdateOperationsInput | string | null
     User?: UserUpdateOneRequiredWithoutCashRegisterLogNestedInput
     payments?: PaymentUpdateManyWithoutCashRegisterLogNestedInput
   }
@@ -38983,6 +39071,8 @@ export namespace Prisma {
     description?: NullableStringFieldUpdateOperationsInput | string | null
     userId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    referenceId?: NullableStringFieldUpdateOperationsInput | string | null
+    referenceType?: NullableStringFieldUpdateOperationsInput | string | null
     payments?: PaymentUncheckedUpdateManyWithoutCashRegisterLogNestedInput
   }
 
@@ -38993,6 +39083,8 @@ export namespace Prisma {
     description?: NullableStringFieldUpdateOperationsInput | string | null
     userId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    referenceId?: NullableStringFieldUpdateOperationsInput | string | null
+    referenceType?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type CustomerUpdateWithoutBranchInput = {

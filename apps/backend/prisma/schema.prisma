@@ -303,8 +303,9 @@ model CashRegisterLog {
   referenceId   String? // Fatura, randevu vb. referans ID'si
   referenceType String? // 'INVOICE', 'APPOINTMENT' vb.
 
-  Branch Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  User   User   @relation(fields: [userId], references: [id])
+  Branch   Branch    @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  User     User      @relation(fields: [userId], references: [id])
+  payments Payment[] // Bu satır geri eklendi
 
   @@index([branchId, createdAt])
   @@index([referenceId, referenceType])

@@ -322,7 +322,9 @@ exports.Prisma.CashRegisterLogScalarFieldEnum = {
   description: 'description',
   branchId: 'branchId',
   userId: 'userId',
-  createdAt: 'createdAt'
+  createdAt: 'createdAt',
+  referenceId: 'referenceId',
+  referenceType: 'referenceType'
 };
 
 exports.Prisma.SortOrder = {
