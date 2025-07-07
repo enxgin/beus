@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsISO8601, IsNumberString, IsOptional, IsString, IsUUID } from 'class-validator';
+import { IsEnum, IsISO8601, IsNumberString, IsOptional, IsString, IsUUID, IsInt, Min } from 'class-validator';
+import { Type } from 'class-transformer';
 import { CashLogType } from '../../prisma/prisma-types';
 
 export class FindCashRegisterLogsDto {
@@ -55,18 +56,29 @@ export class FindCashRegisterLogsDto {
     example: '0', 
     required: false 
   })
-  @IsNumberString({}, { message: 'Skip değeri bir sayı olmalıdır' })
-  @IsOptional()
-  skip?: string;
-
-  @ApiProperty({ 
-    description: 'Alınacak kayıt sayısı (sayfalama için)', 
-    example: '10', 
-    required: false 
+  @ApiProperty({
+    description: 'Sayfa numarası',
+    example: 1,
+    required: false,
+    default: 1,
   })
-  @IsNumberString({}, { message: 'Take değeri bir sayı olmalıdır' })
+  @IsInt()
+  @Type(() => Number)
+  @Min(1)
   @IsOptional()
-  take?: string;
+  page?: number;
+
+  @ApiProperty({
+    description: 'Sayfa başına kayıt sayısı',
+    example: 10,
+    required: false,
+    default: 10,
+  })
+  @IsInt()
+  @Type(() => Number)
+  @Min(1)
+  @IsOptional()
+  limit?: number;
 
   @ApiProperty({ 
     description: 'Sıralama (JSON formatında)', 

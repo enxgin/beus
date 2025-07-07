@@ -134,7 +134,7 @@ export class CashRegisterLogsController {
     const startDateTime = startDate ? new Date(startDate) : undefined;
     const endDateTime = endDate ? new Date(endDate) : undefined;
     
-    return this.cashRegisterLogsService.calculateCashBalance(branchId, startDateTime, endDateTime);
+    return this.cashRegisterLogsService.getCashBalance(branchId);
   }
   
   @ApiOperation({ summary: 'Kasa açılış kaydı oluştur' })

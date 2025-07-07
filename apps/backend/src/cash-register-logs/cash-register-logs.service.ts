@@ -27,288 +27,122 @@ export class CashRegisterLogsService {
   async create(createCashRegisterLogDto: CreateCashRegisterLogDto) {
     const { branchId, userId, type, amount, description } = createCashRegisterLogDto;
 
-    // Şubenin var olduğunu kontrol et
-    const branch = await this.prisma.branch.findUnique({
-      where: { id: branchId },
-    });
+    const branch = await this.prisma.branch.findUnique({ where: { id: branchId } });
+    if (!branch) throw new NotFoundException(`Şube bulunamadı: ID ${branchId}`);
 
-    if (!branch) {
-      throw new NotFoundException(`Şube bulunamadı: ID ${branchId}`);
-    }
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundException(`Kullanıcı bulunamadı: ID ${userId}`);
 
-    // Kullanıcının var olduğunu kontrol et
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-    });
-
-    if (!user) {
-      throw new NotFoundException(`Kullanıcı bulunamadı: ID ${userId}`);
-    }
-
-    // Invoices ve Payments ile ilişkileri kontrol etme işlevleri burada yer alabilir
-    // Not: CashRegisterLog modelinde bu alanlar yoksa bu kontroller kaldırılabilir veya model güncellenebilir
-
-    // Kasa kaydını oluştur
     return this.prisma.cashRegisterLog.create({
       data: {
         type,
         amount,
         description,
-        branch: {
-          connect: { id: branchId }
-        },
-        user: {
-          connect: { id: userId }
-        },
+        Branch: { connect: { id: branchId } },
+        User: { connect: { id: userId } },
       },
       include: {
-        branch: true,
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            role: true,
-          },
-        },
+        Branch: true,
+        User: { select: { id: true, name: true, email: true, role: true } },
       },
     });
   }
 
-  async findAll(findCashRegisterLogsDto: FindCashRegisterLogsDto) {
-    const {
-      skip,
-      take,
-      branchId,
-      userId,
-      type,
-      startDate,
-      endDate,
-      orderBy,
-    } = findCashRegisterLogsDto;
+  async findAll(query: FindCashRegisterLogsDto) {
+    const { branchId, userId, startDate, endDate, type, page = 1, limit = 10 } = query;
+    const skip = (page - 1) * limit;
 
-    // Filtreleri oluştur
     const where: any = {};
-
-    if (branchId) {
-      where.branchId = branchId;
-    }
-
-    if (userId) {
-      where.userId = userId;
-    }
-
-    if (type) {
-      where.type = type;
-    }
-
-    // Tarih aralığı filtresi
+    if (branchId) where.branchId = branchId;
+    if (userId) where.userId = userId;
+    if (type) where.type = type;
     if (startDate || endDate) {
       where.createdAt = {};
-
-      if (startDate) {
-        where.createdAt.gte = new Date(startDate);
-      }
-
-      if (endDate) {
-        where.createdAt.lte = new Date(endDate);
-      }
+      if (startDate) where.createdAt.gte = new Date(startDate);
+      if (endDate) where.createdAt.lte = new Date(endDate);
     }
 
-    // Skip ve take değerlerini sayı olarak dönüştür
-    const skipNumber = skip ? parseInt(skip) : undefined;
-    const takeNumber = take ? parseInt(take) : undefined;
-
-    // Sıralama parametresi
-    let orderByObject = undefined;
-    if (orderBy) {
-      try {
-        orderByObject = JSON.parse(orderBy);
-      } catch (error) {
-        orderByObject = { createdAt: 'desc' }; // Varsayılan sıralama
-      }
-    } else {
-      orderByObject = { createdAt: 'desc' }; // Varsayılan sıralama
-    }
-
-    // Toplam kasa kaydı sayısını bul
-    const total = await this.prisma.cashRegisterLog.count({ where });
-
-    // Kasa kayıtlarını getir
-    const cashRegisterLogs = await this.prisma.cashRegisterLog.findMany({
-      skip: skipNumber,
-      take: takeNumber,
-      where,
-      orderBy: orderByObject,
-      include: {
-        branch: true,
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            role: true,
-          },
+    const [data, total] = await this.prisma.$transaction([
+      this.prisma.cashRegisterLog.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          Branch: true,
+          User: { select: { id: true, name: true, email: true, role: true } },
         },
-
-      },
-    });
+      }),
+      this.prisma.cashRegisterLog.count({ where }),
+    ]);
 
     return {
-      data: cashRegisterLogs,
+      data,
       meta: {
         total,
-        skip: skipNumber,
-        take: takeNumber,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
       },
     };
   }
 
   async findOne(id: string) {
-    const cashRegisterLog = await this.prisma.cashRegisterLog.findUnique({
+    const log = await this.prisma.cashRegisterLog.findUnique({
       where: { id },
       include: {
-        branch: true,
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            role: true,
-          },
-        },
-
+        Branch: true,
+        User: { select: { id: true, name: true, email: true, role: true } },
       },
     });
 
-    if (!cashRegisterLog) {
+    if (!log) {
       throw new NotFoundException(`Kasa kaydı bulunamadı: ID ${id}`);
     }
-
-    return cashRegisterLog;
+    return log;
   }
 
   async update(id: string, updateCashRegisterLogDto: UpdateCashRegisterLogDto) {
-    // Kasa kaydının var olduğunu kontrol et
-    const cashRegisterLog = await this.prisma.cashRegisterLog.findUnique({
-      where: { id },
-    });
-
-    if (!cashRegisterLog) {
-      throw new NotFoundException(`Kasa kaydı bulunamadı: ID ${id}`);
+    const existingLog = await this.findOne(id);
+    if (existingLog.type === CashLogType.OPENING || existingLog.type === CashLogType.CLOSING) {
+      throw new BadRequestException('Açılış ve kapanış kayıtları güncellenemez.');
     }
-
-    // Örnek kural: Belirli bir tipteki kayıtları güncellemeye izin vermeme
-    if (cashRegisterLog.type === CashLogType.OPENING || cashRegisterLog.type === CashLogType.CLOSING) {
-      throw new BadRequestException(
-        'Açılış veya kapanış kayıtları güncellenemez.',
-      );
-    }
-
-    // Şube ID güncellenirse, var olduğunu kontrol et
-    if (updateCashRegisterLogDto.branchId) {
-      const branch = await this.prisma.branch.findUnique({
-        where: { id: updateCashRegisterLogDto.branchId },
-      });
-
-      if (!branch) {
-        throw new NotFoundException(`Şube bulunamadı: ID ${updateCashRegisterLogDto.branchId}`);
-      }
-    }
-
-    // Kullanıcı ID güncellenirse, var olduğunu kontrol et
-    if (updateCashRegisterLogDto.userId) {
-      const user = await this.prisma.user.findUnique({
-        where: { id: updateCashRegisterLogDto.userId },
-      });
-
-      if (!user) {
-        throw new NotFoundException(`Kullanıcı bulunamadı: ID ${updateCashRegisterLogDto.userId}`);
-      }
-    }
-
-    // Kasa kaydını güncelle
+    
     return this.prisma.cashRegisterLog.update({
       where: { id },
       data: updateCashRegisterLogDto,
-      include: {
-        branch: true,
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            role: true,
-          },
-        },
-
-      },
     });
   }
 
   async remove(id: string) {
-    // Kasa kaydının var olduğunu kontrol et
-    const cashRegisterLog = await this.prisma.cashRegisterLog.findUnique({
-      where: { id },
-    });
-
-    if (!cashRegisterLog) {
-      throw new NotFoundException(`Kasa kaydı bulunamadı: ID ${id}`);
+    const existingLog = await this.findOne(id);
+    if (existingLog.type === CashLogType.OPENING || existingLog.type === CashLogType.CLOSING) {
+      throw new BadRequestException('Açılış ve kapanış kayıtları silinemez.');
     }
-
-    // Örnek kural: Belirli bir tipteki kayıtları silmeye izin vermeme
-    if (cashRegisterLog.type === CashLogType.OPENING || cashRegisterLog.type === CashLogType.CLOSING) {
-      throw new BadRequestException(
-        'Açılış veya kapanış kayıtları silinemez.',
-      );
-    }
-
-    // Kasa kaydını sil
-    return this.prisma.cashRegisterLog.delete({
-      where: { id },
-    });
+    return this.prisma.cashRegisterLog.delete({ where: { id } });
   }
 
-  async calculateCashBalance(branchId?: string, startDate?: Date, endDate?: Date): Promise<CashBalance> {
-    // Filtreleri oluştur
-    const where: any = {};
+  async getCashBalance(branchId: string): Promise<CashBalance> {
+    const incomeTypes: CashLogType[] = [CashLogType.INCOME, CashLogType.MANUAL_IN, CashLogType.OPENING];
+    const expenseTypes: CashLogType[] = [CashLogType.OUTCOME, CashLogType.MANUAL_OUT];
 
-    if (branchId) {
-      where.branchId = branchId;
-    }
-
-    // Tarih aralığı filtresi
-    if (startDate || endDate) {
-      where.createdAt = {};
-      
-      if (startDate) {
-        where.createdAt.gte = startDate;
-      }
-      
-      if (endDate) {
-        where.createdAt.lte = endDate;
-      }
-    }
-
-    // Tüm kasa kayıtlarını getir
-    const cashRegisterLogs = await this.prisma.cashRegisterLog.findMany({
-      where,
-      orderBy: { createdAt: 'asc' },
+    const aggregations = await this.prisma.cashRegisterLog.groupBy({
+      by: ['type'],
+      where: { branchId },
+      _sum: { amount: true },
     });
 
-    // Gelir ve giderleri hesapla
     let totalIncome = 0;
     let totalExpense = 0;
 
-    cashRegisterLogs.forEach(log => {
-      if (log.type === CashLogType.INCOME || log.type === CashLogType.MANUAL_IN) {
-        totalIncome += log.amount;
-      } else if (log.type === CashLogType.OUTCOME || log.type === CashLogType.MANUAL_OUT) {
-        totalExpense += log.amount;
+    for (const group of aggregations) {
+      if (incomeTypes.includes(group.type)) {
+        totalIncome += group._sum.amount || 0;
+      } else if (expenseTypes.includes(group.type)) {
+        totalExpense += group._sum.amount || 0;
       }
-    });
+    }
 
-    // Toplam bakiyeyi hesapla
     return {
       totalIncome,
       totalExpense,
@@ -316,85 +150,52 @@ export class CashRegisterLogsService {
     };
   }
 
-  async getDailySummary(branchId?: string, date?: Date): Promise<DailySummary> {
-    // Tarih yoksa bugünü kullan
-    const targetDate = date || new Date();
-    
-    // Günün başlangıcı (00:00:00)
-    const startOfDay = new Date(targetDate);
-    startOfDay.setHours(0, 0, 0, 0);
-    
-    // Günün sonu (23:59:59)
-    const endOfDay = new Date(targetDate);
-    endOfDay.setHours(23, 59, 59, 999);
+  async getDailySummary(branchId: string, date: Date): Promise<DailySummary> {
+    const startDate = new Date(date);
+    startDate.setHours(0, 0, 0, 0);
+    const endDate = new Date(date);
+    endDate.setHours(23, 59, 59, 999);
 
-    // Günlük açılış ve kapanış kayıtlarını bul
-    const openingLog = await this.prisma.cashRegisterLog.findFirst({
+    const transactions = await this.prisma.cashRegisterLog.findMany({
       where: {
         branchId,
-        type: CashLogType.OPENING,
-        createdAt: {
-          gte: startOfDay,
-          lte: endOfDay,
-        },
+        createdAt: { gte: startDate, lte: endDate },
+      },
+      orderBy: { createdAt: 'asc' },
+      include: {
+        Branch: true,
+        User: { select: { id: true, name: true } },
       },
     });
 
-    const closingLog = await this.prisma.cashRegisterLog.findFirst({
-      where: {
-        branchId,
-        type: CashLogType.CLOSING,
-        createdAt: {
-          gte: startOfDay,
-          lte: endOfDay,
-        },
-      },
-    });
+    const openingLog = transactions.find(t => t.type === CashLogType.OPENING);
+    const closingLog = transactions.find(t => t.type === CashLogType.CLOSING);
 
-    // Günlük işlemleri getir
-    const transactions = await this.findAll({
-      branchId,
-      startDate: startOfDay.toISOString(),
-      endDate: endOfDay.toISOString(),
-      orderBy: '{"createdAt":"asc"}',
-    });
+    const incomeTypes: CashLogType[] = [CashLogType.INCOME, CashLogType.MANUAL_IN];
+    const expenseTypes: CashLogType[] = [CashLogType.OUTCOME, CashLogType.MANUAL_OUT];
 
-    const transactionLogs = transactions.data;
+    const dailyIncome = transactions
+      .filter(t => incomeTypes.includes(t.type))
+      .reduce((sum, t) => sum + t.amount, 0);
 
-    // Günlük bakiye hesapla
-    const cashBalance = await this.calculateCashBalance(branchId, startOfDay, endOfDay);
-    
-    // Kasanın gün sonu özeti
+    const dailyExpense = transactions
+      .filter(t => expenseTypes.includes(t.type))
+      .reduce((sum, t) => sum + t.amount, 0);
+
+    const openingBalance = openingLog ? openingLog.amount : 0;
+    const calculatedClosingBalance = openingBalance + dailyIncome - dailyExpense;
+
     return {
-      date: targetDate.toISOString().split('T')[0], // YYYY-MM-DD formatı
-      openingBalance: openingLog ? openingLog.amount : 0,
-      closingBalance: closingLog ? closingLog.amount : 0,
-      dailyIncome: cashBalance.totalIncome,
-      dailyExpense: cashBalance.totalExpense,
-      transactions: transactionLogs,
+      date: startDate.toISOString().split('T')[0],
+      openingBalance,
+      closingBalance: closingLog ? closingLog.amount : calculatedClosingBalance,
+      dailyIncome,
+      dailyExpense,
+      transactions,
     };
   }
 
-  async openCashRegister(branchId: string, userId: string, initialAmount: number, description: string = 'Kasa açılışı') {
-    // Şubenin var olduğunu kontrol et
-    const branch = await this.prisma.branch.findUnique({
-      where: { id: branchId },
-    });
-
-    if (!branch) {
-      throw new NotFoundException(`Şube bulunamadı: ID ${branchId}`);
-    }
-
-    // Kullanıcının var olduğunu kontrol et
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-    });
-
-    if (!user) {
-      throw new NotFoundException(`Kullanıcı bulunamadı: ID ${userId}`);
-    }
-
-    // Bugün için kasanın zaten açılıp açılmadığını kontrol et
+  async openCashRegister(branchId: string, userId: string, openingBalance: number, description?: string) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -402,63 +203,30 @@ export class CashRegisterLogsService {
       where: {
         branchId,
         type: CashLogType.OPENING,
-        createdAt: {
-          gte: today,
-        },
+        createdAt: { gte: today },
       },
     });
 
     if (existingOpeningRecord) {
-      throw new BadRequestException(`Bu şube için kasa zaten açılmış. Kasa Kaydı ID: ${existingOpeningRecord.id}`);
+      throw new BadRequestException(`Bu şube için bugün zaten kasa açılışı yapılmış. Kasa Kaydı ID: ${existingOpeningRecord.id}`);
     }
 
-    // Kasa açılış kaydı oluştur
     return this.prisma.cashRegisterLog.create({
       data: {
         type: CashLogType.OPENING,
-        amount: initialAmount,
-        description,
-        branch: {
-          connect: { id: branchId }
-        },
-        user: {
-          connect: { id: userId }
-        },
+        amount: openingBalance,
+        description: description || 'Günlük kasa açılışı',
+        Branch: { connect: { id: branchId } },
+        User: { connect: { id: userId } },
       },
       include: {
-        branch: true,
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            role: true,
-          },
-        },
+        Branch: true,
+        User: { select: { id: true, name: true, email: true, role: true } },
       },
     });
   }
 
-  async closeCashRegister(branchId: string, userId: string, finalAmount: number, description: string = 'Kasa kapanışı') {
-    // Şubenin var olduğunu kontrol et
-    const branch = await this.prisma.branch.findUnique({
-      where: { id: branchId },
-    });
-
-    if (!branch) {
-      throw new NotFoundException(`Şube bulunamadı: ID ${branchId}`);
-    }
-
-    // Kullanıcının var olduğunu kontrol et
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-    });
-
-    if (!user) {
-      throw new NotFoundException(`Kullanıcı bulunamadı: ID ${userId}`);
-    }
-
-    // Bugün için kasanın açılıp açılmadığını kontrol et
+  async closeCashRegister(branchId: string, userId: string, finalAmount: number, description?: string) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -466,9 +234,7 @@ export class CashRegisterLogsService {
       where: {
         branchId,
         type: CashLogType.OPENING,
-        createdAt: {
-          gte: today,
-        },
+        createdAt: { gte: today },
       },
     });
 
@@ -476,14 +242,11 @@ export class CashRegisterLogsService {
       throw new BadRequestException('Bu şube için bugün kasa açılmamış, önce kasa açılış kaydı oluşturun.');
     }
 
-    // Bugün için kasa kapanış kaydının olup olmadığını kontrol et
     const existingClosingRecord = await this.prisma.cashRegisterLog.findFirst({
       where: {
         branchId,
         type: CashLogType.CLOSING,
-        createdAt: {
-          gte: today,
-        },
+        createdAt: { gte: today },
       },
     });
 
@@ -491,10 +254,8 @@ export class CashRegisterLogsService {
       throw new BadRequestException(`Bu şube için kasa zaten kapatılmış. Kasa Kaydı ID: ${existingClosingRecord.id}`);
     }
 
-    // Günlük bakiye hesapla
     const dailySummary = await this.getDailySummary(branchId, today);
     
-    // Gerçek bakiye ile teorik bakiye arasındaki farkı hesapla
     const difference = finalAmount - dailySummary.closingBalance;
     let differenceDescription = '';
     
@@ -504,33 +265,18 @@ export class CashRegisterLogsService {
         `Kasa açığı: ${Math.abs(difference)}`;
     }
 
-    // Kasa kapanış kaydı oluştur
     return this.prisma.cashRegisterLog.create({
       data: {
         type: CashLogType.CLOSING,
         amount: finalAmount,
-        description: description + (differenceDescription ? ` (${differenceDescription})` : ''),
-        branch: {
-          connect: { id: branchId }
-        },
-        user: {
-          connect: { id: userId }
-        },
+        description: (description || '') + (differenceDescription ? ` (${differenceDescription})` : ''),
+        Branch: { connect: { id: branchId } },
+        User: { connect: { id: userId } },
       },
       include: {
-        branch: true,
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            role: true,
-          },
-        },
+        Branch: true,
+        User: { select: { id: true, name: true, email: true, role: true } },
       },
     });
   }
 }
-
-
-

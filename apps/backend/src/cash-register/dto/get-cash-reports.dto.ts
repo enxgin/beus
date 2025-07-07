@@ -15,6 +15,10 @@ export class GetCashReportsDto {
   branchId?: string;
 
   @IsOptional()
+  @IsString()
+  userId?: string;
+
+  @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(1)
