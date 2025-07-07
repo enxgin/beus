@@ -8,11 +8,8 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../prisma/prisma-types';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Controller({ path: 'categories', host: '*' })
+@Controller('categories')
 export class ServiceCategoriesController {
-  // Eski endpoint'i de desteklemek için ikinci controller metodu ekliyoruz
-  @Controller({ path: 'service-categories', host: '*' })
-  static ServiceCategoriesCompatController extends ServiceCategoriesController {}
   
   constructor(private readonly serviceCategoriesService: ServiceCategoriesService) {}
 
