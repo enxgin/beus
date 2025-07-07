@@ -15,12 +15,14 @@ export interface CommissionRule {
   createdAt: string;
 }
 
-export interface PaginatedCommissionRules {
-  data: CommissionRule[];
+export interface PaginatedResponse<T> {
+  data: T[];
   total: number;
   page: number;
   limit: number;
 }
+
+export interface PaginatedCommissionRules extends PaginatedResponse<CommissionRule> {}
 
 export const getCommissionRules = async (params: { page: number; limit: number; }): Promise<PaginatedCommissionRules> => {
   const response = await api.get('/commission-rules', { params });
@@ -58,7 +60,17 @@ export const updateCommissionStatus = async ({ id, status }: { id: string; statu
 };
 
 export const createCommissionRule = async (data: CommissionRuleFormValues): Promise<CommissionRule> => {
-  const response = await api.post('/commission-rules', data);
+  let endpoint = '/commission-rules';
+  
+  if (data.isGlobal) {
+    endpoint = '/commission-rules/global';
+  } else if (data.serviceId) {
+    endpoint = '/commission-rules/service';
+  } else if (data.userId) {
+    endpoint = '/commission-rules/user';
+  }
+  
+  const response = await api.post(endpoint, data);
   return response.data;
 };
 
