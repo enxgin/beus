@@ -7,16 +7,16 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../prisma/prisma-types';
 
+/**
+ * Bu controller, eski '/service-categories' endpoint'ini desteklemek için oluşturulmuştur.
+ * Frontend'deki mevcut isteklerin çalışmaya devam etmesini sağlar.
+ */
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Controller({ path: 'categories', host: '*' })
-export class ServiceCategoriesController {
-  // Eski endpoint'i de desteklemek için ikinci controller metodu ekliyoruz
-  @Controller({ path: 'service-categories', host: '*' })
-  static ServiceCategoriesCompatController extends ServiceCategoriesController {}
-  
+@Controller('service-categories')
+export class ServiceCategoriesCompatController {
   constructor(private readonly serviceCategoriesService: ServiceCategoriesService) {}
 
-    @Post()
+  @Post()
   @Roles(UserRole.ADMIN, UserRole.SUPER_BRANCH_MANAGER, UserRole.BRANCH_MANAGER)
   create(@Body() createServiceCategoryDto: CreateServiceCategoryDto) {
     return this.serviceCategoriesService.create(createServiceCategoryDto);
@@ -36,13 +36,13 @@ export class ServiceCategoriesController {
     return this.serviceCategoriesService.findOne(id);
   }
 
-    @Patch(':id')
+  @Patch(':id')
   @Roles(UserRole.ADMIN, UserRole.SUPER_BRANCH_MANAGER, UserRole.BRANCH_MANAGER)
   update(@Param('id') id: string, @Body() updateServiceCategoryDto: UpdateServiceCategoryDto) {
     return this.serviceCategoriesService.update(id, updateServiceCategoryDto);
   }
 
-    @Delete(':id')
+  @Delete(':id')
   @Roles(UserRole.ADMIN, UserRole.SUPER_BRANCH_MANAGER, UserRole.BRANCH_MANAGER)
   remove(@Param('id') id: string) {
     return this.serviceCategoriesService.remove(id);

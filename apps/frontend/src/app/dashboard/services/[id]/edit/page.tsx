@@ -64,6 +64,10 @@ const EditServicePage = () => {
         api.get('/staff', { headers: { Authorization: `Bearer ${token}` } }).then(res => res.data),
         user?.role === UserRole.SUPERADMIN ? api.get('/branches', { headers: { Authorization: `Bearer ${token}` } }).then(res => res.data) : Promise.resolve(null)
       ]);
+      
+      // Debug: API'den dönen kategori verilerini kontrol edelim
+      console.log('API Kategori Verileri:', categories);
+      
       return { service, categories, staff, branches };
     },
     enabled: !!token && !!id,
@@ -101,15 +105,29 @@ const EditServicePage = () => {
 
   const categoryOptions = useMemo(() => {
     if (!apiData?.categories) return [];
+    
+    // Debug: Kategori filtrelerini kontrol edelim
+    console.log('Tüm Kategoriler:', apiData.categories);
+    console.log('Seçilen Şube ID:', watchedBranchId);
+    
     const filtered = apiData.categories.filter(c => c.branchId === watchedBranchId);
+    console.log('Şubeye Göre Filtrelenmiş Kategoriler:', filtered);
+    
     const selectedCategoryId = form.getValues('categoryId');
+    console.log('Seçili Kategori ID:', selectedCategoryId);
+    
     if (selectedCategoryId && !filtered.some(c => c.id === selectedCategoryId)) {
       const selectedCategory = apiData.categories.find(c => c.id === selectedCategoryId);
       if (selectedCategory) {
         filtered.unshift(selectedCategory);
+        console.log('Seçili Kategori Eklendi:', selectedCategory);
       }
     }
-    return filtered.map(c => ({ value: c.id, label: c.name }));
+    
+    const result = filtered.map(c => ({ value: c.id, label: c.name }));
+    console.log('Son Kategori Seçenekleri:', result);
+    
+    return result;
   }, [apiData?.categories, watchedBranchId, form.watch('categoryId')]);
 
   const staffOptions = useMemo(() => {
