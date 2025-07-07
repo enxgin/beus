@@ -35,11 +35,11 @@ export class CashRegisterLogsService {
 
     return this.prisma.cashRegisterLog.create({
       data: {
+        branchId,
+        userId,
         type,
         amount,
         description,
-        Branch: { connect: { id: branchId } },
-        User: { connect: { id: userId } },
       },
       include: {
         Branch: true,
@@ -213,11 +213,11 @@ export class CashRegisterLogsService {
 
     return this.prisma.cashRegisterLog.create({
       data: {
+        branchId,
+        userId,
         type: CashLogType.OPENING,
         amount: openingBalance,
         description: description || 'Günlük kasa açılışı',
-        Branch: { connect: { id: branchId } },
-        User: { connect: { id: userId } },
       },
       include: {
         Branch: true,
@@ -267,11 +267,11 @@ export class CashRegisterLogsService {
 
     return this.prisma.cashRegisterLog.create({
       data: {
+        branchId,
+        userId,
         type: CashLogType.CLOSING,
         amount: finalAmount,
         description: (description || '') + (differenceDescription ? ` (${differenceDescription})` : ''),
-        Branch: { connect: { id: branchId } },
-        User: { connect: { id: userId } },
       },
       include: {
         Branch: true,

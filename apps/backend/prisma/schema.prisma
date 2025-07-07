@@ -293,7 +293,7 @@ model StaffCommission {
 }
 
 model CashRegisterLog {
-  id          String      @id
+  id          String      @id @default(cuid())
   type        CashLogType
   amount      Float
   description String?
@@ -363,4 +363,5 @@ enum CashLogType {
   OUTCOME
   MANUAL_IN
   MANUAL_OUT
+  INVOICE_PAYMENT
 }

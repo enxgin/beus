@@ -1,20 +1,26 @@
 -- CreateEnum
-CREATE TYPE "UserRole" AS ENUM ('ADMIN', 'SUPER_BRANCH_MANAGER', 'BRANCH_MANAGER', 'RECEPTION', 'STAFF');
+CREATE TYPE "CommissionType" AS ENUM ('PERCENTAGE', 'FIXED_AMOUNT');
 
 -- CreateEnum
-CREATE TYPE "ServiceType" AS ENUM ('TIME_BASED', 'UNIT_BASED');
+CREATE TYPE "CommissionStatus" AS ENUM ('PENDING', 'APPROVED', 'PAID', 'CANCELED');
 
 -- CreateEnum
-CREATE TYPE "AppointmentStatus" AS ENUM ('SCHEDULED', 'ARRIVED', 'COMPLETED', 'NO_SHOW', 'CANCELED');
+CREATE TYPE "PackageType" AS ENUM ('SESSION', 'TIME');
 
 -- CreateEnum
-CREATE TYPE "PaymentStatus" AS ENUM ('PAID', 'UNPAID', 'PARTIALLY_PAID');
+CREATE TYPE "AppointmentStatus" AS ENUM ('CONFIRMED', 'COMPLETED', 'CANCELLED', 'NO_SHOW', 'SCHEDULED', 'ARRIVED', 'CANCELED');
+
+-- CreateEnum
+CREATE TYPE "PaymentStatus" AS ENUM ('PAID', 'UNPAID', 'PARTIALLY_PAID', 'CANCELLED', 'REFUNDED');
 
 -- CreateEnum
 CREATE TYPE "PaymentMethod" AS ENUM ('CASH', 'CREDIT_CARD', 'BANK_TRANSFER', 'CUSTOMER_CREDIT');
 
 -- CreateEnum
-CREATE TYPE "CashLogType" AS ENUM ('OPENING', 'CLOSING', 'INCOME', 'OUTCOME', 'MANUAL_IN', 'MANUAL_OUT');
+CREATE TYPE "UserRole" AS ENUM ('ADMIN', 'SUPER_BRANCH_MANAGER', 'BRANCH_MANAGER', 'RECEPTION', 'STAFF', 'CUSTOMER');
+
+-- CreateEnum
+CREATE TYPE "CashLogType" AS ENUM ('OPENING', 'CLOSING', 'INCOME', 'OUTCOME', 'MANUAL_IN', 'MANUAL_OUT', 'INVOICE_PAYMENT');
 
 -- CreateTable
 CREATE TABLE "User" (
@@ -28,6 +34,21 @@ CREATE TABLE "User" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "WorkHour" (
+    "id" TEXT NOT NULL,
+    "staffId" TEXT NOT NULL,
+    "branchId" TEXT NOT NULL,
+    "dayOfWeek" INTEGER NOT NULL,
+    "startTime" TEXT NOT NULL,
+    "endTime" TEXT NOT NULL,
+    "isOff" BOOLEAN NOT NULL DEFAULT false,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "WorkHour_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -87,6 +108,7 @@ CREATE TABLE "ServiceCategory" (
     "isActive" BOOLEAN NOT NULL DEFAULT true,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "branchId" TEXT,
 
     CONSTRAINT "ServiceCategory_pkey" PRIMARY KEY ("id")
 );
@@ -95,15 +117,27 @@ CREATE TABLE "ServiceCategory" (
 CREATE TABLE "Service" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
-    "type" "ServiceType" NOT NULL,
-    "duration" INTEGER,
+    "duration" INTEGER NOT NULL,
     "price" DOUBLE PRECISION NOT NULL,
-    "commissionRate" DOUBLE PRECISION,
-    "commissionFixed" DOUBLE PRECISION,
     "categoryId" TEXT NOT NULL,
     "branchId" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "commissionFixed" DOUBLE PRECISION,
+    "commissionRate" DOUBLE PRECISION,
+    "description" TEXT,
+    "unitCount" INTEGER,
 
     CONSTRAINT "Service_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "StaffService" (
+    "userId" TEXT NOT NULL,
+    "serviceId" TEXT NOT NULL,
+
+    CONSTRAINT "StaffService_pkey" PRIMARY KEY ("userId","serviceId")
 );
 
 -- CreateTable
@@ -114,6 +148,13 @@ CREATE TABLE "Package" (
     "validityDays" INTEGER NOT NULL,
     "commissionRate" DOUBLE PRECISION,
     "commissionFixed" DOUBLE PRECISION,
+    "branchId" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "description" TEXT,
+    "totalMinutes" INTEGER,
+    "totalSessions" INTEGER,
+    "type" "PackageType" NOT NULL DEFAULT 'SESSION',
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Package_pkey" PRIMARY KEY ("id")
 );
@@ -135,6 +176,8 @@ CREATE TABLE "CustomerPackage" (
     "remainingSessions" JSONB NOT NULL,
     "customerId" TEXT NOT NULL,
     "packageId" TEXT NOT NULL,
+    "notes" TEXT,
+    "salesCode" TEXT,
 
     CONSTRAINT "CustomerPackage_pkey" PRIMARY KEY ("id")
 );
@@ -154,7 +197,7 @@ CREATE TABLE "Appointment" (
     "id" TEXT NOT NULL,
     "startTime" TIMESTAMP(3) NOT NULL,
     "endTime" TIMESTAMP(3) NOT NULL,
-    "status" "AppointmentStatus" NOT NULL DEFAULT 'SCHEDULED',
+    "status" "AppointmentStatus" NOT NULL DEFAULT 'CONFIRMED',
     "notes" TEXT,
     "customerId" TEXT NOT NULL,
     "staffId" TEXT NOT NULL,
@@ -162,6 +205,9 @@ CREATE TABLE "Appointment" (
     "serviceId" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "duration" INTEGER,
+    "customerPackageId" TEXT,
+    "packageServiceId" TEXT,
 
     CONSTRAINT "Appointment_pkey" PRIMARY KEY ("id")
 );
@@ -195,6 +241,21 @@ CREATE TABLE "Payment" (
 );
 
 -- CreateTable
+CREATE TABLE "CommissionRule" (
+    "id" TEXT NOT NULL,
+    "type" "CommissionType" NOT NULL,
+    "value" DOUBLE PRECISION NOT NULL,
+    "description" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "isGlobal" BOOLEAN NOT NULL DEFAULT false,
+    "serviceId" TEXT,
+    "userId" TEXT,
+
+    CONSTRAINT "CommissionRule_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "StaffCommission" (
     "id" TEXT NOT NULL,
     "amount" DOUBLE PRECISION NOT NULL,
@@ -202,6 +263,10 @@ CREATE TABLE "StaffCommission" (
     "staffId" TEXT NOT NULL,
     "invoiceId" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "appliedRuleId" TEXT,
+    "serviceId" TEXT,
+    "status" "CommissionStatus" NOT NULL DEFAULT 'PENDING',
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "StaffCommission_pkey" PRIMARY KEY ("id")
 );
@@ -223,13 +288,13 @@ CREATE TABLE "CashRegisterLog" (
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "WorkHour_staffId_branchId_dayOfWeek_key" ON "WorkHour"("staffId", "branchId", "dayOfWeek");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Tag_name_key" ON "Tag"("name");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Customer_phone_key" ON "Customer"("phone");
-
--- CreateIndex
-CREATE UNIQUE INDEX "ServiceCategory_name_key" ON "ServiceCategory"("name");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "PackageUsageHistory_appointmentId_key" ON "PackageUsageHistory"("appointmentId");
@@ -238,10 +303,22 @@ CREATE UNIQUE INDEX "PackageUsageHistory_appointmentId_key" ON "PackageUsageHist
 CREATE UNIQUE INDEX "Invoice_appointmentId_key" ON "Invoice"("appointmentId");
 
 -- CreateIndex
+CREATE INDEX "CommissionRule_userId_serviceId_isGlobal_idx" ON "CommissionRule"("userId", "serviceId", "isGlobal");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "StaffCommission_invoiceId_key" ON "StaffCommission"("invoiceId");
+
+-- CreateIndex
+CREATE INDEX "StaffCommission_staffId_serviceId_status_idx" ON "StaffCommission"("staffId", "serviceId", "status");
 
 -- AddForeignKey
 ALTER TABLE "User" ADD CONSTRAINT "User_branchId_fkey" FOREIGN KEY ("branchId") REFERENCES "Branch"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "WorkHour" ADD CONSTRAINT "WorkHour_branchId_fkey" FOREIGN KEY ("branchId") REFERENCES "Branch"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "WorkHour" ADD CONSTRAINT "WorkHour_staffId_fkey" FOREIGN KEY ("staffId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Branch" ADD CONSTRAINT "Branch_parentBranchId_fkey" FOREIGN KEY ("parentBranchId") REFERENCES "Branch"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -256,10 +333,22 @@ ALTER TABLE "CustomerTag" ADD CONSTRAINT "CustomerTag_tagId_fkey" FOREIGN KEY ("
 ALTER TABLE "Customer" ADD CONSTRAINT "Customer_branchId_fkey" FOREIGN KEY ("branchId") REFERENCES "Branch"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Service" ADD CONSTRAINT "Service_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "ServiceCategory"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "ServiceCategory" ADD CONSTRAINT "ServiceCategory_branchId_fkey" FOREIGN KEY ("branchId") REFERENCES "Branch"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Service" ADD CONSTRAINT "Service_branchId_fkey" FOREIGN KEY ("branchId") REFERENCES "Branch"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Service" ADD CONSTRAINT "Service_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "ServiceCategory"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "StaffService" ADD CONSTRAINT "StaffService_serviceId_fkey" FOREIGN KEY ("serviceId") REFERENCES "Service"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "StaffService" ADD CONSTRAINT "StaffService_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Package" ADD CONSTRAINT "Package_branchId_fkey" FOREIGN KEY ("branchId") REFERENCES "Branch"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "PackageService" ADD CONSTRAINT "PackageService_packageId_fkey" FOREIGN KEY ("packageId") REFERENCES "Package"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -274,43 +363,58 @@ ALTER TABLE "CustomerPackage" ADD CONSTRAINT "CustomerPackage_customerId_fkey" F
 ALTER TABLE "CustomerPackage" ADD CONSTRAINT "CustomerPackage_packageId_fkey" FOREIGN KEY ("packageId") REFERENCES "Package"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "PackageUsageHistory" ADD CONSTRAINT "PackageUsageHistory_customerPackageId_fkey" FOREIGN KEY ("customerPackageId") REFERENCES "CustomerPackage"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "PackageUsageHistory" ADD CONSTRAINT "PackageUsageHistory_appointmentId_fkey" FOREIGN KEY ("appointmentId") REFERENCES "Appointment"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Appointment" ADD CONSTRAINT "Appointment_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "Customer"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Appointment" ADD CONSTRAINT "Appointment_staffId_fkey" FOREIGN KEY ("staffId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "PackageUsageHistory" ADD CONSTRAINT "PackageUsageHistory_customerPackageId_fkey" FOREIGN KEY ("customerPackageId") REFERENCES "CustomerPackage"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Appointment" ADD CONSTRAINT "Appointment_branchId_fkey" FOREIGN KEY ("branchId") REFERENCES "Branch"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "Appointment" ADD CONSTRAINT "Appointment_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "Customer"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Appointment" ADD CONSTRAINT "Appointment_customerPackageId_fkey" FOREIGN KEY ("customerPackageId") REFERENCES "CustomerPackage"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "Appointment" ADD CONSTRAINT "Appointment_serviceId_fkey" FOREIGN KEY ("serviceId") REFERENCES "Service"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Invoice" ADD CONSTRAINT "Invoice_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "Customer"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Invoice" ADD CONSTRAINT "Invoice_branchId_fkey" FOREIGN KEY ("branchId") REFERENCES "Branch"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "Appointment" ADD CONSTRAINT "Appointment_staffId_fkey" FOREIGN KEY ("staffId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Invoice" ADD CONSTRAINT "Invoice_appointmentId_fkey" FOREIGN KEY ("appointmentId") REFERENCES "Appointment"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Payment" ADD CONSTRAINT "Payment_invoiceId_fkey" FOREIGN KEY ("invoiceId") REFERENCES "Invoice"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "Invoice" ADD CONSTRAINT "Invoice_branchId_fkey" FOREIGN KEY ("branchId") REFERENCES "Branch"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Invoice" ADD CONSTRAINT "Invoice_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "Customer"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Payment" ADD CONSTRAINT "Payment_cashRegisterLogId_fkey" FOREIGN KEY ("cashRegisterLogId") REFERENCES "CashRegisterLog"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "StaffCommission" ADD CONSTRAINT "StaffCommission_staffId_fkey" FOREIGN KEY ("staffId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Payment" ADD CONSTRAINT "Payment_invoiceId_fkey" FOREIGN KEY ("invoiceId") REFERENCES "Invoice"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "CommissionRule" ADD CONSTRAINT "CommissionRule_serviceId_fkey" FOREIGN KEY ("serviceId") REFERENCES "Service"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "CommissionRule" ADD CONSTRAINT "CommissionRule_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "StaffCommission" ADD CONSTRAINT "StaffCommission_appliedRuleId_fkey" FOREIGN KEY ("appliedRuleId") REFERENCES "CommissionRule"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "StaffCommission" ADD CONSTRAINT "StaffCommission_invoiceId_fkey" FOREIGN KEY ("invoiceId") REFERENCES "Invoice"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "StaffCommission" ADD CONSTRAINT "StaffCommission_serviceId_fkey" FOREIGN KEY ("serviceId") REFERENCES "Service"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "StaffCommission" ADD CONSTRAINT "StaffCommission_staffId_fkey" FOREIGN KEY ("staffId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "CashRegisterLog" ADD CONSTRAINT "CashRegisterLog_branchId_fkey" FOREIGN KEY ("branchId") REFERENCES "Branch"("id") ON DELETE CASCADE ON UPDATE CASCADE;

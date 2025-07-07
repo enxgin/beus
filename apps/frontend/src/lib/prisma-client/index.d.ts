@@ -191,7 +191,8 @@ export const CashLogType: {
   INCOME: 'INCOME',
   OUTCOME: 'OUTCOME',
   MANUAL_IN: 'MANUAL_IN',
-  MANUAL_OUT: 'MANUAL_OUT'
+  MANUAL_OUT: 'MANUAL_OUT',
+  INVOICE_PAYMENT: 'INVOICE_PAYMENT'
 };
 
 export type CashLogType = (typeof CashLogType)[keyof typeof CashLogType]
@@ -29261,7 +29262,7 @@ export namespace Prisma {
   }
 
   export type CashRegisterLogCreateInput = {
-    id: string
+    id?: string
     type: $Enums.CashLogType
     amount: number
     description?: string | null
@@ -29272,7 +29273,7 @@ export namespace Prisma {
   }
 
   export type CashRegisterLogUncheckedCreateInput = {
-    id: string
+    id?: string
     type: $Enums.CashLogType
     amount: number
     description?: string | null
@@ -29305,7 +29306,7 @@ export namespace Prisma {
   }
 
   export type CashRegisterLogCreateManyInput = {
-    id: string
+    id?: string
     type: $Enums.CashLogType
     amount: number
     description?: string | null
@@ -33318,7 +33319,7 @@ export namespace Prisma {
   }
 
   export type CashRegisterLogCreateWithoutUserInput = {
-    id: string
+    id?: string
     type: $Enums.CashLogType
     amount: number
     description?: string | null
@@ -33328,7 +33329,7 @@ export namespace Prisma {
   }
 
   export type CashRegisterLogUncheckedCreateWithoutUserInput = {
-    id: string
+    id?: string
     type: $Enums.CashLogType
     amount: number
     description?: string | null
@@ -34062,7 +34063,7 @@ export namespace Prisma {
   }
 
   export type CashRegisterLogCreateWithoutBranchInput = {
-    id: string
+    id?: string
     type: $Enums.CashLogType
     amount: number
     description?: string | null
@@ -34072,7 +34073,7 @@ export namespace Prisma {
   }
 
   export type CashRegisterLogUncheckedCreateWithoutBranchInput = {
-    id: string
+    id?: string
     type: $Enums.CashLogType
     amount: number
     description?: string | null
@@ -37601,7 +37602,7 @@ export namespace Prisma {
   }
 
   export type CashRegisterLogCreateWithoutPaymentsInput = {
-    id: string
+    id?: string
     type: $Enums.CashLogType
     amount: number
     description?: string | null
@@ -37611,7 +37612,7 @@ export namespace Prisma {
   }
 
   export type CashRegisterLogUncheckedCreateWithoutPaymentsInput = {
-    id: string
+    id?: string
     type: $Enums.CashLogType
     amount: number
     description?: string | null
@@ -38501,7 +38502,7 @@ export namespace Prisma {
   }
 
   export type CashRegisterLogCreateManyUserInput = {
-    id: string
+    id?: string
     type: $Enums.CashLogType
     amount: number
     description?: string | null
@@ -38771,7 +38772,7 @@ export namespace Prisma {
   }
 
   export type CashRegisterLogCreateManyBranchInput = {
-    id: string
+    id?: string
     type: $Enums.CashLogType
     amount: number
     description?: string | null

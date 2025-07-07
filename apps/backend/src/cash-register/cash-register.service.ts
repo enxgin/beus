@@ -38,11 +38,11 @@ export class CashRegisterService {
     
     const openingLog = await this.prisma.cashRegisterLog.create({
       data: {
+        branchId,
+        userId,
         type: CashLogType.OPENING,
         amount: openingBalance,
         description: notes ? `Günlük kasa açılışı: ${notes}` : 'Günlük kasa açılışı',
-        Branch: { connect: { id: branchId } },
-        User: { connect: { id: userId } },
       },
     });
     
@@ -110,11 +110,11 @@ export class CashRegisterService {
 
     const closingLog = await this.prisma.cashRegisterLog.create({
       data: {
+        branchId,
+        userId,
         type: CashLogType.CLOSING,
         amount: actualBalance,
         description: `Günlük kasa kapanışı. Beklenen: ${expectedBalance}, Fark: ${difference}`,
-        Branch: { connect: { id: branchId } },
-        User: { connect: { id: userId } },
       },
     });
 
@@ -126,7 +126,7 @@ export class CashRegisterService {
   }
 
   async createTransaction(createTransactionDto: CreateTransactionDto, userId: string) {
-    const { branchId, type, amount, description } = createTransactionDto;
+    const { branchId, type, amount, description, referenceId, referenceType } = createTransactionDto;
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -159,11 +159,11 @@ export class CashRegisterService {
 
     const transaction = await this.prisma.cashRegisterLog.create({
       data: {
+        branchId,
+        userId,
         type,
         amount,
         description,
-        Branch: { connect: { id: branchId } },
-        User: { connect: { id: userId } },
       },
     });
 

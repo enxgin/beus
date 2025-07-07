@@ -406,7 +406,8 @@ exports.CashLogType = exports.$Enums.CashLogType = {
   INCOME: 'INCOME',
   OUTCOME: 'OUTCOME',
   MANUAL_IN: 'MANUAL_IN',
-  MANUAL_OUT: 'MANUAL_OUT'
+  MANUAL_OUT: 'MANUAL_OUT',
+  INVOICE_PAYMENT: 'INVOICE_PAYMENT'
 };
 
 exports.Prisma.ModelName = {
