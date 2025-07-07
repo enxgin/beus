@@ -78,7 +78,7 @@ export class CreateServiceDto {
   })
   @IsEnum(ServiceType, { message: 'Geçersiz hizmet türü' })
   @IsOptional()
-  type?: ServiceType;
+  serviceType?: ServiceType;
 
   @ApiProperty({
     description: 'Maksimum kapasite',
