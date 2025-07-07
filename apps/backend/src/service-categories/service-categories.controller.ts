@@ -8,7 +8,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../prisma/prisma-types';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Controller('service-categories')
+@Controller('categories')
 export class ServiceCategoriesController {
   constructor(private readonly serviceCategoriesService: ServiceCategoriesService) {}
 
