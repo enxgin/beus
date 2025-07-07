@@ -34,6 +34,8 @@ const formSchema = z.object({
   price: z.coerce.number().min(0, {
     message: 'Fiyat 0 veya daha büyük olmalıdır.',
   }),
+  type: z.string().min(1, { message: 'Hizmet türü seçimi zorunludur.' }),
+  maxCapacity: z.coerce.number().min(1, { message: 'Kapasite en az 1 olmalıdır.' }),
   categoryId: z.string().min(1, { message: 'Kategori seçimi zorunludur.' }),
   branchId: z.string().min(1, { message: 'Şube seçimi zorunludur.' }),
   staffIds: z.array(z.string()).min(1, { message: 'En az bir personel seçilmelidir.' }),
@@ -108,6 +110,8 @@ const CreateServicePage = () => {
     name: "",
     duration: 30,
     price: 100,
+    type: "STANDARD", // Varsayılan hizmet türü
+    maxCapacity: 1, // Varsayılan kapasite
     categoryId: "",
     branchId: (user?.role === UserRole.BRANCH_MANAGER && user.branch?.id) ? user.branch.id : "",
     staffIds: [] as string[],
@@ -127,15 +131,22 @@ const CreateServicePage = () => {
       name: formValues.name,
       duration: Number(formValues.duration) || 30,
       price: Number(formValues.price) || 0,
+      type: formValues.type || 'STANDARD', // Hizmet türü
+      maxCapacity: Number(formValues.maxCapacity) || 1, // Kapasite
       categoryId: String(formValues.categoryId), // ID'yi string olarak gönder
       branchId: String(formValues.branchId), // ID'yi string olarak gönder
       staffIds: formValues.staffIds.map((id: any) => String(id)), // ID array'ini string'lere dönüştür
       isActive: Boolean(formValues.isActive),
     };
     
-    // Her türlü ID'nin boş olmadığından emin ol
-    if (!serviceData.categoryId || !serviceData.branchId || !serviceData.staffIds.length) {
+    // Gerekli alanların boş olmadığından emin ol
+    if (!serviceData.categoryId || !serviceData.branchId || !serviceData.staffIds.length || !serviceData.type) {
       throw new Error("Gerekli alanlar eksik");
+    }
+    
+    // Kapasitenin en az 1 olduğundan emin ol
+    if (serviceData.maxCapacity < 1) {
+      throw new Error("Kapasite en az 1 olmalıdır");
     }
     
     return serviceData;
@@ -432,6 +443,37 @@ const CreateServicePage = () => {
                 name="price"
                 value={formValues.price}
                 onChange={handleInputChange}
+              />
+            </div>
+            
+            {/* Hizmet Türü */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Hizmet Türü*</label>
+              <Select 
+                name="type"
+                value={formValues.type} 
+                onValueChange={(value) => handleSelectChange('type', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Hizmet türü seçin" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="STANDARD">Standart</SelectItem>
+                  <SelectItem value="PREMIUM">Premium</SelectItem>
+                  <SelectItem value="VIP">VIP</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {/* Kapasite */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Kapasite*</label>
+              <Input 
+                type="number" 
+                name="maxCapacity"
+                value={formValues.maxCapacity}
+                onChange={handleInputChange}
+                min="1"
               />
             </div>
             

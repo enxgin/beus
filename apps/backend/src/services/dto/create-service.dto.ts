@@ -74,18 +74,21 @@ export class CreateServiceDto {
     description: 'Hizmet türü',
     enum: ServiceType,
     example: ServiceType.TIME_BASED,
+    required: false,
   })
   @IsEnum(ServiceType, { message: 'Geçersiz hizmet türü' })
-  @IsNotEmpty({ message: 'Hizmet türü boş olamaz' })
-  type: ServiceType;
+  @IsOptional()
+  type?: ServiceType;
 
   @ApiProperty({
     description: 'Maksimum kapasite',
     example: 1,
+    required: false,
   })
   @IsNumber({}, { message: 'Kapasite sayısal bir değer olmalıdır' })
   @Min(1, { message: 'Kapasite en az 1 olmalıdır' })
-  maxCapacity: number;
+  @IsOptional()
+  maxCapacity?: number;
 }
 
 

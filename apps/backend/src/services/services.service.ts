@@ -13,15 +13,15 @@ export class ServicesService {
   async create(createServiceDto: CreateServiceDto) {
     const { staffIds, branchId, categoryId, type, maxCapacity, ...serviceData } = createServiceDto;
 
-    if (!type || !maxCapacity) {
-      throw new BadRequestException('type and maxCapacity are required.');
-    }
+    // Varsayılan değerler atama
+    const serviceType = type || 'STANDARD';
+    const serviceMaxCapacity = maxCapacity || 1;
 
     return this.prisma.service.create({
       data: {
         ...serviceData,
-        type,
-        maxCapacity,
+        type: serviceType,
+        maxCapacity: serviceMaxCapacity,
         branch: {
           connect: { id: branchId }
         },
