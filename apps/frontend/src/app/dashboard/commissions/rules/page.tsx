@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { getCommissionRules } from "@/services/commission.service";
+import { getCommissionRules, PaginatedCommissionRules } from "@/services/commission.service";
 import { columns } from "@/components/commissions/rules-columns";
 import { RulesDataTable } from "@/components/commissions/rules-data-table";
 import { useSearchParams } from "next/navigation";
@@ -24,11 +24,17 @@ export default function CommissionRulesPage() {
   
   const { page, limit } = parsedParams.data;
 
-  const { data, isLoading, isError, error } = useQuery({
+  const { data, isLoading, isError, error, refetch } = useQuery<PaginatedCommissionRules>({
     queryKey: ["commission-rules", { page, limit }],
     queryFn: () => getCommissionRules({ page, limit }),
-    keepPreviousData: true,
+    staleTime: 0, // Her zaman güncel veri almak için
+    refetchOnMount: true, // Bileşen mount olduğunda yeniden veri çek
   });
+  
+  // Sayfa yüklendiğinde verileri yeniden çek
+  React.useEffect(() => {
+    refetch();
+  }, [refetch]);
 
   if (isLoading) {
     return <div>Yükleniyor...</div>;

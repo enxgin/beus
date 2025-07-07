@@ -28,10 +28,12 @@ export class CommissionRulesController {
   }
 
   @Get()
-  findAll(
+  async findAll(
     @Query('userId') userId?: string,
     @Query('serviceId') serviceId?: string,
     @Query('isGlobal') isGlobal?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
   ) {
     const params: any = {};
     
@@ -39,7 +41,10 @@ export class CommissionRulesController {
     if (serviceId) params.serviceId = serviceId;
     if (isGlobal === 'true') params.isGlobal = true;
     
-    return this.commissionRulesService.findAll(params);
+    const pageNumber = page ? parseInt(page, 10) : 1;
+    const limitNumber = limit ? parseInt(limit, 10) : 10;
+    
+    return this.commissionRulesService.findAll(params, pageNumber, limitNumber);
   }
 
   @Get(':id')

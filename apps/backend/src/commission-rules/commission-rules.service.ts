@@ -133,32 +133,50 @@ export class CommissionRulesService {
   }
 
   // Kural listesi
-  async findAll(params?: {
-    userId?: string;
-    serviceId?: string;
-    isGlobal?: boolean;
-  }) {
-    return this.prisma.commissionRule.findMany({
-      where: params,
-      include: {
-        service: {
-          select: {
-            id: true,
-            name: true,
+  async findAll(
+    params?: {
+      userId?: string;
+      serviceId?: string;
+      isGlobal?: boolean;
+    },
+    page: number = 1,
+    limit: number = 10
+  ) {
+    const skip = (page - 1) * limit;
+
+    const [data, total] = await Promise.all([
+      this.prisma.commissionRule.findMany({
+        where: params,
+        include: {
+          service: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
           },
         },
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
+        orderBy: {
+          createdAt: 'desc',
         },
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
+        skip,
+        take: limit,
+      }),
+      this.prisma.commissionRule.count({ where: params }),
+    ]);
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+    };
   }
 
   // Kural silme
