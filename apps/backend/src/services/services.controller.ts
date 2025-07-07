@@ -36,9 +36,10 @@ export class ServicesController {
   @ApiQuery({ name: 'categoryId', required: false, type: String })
   @ApiQuery({ name: 'search', required: false, type: String })
   @ApiQuery({ name: 'orderBy', required: false, example: '{"name":"asc"}' })
+  @ApiQuery({ name: 'ignoreBranchFilter', required: false, type: String, description: 'If true, ignores branch filtering' })
   @Get()
   async findAll(@Req() req, @Query() query: any) {
-    const { skip, take, branchId, categoryId, search, orderBy } = query;
+    const { skip, take, branchId, categoryId, search, orderBy, ignoreBranchFilter } = query;
 
     let parsedOrderBy;
     try {
@@ -57,6 +58,7 @@ export class ServicesController {
       categoryId,
       search,
       orderBy: parsedOrderBy,
+      ignoreBranchFilter,
     });
   }
 
