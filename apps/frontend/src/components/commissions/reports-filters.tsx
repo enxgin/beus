@@ -101,7 +101,7 @@ export function ReportsFilters() {
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="">Tüm Personeller</SelectItem>
+                  
                   {staffOptions?.map(option => (
                     <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
                   ))}
@@ -123,7 +123,7 @@ export function ReportsFilters() {
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="">Tüm Durumlar</SelectItem>
+
                   <SelectItem value="PENDING">Beklemede</SelectItem>
                   <SelectItem value="APPROVED">Onaylandı</SelectItem>
                   <SelectItem value="PAID">Ödendi</SelectItem>

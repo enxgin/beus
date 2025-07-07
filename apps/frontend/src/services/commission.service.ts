@@ -1,4 +1,4 @@
-import { api } from '@/lib/api';
+import api from '@/lib/api';
 import { CommissionRuleFormValues } from '@/lib/schemas/commission-rule.schema';
 
 // Define types based on backend Prisma models

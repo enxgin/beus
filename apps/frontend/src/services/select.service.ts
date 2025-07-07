@@ -1,4 +1,4 @@
-import { api } from '@/lib/api';
+import api from '@/lib/api';
 
 export interface SelectOption {
   value: string;
@@ -25,7 +25,7 @@ export const getStaffForSelect = async (): Promise<SelectOption[]> => {
 };
 
 export const getServicesForSelect = async (): Promise<SelectOption[]> => {
-  const response = await api.get('/services', { params: { limit: 1000 } });
+  const response = await api.get('/services', { params: { limit: 1000, ignoreBranchFilter: 'true' } });
   const services = response.data.data || response.data;
   return services.map((service: Service) => ({
     value: service.id,

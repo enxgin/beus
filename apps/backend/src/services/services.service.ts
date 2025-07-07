@@ -57,33 +57,36 @@ export class ServicesService {
       categoryId?: string;
       search?: string;
       orderBy?: any;
+      ignoreBranchFilter?: string;
     },
   ) {
-    const { skip, take, branchId, categoryId, search, orderBy } = params;
+    const { skip, take, branchId, categoryId, search, orderBy, ignoreBranchFilter } = params;
 
     const where: any = {
       isActive: true,
     };
 
-    // Role-based branch filtering
-    if (user.role === 'ADMIN') {
-      if (branchId) {
-        where.branchId = branchId;
-      }
-    } else if (user.role === 'SUPER_BRANCH_MANAGER') {
-      const managedBranchIds = user.branches?.map((b) => b.id) || [];
-      if (branchId && managedBranchIds.includes(branchId)) {
-        where.branchId = branchId;
+    // Role-based branch filtering is skipped if ignoreBranchFilter is true
+    if (ignoreBranchFilter !== 'true') {
+      if (user.role === 'ADMIN') {
+        if (branchId) {
+          where.branchId = branchId;
+        }
+      } else if (user.role === 'SUPER_BRANCH_MANAGER') {
+        const managedBranchIds = user.branches?.map((b) => b.id) || [];
+        if (branchId && managedBranchIds.includes(branchId)) {
+          where.branchId = branchId;
+        } else {
+          where.branchId = { in: managedBranchIds };
+        }
       } else {
-        where.branchId = { in: managedBranchIds };
-      }
-    } else {
-      // STAFF, BRANCH_MANAGER, RECEPTION
-      if (user.branchId) {
-        where.branchId = user.branchId;
-      } else {
-        // If user has no branch, they see no services.
-        return { data: [], totalCount: 0 };
+        // STAFF, BRANCH_MANAGER, RECEPTION
+        if (user.branchId) {
+          where.branchId = user.branchId;
+        } else {
+          // If user has no branch, they see no services.
+          return { data: [], totalCount: 0 };
+        }
       }
     }
 
