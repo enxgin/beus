@@ -325,7 +325,7 @@ export class InvoicesService {
   }
 
   async createPayment(invoiceId: string, createPaymentDto: CreatePaymentDto) {
-    const { amount, method, cashRegisterLogId } = createPaymentDto;
+    const { amount, method, cashRegisterLogId, note } = createPaymentDto;
 
     // Faturanın var olup olmadığını kontrol et
     const invoice = await this.prisma.invoice.findUnique({

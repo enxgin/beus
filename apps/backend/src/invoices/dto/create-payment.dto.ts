@@ -25,6 +25,15 @@ export class CreatePaymentDto {
   @IsString()
   @IsOptional()
   cashRegisterLogId?: string;
+  
+  @ApiProperty({ 
+    description: 'Ödeme notu', 
+    example: 'Ön ödeme', 
+    required: false 
+  })
+  @IsString()
+  @IsOptional()
+  note?: string;
 }
 
 
