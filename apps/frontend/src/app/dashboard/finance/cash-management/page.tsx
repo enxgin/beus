@@ -51,7 +51,7 @@ export default function CashManagementPage() {
     return <div className="text-center text-red-500">Hata: {error.message}</div>;
   }
 
-  const { status, currentBalance, dailyIncome, dailyOutcome, netChange, transactions } = data || {};
+  const { status, currentBalance, dailyIncome, dailyOutcome, netChange, transactions, openingBalance } = data || {};
 
   return (
     <>
@@ -114,7 +114,7 @@ export default function CashManagementPage() {
       {/* Main Content */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <TransactionList transactions={transactions || []} />
+          <TransactionList transactions={transactions || []} openingBalance={openingBalance || 0} />
         </div>
         <div className="space-y-6">
           {/* TODO: Ödeme Özeti Kartı Eklenecek */}
@@ -125,6 +125,7 @@ export default function CashManagementPage() {
       <OpenCashDayDialog
         isOpen={isOpeningDialogOpen}
         onClose={() => setIsOpeningDialogOpen(false)}
+        branchId={branchId}
       />
     </>
   );

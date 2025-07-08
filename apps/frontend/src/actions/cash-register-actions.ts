@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { cookies } from 'next/headers';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
 
 const openCashDaySchema = z.object({
   openingBalance: z.coerce.number().min(0),
@@ -13,12 +13,18 @@ const openCashDaySchema = z.object({
 });
 
 async function getAuthHeaders() {
-  const token = cookies().get('access_token')?.value;
+  // Next.js dinamik fonksiyon kuralına uymak için önce cookieStore'u alıyoruz.
+  const cookieStore = cookies();
+  // Hafıza kaydına göre standartlaştırılmış token ismini ('token') kullanıyoruz.
+  const token = cookieStore.get('token')?.value;
+
   if (!token) {
-    // Gerçek uygulamada burada bir hata fırlatmak veya login'e yönlendirmek daha doğru olur.
-    console.warn('Authentication token not found.');
-    return { 'Content-Type': 'application/json' };
+    // Token yoksa, isteğin başarısız olacağı kesin olduğu için hata fırlatmak en doğrusu.
+    const errorMessage = 'Authentication token not found. Please log in again.';
+    console.error(errorMessage);
+    throw new Error(errorMessage);
   }
+
   return {
     'Content-Type': 'application/json',
     'Authorization': `Bearer ${token}`,
@@ -36,14 +42,15 @@ export async function getCashDayDetails(date: string, branchId: string) {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Kasa detayları alınamadı.');
+      // Hata durumunda daha detaylı bilgi loglayalım.
+      const errorText = await response.text();
+      console.error(`Failed to get cash day details. Status: ${response.status}, Body: ${errorText}`);
+      throw new Error(`Kasa detayları alınamadı. Sunucu yanıtı: ${response.status}`);
     }
 
     return await response.json();
   } catch (error: any) {
-    console.error('Failed to get cash day details:', error);
-    // Frontend'in çökmemesi için boş bir state döndürelim
+    console.error('Exception in getCashDayDetails:', error);
     return {
       status: 'ERROR',
       currentBalance: 0,
@@ -51,7 +58,7 @@ export async function getCashDayDetails(date: string, branchId: string) {
       dailyOutcome: 0,
       netChange: 0,
       transactions: [],
-      error: error.message || 'Kasa detayları alınamadı.',
+      error: error.message || 'Bilinmeyen bir hata oluştu.',
     };
   }
 }
@@ -60,7 +67,9 @@ export async function openCashDay(values: unknown) {
   const validatedFields = openCashDaySchema.safeParse(values);
 
   if (!validatedFields.success) {
-    return { error: 'Geçersiz alanlar: ' + validatedFields.error.flatten().fieldErrors };
+    const errorMessages = validatedFields.error.flatten().fieldErrors;
+    console.error('Invalid fields for openCashDay:', errorMessages);
+    return { error: 'Geçersiz alanlar: ' + JSON.stringify(errorMessages) };
   }
 
   try {
@@ -72,15 +81,16 @@ export async function openCashDay(values: unknown) {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Kasa açılamadı.');
+      const errorText = await response.text();
+      console.error(`Failed to open cash day. Status: ${response.status}, Body: ${errorText}`);
+      throw new Error(`Kasa açılamadı. Sunucu yanıtı: ${response.status}`);
     }
 
     const result = await response.json();
     revalidatePath('/dashboard/finance/cash-management');
     return { success: 'Kasa başarıyla açıldı!', data: result };
   } catch (error: any) {
-    console.error('Failed to open cash day:', error);
+    console.error('Exception in openCashDay:', error);
     return { error: error.message };
   }
 }

@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { useEffect } from 'react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -25,13 +26,12 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-// import { openCashDay } from '@/actions/cash-register-actions'; // Bu action daha sonra oluşturulacak
+import { openCashDay } from '@/actions/cash-register-actions';
 
 const openCashDaySchema = z.object({
   openingBalance: z.coerce.number().min(0, 'Açılış bakiyesi 0 veya daha büyük olmalıdır.'),
   notes: z.string().optional(),
-  // Şimdilik branchId'yi sabit olarak alıyoruz, daha sonra dinamik hale getirilebilir.
-  branchId: z.string().default('clz1yl2o4000013j1p5itk9s5'),
+  branchId: z.string().min(1, 'Şube IDsi gereklidir.'),
 });
 
 type OpenCashDayValues = z.infer<typeof openCashDaySchema>;
@@ -39,19 +39,10 @@ type OpenCashDayValues = z.infer<typeof openCashDaySchema>;
 interface OpenCashDayDialogProps {
   isOpen: boolean;
   onClose: () => void;
+  branchId: string;
 }
 
-// Placeholder for the server action
-async function openCashDay(values: OpenCashDayValues): Promise<any> {
-  console.log('Opening cash day with:', values);
-  // Burada backend'e API çağrısı yapılacak.
-  // Örnek: const response = await fetch('/api/cash-register/open', { method: 'POST', body: JSON.stringify(values) });
-  // if (!response.ok) throw new Error('Kasa açılamadı');
-  // return response.json();
-  return new Promise(resolve => setTimeout(() => resolve({ id: 'new-cash-day-id' }), 1000));
-}
-
-export function OpenCashDayDialog({ isOpen, onClose }: OpenCashDayDialogProps) {
+export function OpenCashDayDialog({ isOpen, onClose, branchId }: OpenCashDayDialogProps) {
   const queryClient = useQueryClient();
 
   const form = useForm<OpenCashDayValues>({
@@ -59,15 +50,27 @@ export function OpenCashDayDialog({ isOpen, onClose }: OpenCashDayDialogProps) {
     defaultValues: {
       openingBalance: 0,
       notes: '',
-      branchId: 'clz1yl2o4000013j1p5itk9s5', // Varsayılan şube ID'si
+      branchId: branchId,
     },
   });
 
+  useEffect(() => {
+    form.reset({ openingBalance: 0, notes: '', branchId });
+  }, [branchId, form]);
+
   const { mutate, isPending } = useMutation({
     mutationFn: openCashDay,
-    onSuccess: () => {
+    onSuccess: (result) => {
+      if (result.error) {
+        toast.error(`Kasa açılamadı: ${result.error}`);
+        return;
+      }
+
       toast.success('Kasa başarıyla açıldı!');
-      queryClient.invalidateQueries({ queryKey: ['cash-reports'] });
+      
+      // Bu, 'cash-day-details' ile başlayan tüm sorguları geçersiz kılar ve yeniden yüklenmelerini tetikler.
+      queryClient.invalidateQueries({ queryKey: ['cash-day-details'] });
+      
       onClose();
       form.reset();
     },
@@ -114,6 +117,18 @@ export function OpenCashDayDialog({ isOpen, onClose }: OpenCashDayDialogProps) {
                     <Textarea placeholder="Açılışla ilgili notlar..." {...field} />
                   </FormControl>
                   <FormMessage />
+                </FormItem>
+              )}
+            />
+            {/* branchId is hidden but submitted with the form */}
+            <FormField
+              control={form.control}
+              name="branchId"
+              render={({ field }) => (
+                <FormItem className="hidden">
+                  <FormControl>
+                    <Input type="hidden" {...field} />
+                  </FormControl>
                 </FormItem>
               )}
             />

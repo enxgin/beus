@@ -141,6 +141,17 @@ export class CashRegisterService {
     const openingLog = transactions.find((t) => t.type === CashLogType.OPENING);
     const closingLog = transactions.find((t) => t.type === CashLogType.CLOSING);
 
+    if (!openingLog) {
+      return {
+        status: 'NOT_OPENED',
+        currentBalance: 0,
+        dailyIncome: 0,
+        dailyOutcome: 0,
+        netChange: 0,
+        transactions: [],
+      };
+    }
+
     const incomeTypes = [CashLogType.INCOME, CashLogType.MANUAL_IN, CashLogType.INVOICE_PAYMENT] as const;
     const outcomeTypes = [CashLogType.OUTCOME, CashLogType.MANUAL_OUT] as const;
 
@@ -152,16 +163,18 @@ export class CashRegisterService {
       .filter(t => outcomeTypes.includes(t.type as typeof outcomeTypes[number]))
       .reduce((sum, t) => sum + t.amount, 0);
     
-    const openingBalance = openingLog?.amount || 0;
+    const openingBalance = openingLog.amount;
     const currentBalance = openingBalance + dailyIncome - dailyOutcome;
 
     return {
-      status: closingLog ? 'CLOSED' : openingLog ? 'OPEN' : 'NOT_OPENED',
+      status: closingLog ? 'CLOSED' : 'OPEN',
       currentBalance,
       dailyIncome,
       dailyOutcome,
       netChange: dailyIncome - dailyOutcome,
       transactions,
+      // Raporlama için ek alanlar
+      openingBalance: openingLog.amount,
       actualBalance: closingLog ? closingLog.amount : null,
       closedAt: closingLog ? closingLog.createdAt : null,
       closedBy: closingLog ? (closingLog as any).User : null,
