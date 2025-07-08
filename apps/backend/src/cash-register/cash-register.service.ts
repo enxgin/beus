@@ -120,66 +120,89 @@ export class CashRegisterService {
   }
 
   async getCashDayDetails(date: Date, branchId: string) {
-    const { startOfDay, endOfDay } = this.getStartAndEndOfDay(date);
+    try {
+      this.logger.debug(`getCashDayDetails çağrıldı: tarih=${date}, branchId=${branchId}`);
+      const { startOfDay, endOfDay } = this.getStartAndEndOfDay(date);
 
-    const transactions = await this.prisma.cashRegisterLog.findMany({
-      where: {
-        branchId,
-        createdAt: {
-          gte: startOfDay,
-          lte: endOfDay,
+      // Branch kontrolü yapalım
+      const branch = await this.prisma.branch.findUnique({
+        where: { id: branchId },
+      });
+
+      if (!branch) {
+        this.logger.error(`Branch bulunamadı: ${branchId}`);
+        throw new NotFoundException(`Şube bulunamadı: ${branchId}`);
+      }
+
+      this.logger.debug(`Transactions sorgusu yapılıyor: startOfDay=${startOfDay}, endOfDay=${endOfDay}`);
+      const transactions = await this.prisma.cashRegisterLog.findMany({
+        where: {
+          branchId,
+          createdAt: {
+            gte: startOfDay,
+            lte: endOfDay,
+          },
         },
-      },
-      include: {
-        User: { select: { name: true, id: true } },
-      },
-      orderBy: {
-        createdAt: 'asc',
-      },
-    });
+        include: {
+          User: { select: { name: true, id: true } },
+        },
+        orderBy: {
+          createdAt: 'asc',
+        },
+      });
+      
+      this.logger.debug(`${transactions.length} adet işlem bulundu.`);
 
-    const openingLog = transactions.find((t) => t.type === CashLogType.OPENING);
-    const closingLog = transactions.find((t) => t.type === CashLogType.CLOSING);
+      const openingLog = transactions.find((t) => t.type === CashLogType.OPENING);
+      const closingLog = transactions.find((t) => t.type === CashLogType.CLOSING);
 
-    if (!openingLog) {
+      if (!openingLog) {
+        this.logger.debug('Kasa açılış kaydı bulunamadı.');
+        return {
+          status: 'NOT_OPENED',
+          currentBalance: 0,
+          dailyIncome: 0,
+          dailyOutcome: 0,
+          netChange: 0,
+          transactions: [],
+        };
+      }
+
+      const incomeTypes = [CashLogType.INCOME, CashLogType.MANUAL_IN, CashLogType.INVOICE_PAYMENT] as const;
+      const outcomeTypes = [CashLogType.OUTCOME, CashLogType.MANUAL_OUT] as const;
+
+      this.logger.debug('Gelir ve gider hesaplanıyor...');
+      const dailyIncome = transactions
+        .filter(t => incomeTypes.includes(t.type as typeof incomeTypes[number]))
+        .reduce((sum, t) => sum + t.amount, 0);
+
+      const dailyOutcome = transactions
+        .filter(t => outcomeTypes.includes(t.type as typeof outcomeTypes[number]))
+        .reduce((sum, t) => sum + t.amount, 0);
+      
+      const openingBalance = openingLog.amount;
+      const currentBalance = openingBalance + dailyIncome - dailyOutcome;
+
+      this.logger.debug(`Kasa durumu: Açılış bakiyesi=${openingBalance}, Gelir=${dailyIncome}, Gider=${dailyOutcome}, Güncel bakiye=${currentBalance}`);
+      
       return {
-        status: 'NOT_OPENED',
-        currentBalance: 0,
-        dailyIncome: 0,
-        dailyOutcome: 0,
-        netChange: 0,
-        transactions: [],
+        status: closingLog ? 'CLOSED' : 'OPEN',
+        currentBalance,
+        dailyIncome,
+        dailyOutcome,
+        netChange: dailyIncome - dailyOutcome,
+        transactions,
+        // Raporlama için ek alanlar
+        openingBalance: openingLog.amount,
+        actualBalance: closingLog ? closingLog.amount : null,
+        closedAt: closingLog ? closingLog.createdAt : null,
+        closedBy: closingLog ? (closingLog as any).User : null,
+        expectedBalance: currentBalance
       };
+    } catch (error) {
+      this.logger.error(`getCashDayDetails hatası: ${error.message}`, error.stack);
+      throw new BadRequestException(`Kasa günü detayları alınırken bir hata oluştu: ${error.message}`);
     }
-
-    const incomeTypes = [CashLogType.INCOME, CashLogType.MANUAL_IN, CashLogType.INVOICE_PAYMENT] as const;
-    const outcomeTypes = [CashLogType.OUTCOME, CashLogType.MANUAL_OUT] as const;
-
-    const dailyIncome = transactions
-      .filter(t => incomeTypes.includes(t.type as typeof incomeTypes[number]))
-      .reduce((sum, t) => sum + t.amount, 0);
-
-    const dailyOutcome = transactions
-      .filter(t => outcomeTypes.includes(t.type as typeof outcomeTypes[number]))
-      .reduce((sum, t) => sum + t.amount, 0);
-    
-    const openingBalance = openingLog.amount;
-    const currentBalance = openingBalance + dailyIncome - dailyOutcome;
-
-    return {
-      status: closingLog ? 'CLOSED' : 'OPEN',
-      currentBalance,
-      dailyIncome,
-      dailyOutcome,
-      netChange: dailyIncome - dailyOutcome,
-      transactions,
-      // Raporlama için ek alanlar
-      openingBalance: openingLog.amount,
-      actualBalance: closingLog ? closingLog.amount : null,
-      closedAt: closingLog ? closingLog.createdAt : null,
-      closedBy: closingLog ? (closingLog as any).User : null,
-      expectedBalance: currentBalance
-    };
   }
 
   async getCurrentCashDay(branchId: string) {

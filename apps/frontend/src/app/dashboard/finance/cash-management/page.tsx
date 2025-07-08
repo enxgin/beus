@@ -17,9 +17,10 @@ import {
   Minus, 
   Loader2 
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 import { getCashDayDetails } from '@/actions/cash-register-actions';
+import { useAuthStore } from '@/stores/auth.store';
 import { OpenCashDayDialog } from './_components/open-cash-day-dialog';
 import { QuickActions } from './_components/quick-actions';
 import { StatCard } from './_components/stat-card';
@@ -28,14 +29,24 @@ import { TransactionList } from './_components/transaction-list';
 export default function CashManagementPage() {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [isOpeningDialogOpen, setIsOpeningDialogOpen] = useState(false);
-
+  // Auth store'dan token'ı alıyoruz
+  const { token } = useAuthStore();
+  
   // TODO: branchId'yi kullanıcı session'ından al
   const branchId = 'clxyj6eax000013sq918l3vsd';
+  
+  // Token durumunu kontrol etmek için
+  useEffect(() => {
+    console.log('Auth Store Token Durumu:', token ? 'Token var' : 'Token yok');
+  }, [token]);
   const formattedDate = date ? format(date, 'yyyy-MM-dd') : '';
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ['cash-day-details', formattedDate, branchId],
-    queryFn: () => getCashDayDetails(formattedDate, branchId),
+    queryFn: async () => {
+      console.log('useQuery içinde token durumu:', token ? 'Token var' : 'Token yok');
+      return getCashDayDetails(token, formattedDate, branchId);
+    },
     enabled: !!formattedDate && !!branchId,
   });
 

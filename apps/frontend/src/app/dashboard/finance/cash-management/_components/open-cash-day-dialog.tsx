@@ -27,6 +27,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { openCashDay } from '@/actions/cash-register-actions';
+import { useAuthStore } from '@/stores/auth.store';
 
 const openCashDaySchema = z.object({
   openingBalance: z.coerce.number().min(0, 'Açılış bakiyesi 0 veya daha büyük olmalıdır.'),
@@ -44,6 +45,8 @@ interface OpenCashDayDialogProps {
 
 export function OpenCashDayDialog({ isOpen, onClose, branchId }: OpenCashDayDialogProps) {
   const queryClient = useQueryClient();
+  // Auth store'dan token'ı alıyoruz
+  const { token } = useAuthStore();
 
   const form = useForm<OpenCashDayValues>({
     resolver: zodResolver(openCashDaySchema),
@@ -59,7 +62,10 @@ export function OpenCashDayDialog({ isOpen, onClose, branchId }: OpenCashDayDial
   }, [branchId, form]);
 
   const { mutate, isPending } = useMutation({
-    mutationFn: openCashDay,
+    mutationFn: async (values: OpenCashDayValues) => {
+      console.log('useMutation içinde token durumu:', token ? 'Token var' : 'Token yok');
+      return openCashDay(token, values);
+    },
     onSuccess: (result) => {
       if (result.error) {
         toast.error(`Kasa açılamadı: ${result.error}`);

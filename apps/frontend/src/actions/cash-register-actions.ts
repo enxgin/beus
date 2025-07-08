@@ -2,25 +2,20 @@
 
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
-import { cookies } from 'next/headers';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+// API URL'sini düzeltiyoruz - global prefix'i iki kez eklememek için
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://beus.onrender.com';
 
 const openCashDaySchema = z.object({
   openingBalance: z.coerce.number().min(0),
   notes: z.string().optional(),
-  branchId: z.string(), // Bu formdan gelmeli
+  branchId: z.string(),
 });
 
-async function getAuthHeaders() {
-  // Next.js dinamik fonksiyon kuralına uymak için önce cookieStore'u alıyoruz.
-  const cookieStore = cookies();
-  // Hafıza kaydına göre standartlaştırılmış token ismini ('token') kullanıyoruz.
-  const token = cookieStore.get('token')?.value;
-
+// Token null olabilir, bu durumu daha zarif bir şekilde ele alıyoruz
+function getAuthHeaders(token: string | null | undefined) {
   if (!token) {
-    // Token yoksa, isteğin başarısız olacağı kesin olduğu için hata fırlatmak en doğrusu.
-    const errorMessage = 'Authentication token not found. Please log in again.';
+    const errorMessage = 'Authentication token was not provided. Please log in again.';
     console.error(errorMessage);
     throw new Error(errorMessage);
   }
@@ -31,18 +26,31 @@ async function getAuthHeaders() {
   };
 }
 
-export async function getCashDayDetails(date: string, branchId: string) {
+// Token istemci tarafından bir parametre olarak geçirilecek
+export async function getCashDayDetails(token: string | null | undefined, date: string, branchId: string) {
   if (!date || !branchId) return { error: 'Tarih ve şube IDsi gereklidir.' };
 
   try {
-    const headers = await getAuthHeaders();
-    const response = await fetch(`${API_URL}/cash-register/day-details?date=${date}&branchId=${branchId}`, {
+    // Token yoksa, kullanıcıya daha açıklayıcı bir hata mesajı gösteriyoruz
+    if (!token) {
+      return {
+        status: 'ERROR',
+        currentBalance: 0,
+        dailyIncome: 0,
+        dailyOutcome: 0,
+        netChange: 0,
+        transactions: [],
+        error: 'Oturum bilgisi bulunamadı. Lütfen tekrar giriş yapın.',
+      };
+    }
+
+    const headers = getAuthHeaders(token);
+    const response = await fetch(`${API_URL}/api/v1/cash-register/day-details?date=${date}&branchId=${branchId}`, {
       method: 'GET',
       headers,
     });
 
     if (!response.ok) {
-      // Hata durumunda daha detaylı bilgi loglayalım.
       const errorText = await response.text();
       console.error(`Failed to get cash day details. Status: ${response.status}, Body: ${errorText}`);
       throw new Error(`Kasa detayları alınamadı. Sunucu yanıtı: ${response.status}`);
@@ -63,7 +71,8 @@ export async function getCashDayDetails(date: string, branchId: string) {
   }
 }
 
-export async function openCashDay(values: unknown) {
+// Token istemci tarafından bir parametre olarak geçirilecek
+export async function openCashDay(token: string | null | undefined, values: unknown) {
   const validatedFields = openCashDaySchema.safeParse(values);
 
   if (!validatedFields.success) {
@@ -73,8 +82,13 @@ export async function openCashDay(values: unknown) {
   }
 
   try {
-    const headers = await getAuthHeaders();
-    const response = await fetch(`${API_URL}/cash-register/open-day`, {
+    // Token yoksa, kullanıcıya daha açıklayıcı bir hata mesajı gösteriyoruz
+    if (!token) {
+      return { error: 'Oturum bilgisi bulunamadı. Lütfen tekrar giriş yapın.' };
+    }
+
+    const headers = getAuthHeaders(token);
+    const response = await fetch(`${API_URL}/api/v1/cash-register/open-day`, {
       method: 'POST',
       headers,
       body: JSON.stringify(validatedFields.data),
