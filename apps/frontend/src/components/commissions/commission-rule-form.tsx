@@ -44,21 +44,8 @@ export function CommissionRuleForm({ initialData, onSuccess }: CommissionRuleFor
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const form = useForm<CommissionRuleFormValues>({
-    resolver: zodResolver(
-      commissionRuleSchema.superRefine((data, ctx) => {
-        const { isGlobal, serviceId, userId } = data;
-        const conditions = [isGlobal, !!serviceId, !!userId];
-        const trueCount = conditions.filter((c) => c).length;
-        if (trueCount !== 1) {
-          ctx.addIssue({
-            code: 'custom',
-            message: 'Kural sadece Genel, Hizmete özel veya Personele özel olabilir. Lütfen sadece birini seçin.',
-            path: ['isGlobal'],
-          });
-        }
-      })
-    ),
+  const form = useForm<z.input<typeof commissionRuleSchema>>({
+    resolver: zodResolver(commissionRuleSchema),
     defaultValues: initialData || {
       type: "PERCENTAGE",
       value: 0,
@@ -156,7 +143,7 @@ export function CommissionRuleForm({ initialData, onSuccess }: CommissionRuleFor
             <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
               <FormControl>
                 <Checkbox
-                  checked={field.value}
+                  checked={field.value ?? false}
                   onCheckedChange={(checked) => {
                     field.onChange(checked);
                     if(checked) {

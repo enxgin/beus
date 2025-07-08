@@ -7,7 +7,7 @@ export const commissionRuleSchema = z.object({
   type: CommissionType,
   value: z.coerce.number().min(0, 'Değer 0\'dan küçük olamaz'),
   description: z.string().optional(),
-  isGlobal: z.boolean().default(false),
+  isGlobal: z.boolean().optional(),
   serviceId: z.string().optional().nullable(),
   userId: z.string().optional().nullable(),
 });
