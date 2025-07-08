@@ -61,9 +61,9 @@ export function ExpandableRow({ row, isExpanded, onToggle }: ExpandableRowProps)
             )}
           </Button>
           <div className="flex flex-col">
-            <span className="font-medium">{customer.name}</span>
-            {customer.phone && (
-              <span className="text-xs text-muted-foreground">{customer.phone}</span>
+            <span className="font-medium">{customer.customerName}</span>
+            {customer.customerPhone && (
+              <span className="text-xs text-muted-foreground">{customer.customerPhone}</span>
             )}
             {customer.email && (
               <span className="text-xs text-muted-foreground">{customer.email}</span>
