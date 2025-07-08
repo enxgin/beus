@@ -117,12 +117,12 @@ export class CashRegisterController {
     description: 'Kasa raporları başarıyla getirildi',
   })
   getCashReports(
+    @Request() req,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
     @Query('branchId') branchId?: string,
     @Query('page', new ParseIntPipe({ optional: true })) page = 1,
     @Query('limit', new ParseIntPipe({ optional: true })) limit = 10,
-    @Request() req,
   ) {
     const dto = {
       startDate,
