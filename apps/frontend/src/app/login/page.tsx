@@ -13,7 +13,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth';
 import Image from 'next/image';
 
-// Form için validation şeması
+// Form için validation
 const loginSchema = z.object({
   email: z.string().email({ message: 'Geçerli bir e-posta adresi giriniz' }),
   password: z.string().min(6, { message: 'Şifre en az 6 karakter olmalıdır' }),
