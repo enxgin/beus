@@ -124,15 +124,7 @@ export class CashRegisterService {
       this.logger.debug(`getCashDayDetails çağrıldı: tarih=${date}, branchId=${branchId}`);
       const { startOfDay, endOfDay } = this.getStartAndEndOfDay(date);
 
-      // Branch kontrolü yapalım
-      const branch = await this.prisma.branch.findUnique({
-        where: { id: branchId },
-      });
-
-      if (!branch) {
-        this.logger.error(`Branch bulunamadı: ${branchId}`);
-        throw new NotFoundException(`Şube bulunamadı: ${branchId}`);
-      }
+      // Şube kontrolü geçici olarak kaldırıldı. Render.com üzerinde test için.
 
       this.logger.debug(`Transactions sorgusu yapılıyor: startOfDay=${startOfDay}, endOfDay=${endOfDay}`);
       const transactions = await this.prisma.cashRegisterLog.findMany({
