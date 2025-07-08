@@ -5,7 +5,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
@@ -30,286 +29,184 @@ import { Badge } from "@/components/ui/badge"
 import { X, Plus } from "lucide-react"
 import { useState } from "react"
 
-// Define the form schema using Zod
+// Final, stable schema definition
 const newCustomerSchema = z.object({
   name: z.string().min(2, { message: "İsim en az 2 karakter olmalıdır." }),
+  email: z.string().email({ message: "Geçerli bir e-posta adresi giriniz." }).optional().or(z.literal('')), 
   phone: z
     .string()
     .regex(
       /^(\+90|0)\s*[5-9][0-9]{2}\s*[0-9]{3}\s*[0-9]{2}\s*[0-9]{2}$/, 
       { message: "Geçerli bir Türkiye telefon numarası giriniz. Örn: +905551234567 veya 05551234567" }
     ),
-  notes: z.string().optional().or(z.literal('')),
-  tags: z.array(z.object({
-    name: z.string(),
-    color: z.string()
-  })).optional(),
-  discountRate: z.preprocess(
-    (val) => (val === "" ? 0 : Number(val)),
-    z.number().min(0).max(100)
-  ),
+  notes: z.string().optional().or(z.literal('')), 
+  discountRate: z.coerce.number().min(0, "İndirim oranı 0'dan küçük olamaz.").max(100, "İndirim oranı 100'den büyük olamaz.").optional(),
 })
 
-// Interface tanımı
-type NewCustomerFormValues = {
-  name: string
-  phone: string
-  discountRate: number
-  notes?: string
-  tags?: { name: string; color: string }[]
+// Infer the type from the schema
+type NewCustomerFormValues = z.infer<typeof newCustomerSchema>
+
+// Type for tags used in the frontend state
+interface Tag {
+  id?: string; 
+  name: string;
+  color: string;
 }
 
 export default function NewCustomerPage() {
   const router = useRouter()
-  const [tags, setTags] = useState<{ name: string; color: string }[]>([])
+  const [tags, setTags] = useState<Tag[]>([])
   const [tagInput, setTagInput] = useState('')
   const [tagColor, setTagColor] = useState('#3b82f6')
   
-  // Kullanıcı bilgilerini al
   const { user } = useAuth()
-  
-  // Kullanıcının bağlı olduğu şubeyi kontrol et
   const userBranch = user?.branch
   
-  // Artık etiketleri API'den çekmiyoruz, kullanıcı yeni etiket ekleyebilecek
-  
   const form = useForm<NewCustomerFormValues>({
-    resolver: zodResolver(newCustomerSchema) as any,
+    resolver: zodResolver(newCustomerSchema),
     defaultValues: {
       name: "",
+      email: "",
       phone: "",
       notes: "",
       discountRate: 0,
-      tags: [],
     },
   })
 
-  const onSubmit: SubmitHandler<NewCustomerFormValues> = async (values) => {
-    // Kullanıcının şube bilgisini kontrol et
-    if (!userBranch?.id) {
-      toast.error("Müşteri eklenemedi. Kullanıcının şube bilgisi bulunamadı!")
+  const handleAddTag = () => {
+    if (tagInput.trim() !== "") {
+      const newTags = [...tags, { name: tagInput.trim(), color: tagColor }]
+      setTags(newTags)
+      setTagInput('')
+    }
+  }
+
+  const handleRemoveTag = (index: number) => {
+    const newTags = tags.filter((_, i) => i !== index)
+    setTags(newTags)
+  }
+
+  const onSubmit: SubmitHandler<NewCustomerFormValues> = async (data) => {
+    if (!userBranch) {
+      toast.error("Kullanıcı şube bilgisi olmadan müşteri oluşturulamaz.")
       return
     }
 
-    // Telefon numarası formatlama ve validasyon
-    let phoneNumber = values.phone.replace(/\s+/g, ''); // Önce boşlukları kaldır
-    
-    // Eğer telefon numarası zaten +90 ile başlamıyorsa ekle
-    if (!phoneNumber.startsWith('+90')) {
-      // Başında 0 varsa kaldır
-      if (phoneNumber.startsWith('0')) {
-        phoneNumber = phoneNumber.substring(1);
-      }
-      phoneNumber = '+90' + phoneNumber;
+    const dataToSend = { 
+      ...data, 
+      branchId: userBranch.id,
+      phone: data.phone.replace(/\s/g, ""), // Clean phone number
+      email: data.email === '' ? undefined : data.email,
+      notes: data.notes === '' ? undefined : data.notes,
     }
-    
-    // Etiketleri doğru formatta hazırla
-    const formattedTags = tags.map(tag => ({
-      name: tag.name,
-      color: tag.color
-    }));
-    
+
     try {
-      // 1. Etiketleri ID'ye dönüştür veya oluştur
-      const tagIds = await Promise.all(
-        tags.map(async (tag) => {
-          try {
-            // Etiketler global olduğu için branchId olmadan arama yapıyoruz.
-            const response = await api.get(`/tags/name/${tag.name.toLowerCase()}`);
-            return response.data.id;
-          } catch (error: any) {
-            if (error.response && error.response.status === 404) {
-              const newTagResponse = await api.post('/tags', {
-                name: tag.name.toLowerCase(),
-                color: tag.color,
-              });
-              return newTagResponse.data.id;
-            }
-            throw error;
-          }
-        })
-      );
-
-      // 2. Backend'e gönderilecek veriyi hazırla
-      const customerData = {
-        name: values.name,
-        phone: phoneNumber,
-        notes: values.notes || undefined,
-        discountRate: (Number(values.discountRate) || 0) / 100,
-        branchId: userBranch.id,
-        tagIds: tagIds.length > 0 ? tagIds : undefined,
-      };
-
-      // 3. API isteği
-      const response = await api.post('/customers', customerData);
+      const response = await api.post("/customers", dataToSend)
       
-      // Success toast
-      toast.success("Müşteri başarıyla eklendi")
-      
-      // Redirect to customer list
-      router.push('/dashboard/customers')
-      
+      if (response.status === 201) {
+        toast.success("Müşteri başarıyla oluşturuldu.")
+        router.push("/dashboard/customers")
+      } else {
+        toast.error("Müşteri oluşturulurken bir hata oluştu.")
+      }
     } catch (error: any) {
-      // Detaylı hata logları
-      console.error("Müşteri eklenirken hata oluştu:", error)
-      console.log("Gönderilen veriler:", JSON.stringify(customerData, null, 2))
-      console.log("Kullanıcı bilgisi:", { 
-        id: user?.id,
-        role: user?.role,
-        branchInfo: userBranch 
-      })
-      
-      if (error.response) {
-        // Sunucudan dönen hata yanıtı
-        console.log('Hata detayları:', { 
-          status: error.response.status,
-          data: error.response.data,
-          headers: error.response.headers
-        })
-      }
-      
-      let errorMessage = "Müşteri eklenirken bir hata oluştu."
-      if (error.response?.data?.message) {
-        errorMessage = error.response.data.message
-        if (Array.isArray(errorMessage)) {
-          errorMessage = errorMessage.join(' ')
-        }
-      }
-      
+      console.error("Müşteri oluşturma hatası:", error)
+      console.log("Gönderilen veri:", dataToSend)
+      const errorMessage = error.response?.data?.message || "Bir hata oluştu."
       toast.error(errorMessage)
     }
   }
 
   return (
-    <div className="container mx-auto py-6">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Yeni Müşteri Ekle</h1>
-          <p className="text-muted-foreground">
-            Sisteme yeni bir müşteri ekleyin.
-          </p>
-        </div>
-        <Button variant="outline" onClick={() => router.back()}>
-          Geri Dön
-        </Button>
-      </div>
-      
+    <div className="p-4 md:p-8">
       <Card>
         <CardHeader>
-          <CardTitle>Müşteri Bilgileri</CardTitle>
+          <CardTitle>Yeni Müşteri Oluştur</CardTitle>
           <CardDescription>
-            Lütfen müşteri bilgilerini eksiksiz doldurun.
+            Yeni bir müşteri kaydı oluşturmak için aşağıdaki formu doldurun.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit as any)} className="space-y-6">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <FormField
-                control={form.control as any}
+                control={form.control}
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Ad Soyad</FormLabel>
+                    <FormLabel>İsim Soyisim</FormLabel>
                     <FormControl>
-                      <Input placeholder="Ad Soyad" {...field} />
+                      <Input placeholder="Örn: Ahmet Yılmaz" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField
-                  control={form.control as any}
-                  name="phone"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Telefon</FormLabel>
-                      <FormControl>
-                        <Input placeholder="05XX XXX XX XX" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
 
-              </div>
-              
               <FormField
-                control={form.control as any}
-                name="tags" 
-                render={() => (
+                control={form.control}
+                name="phone"
+                render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Etiketler</FormLabel>
-                    <div className="space-y-4">
-                      <div className="flex flex-wrap gap-2">
-                        {tags.length > 0 ? (
-                          tags.map((tag, index) => (
-                            <Badge 
-                              key={index} 
-                              variant="outline" 
-                              className="px-2 py-1"
-                              style={{ borderColor: tag.color, color: tag.color }}
-                            >
-                              {tag.name}
-                              <button 
-                                type="button"
-                                className="ml-1 hover:text-destructive"
-                                onClick={() => {
-                                  setTags(tags.filter((_, i) => i !== index));
-                                }}
-                              >
-                                <X className="h-3 w-3" />
-                              </button>
-                            </Badge>
-                          ))
-                        ) : (
-                          <div className="text-sm text-muted-foreground">Henüz etiket eklenmedi</div>
-                        )}
-                      </div>
-                      
-                      <div className="border rounded-md p-4">
-                        <div className="text-sm font-medium mb-2">Yeni Etiket Ekle</div>
-                        <div className="flex flex-col space-y-3">
-                          <div className="flex items-center space-x-2">
-                            <Input
-                              placeholder="Etiket adı"
-                              value={tagInput}
-                              onChange={(e) => setTagInput(e.target.value)}
-                              className="flex-1"
-                            />
-                            <input
-                              type="color"
-                              value={tagColor}
-                              onChange={(e) => setTagColor(e.target.value)}
-                              className="w-10 h-10 p-1 border rounded"
-                            />
-                          </div>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            className="w-full"
-                            onClick={() => {
-                              if (tagInput.trim()) {
-                                setTags([...tags, { name: tagInput.trim(), color: tagColor }]);
-                                setTagInput('');
-                              }
-                            }}
-                          >
-                            <Plus className="mr-2 h-4 w-4" /> Etiket Ekle
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
+                    <FormLabel>Telefon Numarası</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Örn: 555 123 45 67" {...field} />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>E-posta Adresi (İsteğe Bağlı)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="ornek@eposta.com" {...field} value={field.value ?? ''} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormItem>
+                <FormLabel>Etiketler</FormLabel>
+                <div className="flex flex-col gap-2">
+                  <div className="flex flex-wrap gap-2">
+                    {tags.map((tag, index) => (
+                      <Badge key={index} variant="outline" style={{ borderColor: tag.color, color: tag.color }}>
+                        {tag.name}
+                        <button type="button" className="ml-2" onClick={() => handleRemoveTag(index)}>
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="text"
+                      value={tagInput}
+                      onChange={(e) => setTagInput(e.target.value)}
+                      placeholder="Yeni etiket"
+                      className="flex-grow"
+                    />
+                    <Input
+                      type="color"
+                      value={tagColor}
+                      onChange={(e) => setTagColor(e.target.value)}
+                      className="w-10 h-10 p-1"
+                    />
+                    <Button type="button" variant="outline" onClick={handleAddTag}>
+                      <Plus className="mr-2 h-4 w-4" /> Ekle
+                    </Button>
+                  </div>
+                </div>
+              </FormItem>
               
               <FormField
-                control={form.control as any}
+                control={form.control}
                 name="discountRate"
                 render={({ field }) => (
                   <FormItem>
@@ -317,10 +214,10 @@ export default function NewCustomerPage() {
                     <FormControl>
                       <Input 
                         type="number" 
-                        min="0" 
-                        max="100" 
                         placeholder="0" 
                         {...field} 
+                        value={field.value ?? 0}
+                        onChange={(e) => field.onChange(e.target.valueAsNumber || 0)}
                       />
                     </FormControl>
                     <FormMessage />
@@ -329,7 +226,7 @@ export default function NewCustomerPage() {
               />
               
               <FormField
-                control={form.control as any}
+                control={form.control}
                 name="notes"
                 render={({ field }) => (
                   <FormItem>
@@ -339,6 +236,7 @@ export default function NewCustomerPage() {
                         placeholder="Müşteri hakkında notlar..."
                         className="resize-none"
                         {...field} 
+                        value={field.value ?? ''}
                       />
                     </FormControl>
                     <FormMessage />
@@ -350,8 +248,8 @@ export default function NewCustomerPage() {
                 <Button variant="outline" type="button" onClick={() => router.back()}>
                   İptal
                 </Button>
-                <Button type="submit">
-                  Müşteri Oluştur
+                <Button type="submit" disabled={form.formState.isSubmitting}>
+                  {form.formState.isSubmitting ? "Oluşturuluyor..." : "Müşteri Oluştur"}
                 </Button>
               </div>
             </form>

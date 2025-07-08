@@ -15,6 +15,7 @@ import { TagsModule } from './tags/tags.module';
 import { ServiceCategoriesModule } from './service-categories/service-categories.module';
 import { StaffModule } from './staff/staff.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { FinanceModule } from './finance/finance.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
     ServiceCategoriesModule,
     StaffModule,
     DashboardModule,
+    FinanceModule,
   ],
   controllers: [],
   providers: [],

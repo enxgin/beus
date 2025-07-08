@@ -60,7 +60,7 @@ export function DataTableRowActions<TData>({ row }: DataTableRowActionsProps<TDa
     <>
       <EditCustomerDialog
         customer={customer}
-        isOpen={isEditDialogOpen}
+        open={isEditDialogOpen}
         onOpenChange={setIsEditDialogOpen}
       />
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>

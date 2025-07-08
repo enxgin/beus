@@ -43,8 +43,7 @@ const menuData = [
     label: 'Finans', icon: Landmark, children: [
       { label: 'Kasa Yönetimi', href: '/dashboard/finance/cash-management', icon: Wallet },
       { label: 'Ödemeler', href: '/dashboard/finance/payments', icon: CreditCard },
-      { label: 'Alacaklar', href: '/dashboard/finance/receivables', icon: TrendingUp },
-      { label: 'Krediler', href: '/dashboard/finance/credits', icon: BadgePercent },
+     // { label: 'Alacaklar', href: '/dashboard/finance/receivables', icon: TrendingUp },
       { label: 'Faturalar', href: '/dashboard/finance/invoices', icon: Receipt },
     ]
   },
@@ -57,24 +56,24 @@ const menuData = [
   },
   {
     label: 'Bildirim Yönetimi', icon: Bell, children: [
-      { label: 'Bildirim Ayarları', href: '/dashboard/notifications/settings', icon: Settings2 },
-      { label: 'Mesaj Şablonları', href: '/dashboard/notifications/templates', icon: FileText },
-      { label: 'Mesaj Geçmişi', href: '/dashboard/notifications/history', icon: History },
-      { label: 'Tetikleyici Kuralları', href: '/dashboard/notifications/triggers', icon: Webhook },
-      { label: 'Bildirim Kuyruğu', href: '/dashboard/notifications/queue', icon: Mails },
+    //   { label: 'Bildirim Ayarları', href: '/dashboard/notifications/settings', icon: Settings2 },
+     //  { label: 'Mesaj Şablonları', href: '/dashboard/notifications/templates', icon: FileText },
+     //  { label: 'Mesaj Geçmişi', href: '/dashboard/notifications/history', icon: History },
+     //  { label: 'Tetikleyici Kuralları', href: '/dashboard/notifications/triggers', icon: Webhook },
+     //  { label: 'Bildirim Kuyruğu', href: '/dashboard/notifications/queue', icon: Mails },
     ]
   },
   {
     label: 'Raporlar', icon: BarChart, children: [
-      { label: 'Raporlar Ana Sayfa', href: '/dashboard/reports', icon: LayoutDashboard },
-      { label: 'Günlük Kasa Raporu', href: '/dashboard/reports/daily-cash', icon: Wallet },
-      { label: 'Kasa Geçmişi', href: '/dashboard/reports/cash-history', icon: History },
-      { label: 'Alacak/Borç Raporu', href: '/dashboard/reports/receivables-payables', icon: TrendingDown },
-      { label: 'Personel Prim Raporu', href: '/dashboard/reports/staff-commission', icon: UserCheck },
-      { label: 'Finansal Dashboard', href: '/dashboard/reports/financial-dashboard', icon: PieChart },
+    //   { label: 'Raporlar Ana Sayfa', href: '/dashboard/reports', icon: LayoutDashboard },
+    //   { label: 'Günlük Kasa Raporu', href: '/dashboard/reports/daily-cash', icon: Wallet },
+     //  { label: 'Kasa Geçmişi', href: '/dashboard/reports/cash-history', icon: History },
+     //  { label: 'Alacak/Borç Raporu', href: '/dashboard/reports/receivables-payables', icon: TrendingDown },
+     //  { label: 'Personel Prim Raporu', href: '/dashboard/reports/staff-commission', icon: UserCheck },
+     //  { label: 'Finansal Dashboard', href: '/dashboard/reports/financial-dashboard', icon: PieChart },
     ]
   },
-  { label: 'Ayarlar', href: '/dashboard/settings', icon: Settings },
+ // { label: 'Ayarlar', href: '/dashboard/settings', icon: Settings },
   {
     label: 'Admin', icon: Gavel, roles: ['admin'], children: [
       { label: 'Şubeler', href: '/dashboard/branches', icon: Landmark },

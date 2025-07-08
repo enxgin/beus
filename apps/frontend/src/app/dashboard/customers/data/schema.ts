@@ -69,6 +69,7 @@ export const packageSchema = z.object({
   id: z.string(),
   name: z.string(),
   price: z.number(),
+  sessionCount: z.number(),
 });
 
 // Customer Package schema
