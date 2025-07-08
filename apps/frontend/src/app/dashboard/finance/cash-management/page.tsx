@@ -137,11 +137,13 @@ export default function CashManagementPage() {
         </div>
       </div>
 
-      <OpenCashDayDialog
-        isOpen={isOpeningDialogOpen}
-        onClose={() => setIsOpeningDialogOpen(false)}
-        branchId={branchId}
-      />
+      {branchId && (
+        <OpenCashDayDialog
+          isOpen={isOpeningDialogOpen}
+          onClose={() => setIsOpeningDialogOpen(false)}
+          branchId={branchId}
+        />
+      )}
     </>
   );
 }
