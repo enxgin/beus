@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { DebugModule } from './debug/debug.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
@@ -27,6 +28,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
     // Core business modules
     AuthModule,
     UsersModule,
+    DebugModule,
     BranchesModule,
     CustomersModule,
     ServicesModule,
