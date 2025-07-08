@@ -116,7 +116,7 @@ export class CashRegisterService {
 
   async createTransaction(createTransactionDto: CreateTransactionDto, user: User) {
     let { branchId } = createTransactionDto;
-    const { type, amount, description } = createTransactionDto;
+    const { type, amount, description, category } = createTransactionDto;
 
     if (user.role !== UserRole.ADMIN) {
       if (!user.branchId) {
@@ -136,6 +136,7 @@ export class CashRegisterService {
         type,
         amount,
         description,
+        category,
       },
     });
   }

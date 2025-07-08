@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
+import { CashLogType, CashMovementCategory } from '@prisma/client';
 
 // API URL'sini düzeltiyoruz - global prefix'i iki kez eklememek için
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://beus.onrender.com';
@@ -9,6 +10,14 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://beus.onrender.com';
 const openCashDaySchema = z.object({
   openingBalance: z.coerce.number().min(0),
   notes: z.string().optional(),
+  branchId: z.string(),
+});
+
+const createManualCashMovementSchema = z.object({
+  type: z.enum([CashLogType.MANUAL_IN, CashLogType.MANUAL_OUT]),
+  category: z.nativeEnum(CashMovementCategory),
+  amount: z.coerce.number().positive(),
+  description: z.string().min(3),
   branchId: z.string(),
 });
 
@@ -105,6 +114,42 @@ export async function openCashDay(token: string | null | undefined, values: unkn
     return { success: 'Kasa başarıyla açıldı!', data: result };
   } catch (error: any) {
     console.error('Exception in openCashDay:', error);
+    return { error: error.message };
+  }
+}
+
+export async function createManualCashMovement(token: string | null | undefined, values: unknown) {
+  const validatedFields = createManualCashMovementSchema.safeParse(values);
+
+  if (!validatedFields.success) {
+    const errorMessages = validatedFields.error.flatten().fieldErrors;
+    console.error('Invalid fields for createManualCashMovement:', errorMessages);
+    return { error: 'Geçersiz alanlar: ' + JSON.stringify(errorMessages) };
+  }
+
+  try {
+    if (!token) {
+      return { error: 'Oturum bilgisi bulunamadı. Lütfen tekrar giriş yapın.' };
+    }
+
+    const headers = getAuthHeaders(token);
+    const response = await fetch(`${API_URL}/api/v1/cash-register/transaction`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(validatedFields.data),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Failed to create manual cash movement. Status: ${response.status}, Body: ${errorText}`);
+      throw new Error(`Manuel hareket oluşturulamadı. Sunucu yanıtı: ${response.status}`);
+    }
+
+    const result = await response.json();
+    revalidatePath('/dashboard/finance/cash-management');
+    return { success: 'Manuel hareket başarıyla oluşturuldu!', data: result };
+  } catch (error: any) {
+    console.error('Exception in createManualCashMovement:', error);
     return { error: error.message };
   }
 }

@@ -20,7 +20,8 @@ import {
 import { useState, useEffect } from 'react';
 
 import { getCashDayDetails } from '@/actions/cash-register-actions';
-import { useAuthStore } from '@/stores/auth.store';
+import { useAuth } from '@/stores/auth.store';
+import { AddCashMovementModal } from '@/components/dashboard/finance/AddCashMovementModal';
 import { OpenCashDayDialog } from './_components/open-cash-day-dialog';
 import { QuickActions } from './_components/quick-actions';
 import { StatCard } from './_components/stat-card';
@@ -29,11 +30,8 @@ import { TransactionList } from './_components/transaction-list';
 export default function CashManagementPage() {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [isOpeningDialogOpen, setIsOpeningDialogOpen] = useState(false);
-  // Auth store'dan token'ı alıyoruz
-  const { token } = useAuthStore();
-  
-  // TODO: branchId'yi kullanıcı session'ından al
-  const branchId = 'clxyj6eax000013sq918l3vsd';
+  const { user, token } = useAuth();
+  const branchId = user?.branchId;
   
   // Token durumunu kontrol etmek için
   useEffect(() => {
@@ -43,11 +41,8 @@ export default function CashManagementPage() {
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ['cash-day-details', formattedDate, branchId],
-    queryFn: async () => {
-      console.log('useQuery içinde token durumu:', token ? 'Token var' : 'Token yok');
-      return getCashDayDetails(token, formattedDate, branchId);
-    },
-    enabled: !!formattedDate && !!branchId,
+    queryFn: () => getCashDayDetails(token, formattedDate, branchId!),
+    enabled: !!formattedDate && !!branchId && !!token,
   });
 
   if (isLoading) {
@@ -87,6 +82,7 @@ export default function CashManagementPage() {
               <Calendar mode="single" selected={date} onSelect={setDate} initialFocus />
             </PopoverContent>
           </Popover>
+          <AddCashMovementModal />
           <Button onClick={() => setIsOpeningDialogOpen(true)} disabled={status === 'OPEN'}>
             <PlusCircle className="mr-2 h-4 w-4" /> Kasa Aç
           </Button>

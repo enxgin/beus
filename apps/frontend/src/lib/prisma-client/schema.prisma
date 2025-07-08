@@ -303,9 +303,11 @@ model CashRegisterLog {
   // referenceId   String? // Fatura, randevu vb. referans ID'si - DB senkronizasyon sorunu için geçici olarak kapatıldı
   // referenceType String? // 'INVOICE', 'APPOINTMENT' vb. - DB senkronizasyon sorunu için geçici olarak kapatıldı
 
-  Branch   Branch    @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  User     User      @relation(fields: [userId], references: [id])
+  Branch   Branch                @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  User     User                  @relation(fields: [userId], references: [id])
   payments Payment[] // Bu satır geri eklendi
+  category CashMovementCategory? // Manuel hareketler için kategori
+
   // @@index([referenceId, referenceType]) // DB senkronizasyon sorunu için geçici olarak kapatıldı
 
   @@index([branchId, createdAt])
@@ -370,4 +372,15 @@ enum CashLogType {
   MANUAL_IN
   MANUAL_OUT
   INVOICE_PAYMENT
+}
+
+enum CashMovementCategory {
+  RENT
+  UTILITIES
+  SUPPLIES
+  STAFF_ADVANCE
+  MAINTENANCE
+  MARKETING
+  OTHER_EXPENSE
+  OTHER_INCOME
 }

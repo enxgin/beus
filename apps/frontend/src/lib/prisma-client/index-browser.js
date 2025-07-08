@@ -322,7 +322,8 @@ exports.Prisma.CashRegisterLogScalarFieldEnum = {
   description: 'description',
   branchId: 'branchId',
   userId: 'userId',
-  createdAt: 'createdAt'
+  createdAt: 'createdAt',
+  category: 'category'
 };
 
 exports.Prisma.SortOrder = {
@@ -408,6 +409,17 @@ exports.CashLogType = exports.$Enums.CashLogType = {
   MANUAL_IN: 'MANUAL_IN',
   MANUAL_OUT: 'MANUAL_OUT',
   INVOICE_PAYMENT: 'INVOICE_PAYMENT'
+};
+
+exports.CashMovementCategory = exports.$Enums.CashMovementCategory = {
+  RENT: 'RENT',
+  UTILITIES: 'UTILITIES',
+  SUPPLIES: 'SUPPLIES',
+  STAFF_ADVANCE: 'STAFF_ADVANCE',
+  MAINTENANCE: 'MAINTENANCE',
+  MARKETING: 'MARKETING',
+  OTHER_EXPENSE: 'OTHER_EXPENSE',
+  OTHER_INCOME: 'OTHER_INCOME'
 };
 
 exports.Prisma.ModelName = {

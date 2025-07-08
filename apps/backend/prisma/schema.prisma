@@ -308,6 +308,8 @@ model CashRegisterLog {
   payments Payment[] // Bu satır geri eklendi
 
   @@index([branchId, createdAt])
+  category      CashMovementCategory? // Manuel hareketler için kategori
+
   // @@index([referenceId, referenceType]) // DB senkronizasyon sorunu için geçici olarak kapatıldı
 }
 
@@ -370,4 +372,15 @@ enum CashLogType {
   MANUAL_IN
   MANUAL_OUT
   INVOICE_PAYMENT
+}
+
+enum CashMovementCategory {
+  RENT
+  UTILITIES
+  SUPPLIES
+  STAFF_ADVANCE
+  MAINTENANCE
+  MARKETING
+  OTHER_EXPENSE
+  OTHER_INCOME
 }

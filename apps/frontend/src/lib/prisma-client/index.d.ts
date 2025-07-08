@@ -197,6 +197,20 @@ export const CashLogType: {
 
 export type CashLogType = (typeof CashLogType)[keyof typeof CashLogType]
 
+
+export const CashMovementCategory: {
+  RENT: 'RENT',
+  UTILITIES: 'UTILITIES',
+  SUPPLIES: 'SUPPLIES',
+  STAFF_ADVANCE: 'STAFF_ADVANCE',
+  MAINTENANCE: 'MAINTENANCE',
+  MARKETING: 'MARKETING',
+  OTHER_EXPENSE: 'OTHER_EXPENSE',
+  OTHER_INCOME: 'OTHER_INCOME'
+};
+
+export type CashMovementCategory = (typeof CashMovementCategory)[keyof typeof CashMovementCategory]
+
 }
 
 export type CommissionType = $Enums.CommissionType
@@ -230,6 +244,10 @@ export const UserRole: typeof $Enums.UserRole
 export type CashLogType = $Enums.CashLogType
 
 export const CashLogType: typeof $Enums.CashLogType
+
+export type CashMovementCategory = $Enums.CashMovementCategory
+
+export const CashMovementCategory: typeof $Enums.CashMovementCategory
 
 /**
  * ##  Prisma Client ʲˢ
@@ -24643,6 +24661,7 @@ export namespace Prisma {
     branchId: string | null
     userId: string | null
     createdAt: Date | null
+    category: $Enums.CashMovementCategory | null
   }
 
   export type CashRegisterLogMaxAggregateOutputType = {
@@ -24653,6 +24672,7 @@ export namespace Prisma {
     branchId: string | null
     userId: string | null
     createdAt: Date | null
+    category: $Enums.CashMovementCategory | null
   }
 
   export type CashRegisterLogCountAggregateOutputType = {
@@ -24663,6 +24683,7 @@ export namespace Prisma {
     branchId: number
     userId: number
     createdAt: number
+    category: number
     _all: number
   }
 
@@ -24683,6 +24704,7 @@ export namespace Prisma {
     branchId?: true
     userId?: true
     createdAt?: true
+    category?: true
   }
 
   export type CashRegisterLogMaxAggregateInputType = {
@@ -24693,6 +24715,7 @@ export namespace Prisma {
     branchId?: true
     userId?: true
     createdAt?: true
+    category?: true
   }
 
   export type CashRegisterLogCountAggregateInputType = {
@@ -24703,6 +24726,7 @@ export namespace Prisma {
     branchId?: true
     userId?: true
     createdAt?: true
+    category?: true
     _all?: true
   }
 
@@ -24800,6 +24824,7 @@ export namespace Prisma {
     branchId: string
     userId: string
     createdAt: Date
+    category: $Enums.CashMovementCategory | null
     _count: CashRegisterLogCountAggregateOutputType | null
     _avg: CashRegisterLogAvgAggregateOutputType | null
     _sum: CashRegisterLogSumAggregateOutputType | null
@@ -24829,6 +24854,7 @@ export namespace Prisma {
     branchId?: boolean
     userId?: boolean
     createdAt?: boolean
+    category?: boolean
     Branch?: boolean | BranchDefaultArgs<ExtArgs>
     User?: boolean | UserDefaultArgs<ExtArgs>
     payments?: boolean | CashRegisterLog$paymentsArgs<ExtArgs>
@@ -24843,6 +24869,7 @@ export namespace Prisma {
     branchId?: boolean
     userId?: boolean
     createdAt?: boolean
+    category?: boolean
     Branch?: boolean | BranchDefaultArgs<ExtArgs>
     User?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["cashRegisterLog"]>
@@ -24855,6 +24882,7 @@ export namespace Prisma {
     branchId?: boolean
     userId?: boolean
     createdAt?: boolean
+    category?: boolean
     Branch?: boolean | BranchDefaultArgs<ExtArgs>
     User?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["cashRegisterLog"]>
@@ -24867,9 +24895,10 @@ export namespace Prisma {
     branchId?: boolean
     userId?: boolean
     createdAt?: boolean
+    category?: boolean
   }
 
-  export type CashRegisterLogOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "type" | "amount" | "description" | "branchId" | "userId" | "createdAt", ExtArgs["result"]["cashRegisterLog"]>
+  export type CashRegisterLogOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "type" | "amount" | "description" | "branchId" | "userId" | "createdAt" | "category", ExtArgs["result"]["cashRegisterLog"]>
   export type CashRegisterLogInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     Branch?: boolean | BranchDefaultArgs<ExtArgs>
     User?: boolean | UserDefaultArgs<ExtArgs>
@@ -24900,6 +24929,7 @@ export namespace Prisma {
       branchId: string
       userId: string
       createdAt: Date
+      category: $Enums.CashMovementCategory | null
     }, ExtArgs["result"]["cashRegisterLog"]>
     composites: {}
   }
@@ -25333,6 +25363,7 @@ export namespace Prisma {
     readonly branchId: FieldRef<"CashRegisterLog", 'String'>
     readonly userId: FieldRef<"CashRegisterLog", 'String'>
     readonly createdAt: FieldRef<"CashRegisterLog", 'DateTime'>
+    readonly category: FieldRef<"CashRegisterLog", 'CashMovementCategory'>
   }
     
 
@@ -26041,7 +26072,8 @@ export namespace Prisma {
     description: 'description',
     branchId: 'branchId',
     userId: 'userId',
-    createdAt: 'createdAt'
+    createdAt: 'createdAt',
+    category: 'category'
   };
 
   export type CashRegisterLogScalarFieldEnum = (typeof CashRegisterLogScalarFieldEnum)[keyof typeof CashRegisterLogScalarFieldEnum]
@@ -26278,6 +26310,20 @@ export namespace Prisma {
    * Reference to a field of type 'CashLogType[]'
    */
   export type ListEnumCashLogTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CashLogType[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'CashMovementCategory'
+   */
+  export type EnumCashMovementCategoryFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CashMovementCategory'>
+    
+
+
+  /**
+   * Reference to a field of type 'CashMovementCategory[]'
+   */
+  export type ListEnumCashMovementCategoryFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CashMovementCategory[]'>
     
   /**
    * Deep Input Types
@@ -27723,6 +27769,7 @@ export namespace Prisma {
     branchId?: StringFilter<"CashRegisterLog"> | string
     userId?: StringFilter<"CashRegisterLog"> | string
     createdAt?: DateTimeFilter<"CashRegisterLog"> | Date | string
+    category?: EnumCashMovementCategoryNullableFilter<"CashRegisterLog"> | $Enums.CashMovementCategory | null
     Branch?: XOR<BranchScalarRelationFilter, BranchWhereInput>
     User?: XOR<UserScalarRelationFilter, UserWhereInput>
     payments?: PaymentListRelationFilter
@@ -27736,6 +27783,7 @@ export namespace Prisma {
     branchId?: SortOrder
     userId?: SortOrder
     createdAt?: SortOrder
+    category?: SortOrderInput | SortOrder
     Branch?: BranchOrderByWithRelationInput
     User?: UserOrderByWithRelationInput
     payments?: PaymentOrderByRelationAggregateInput
@@ -27752,6 +27800,7 @@ export namespace Prisma {
     branchId?: StringFilter<"CashRegisterLog"> | string
     userId?: StringFilter<"CashRegisterLog"> | string
     createdAt?: DateTimeFilter<"CashRegisterLog"> | Date | string
+    category?: EnumCashMovementCategoryNullableFilter<"CashRegisterLog"> | $Enums.CashMovementCategory | null
     Branch?: XOR<BranchScalarRelationFilter, BranchWhereInput>
     User?: XOR<UserScalarRelationFilter, UserWhereInput>
     payments?: PaymentListRelationFilter
@@ -27765,6 +27814,7 @@ export namespace Prisma {
     branchId?: SortOrder
     userId?: SortOrder
     createdAt?: SortOrder
+    category?: SortOrderInput | SortOrder
     _count?: CashRegisterLogCountOrderByAggregateInput
     _avg?: CashRegisterLogAvgOrderByAggregateInput
     _max?: CashRegisterLogMaxOrderByAggregateInput
@@ -27783,6 +27833,7 @@ export namespace Prisma {
     branchId?: StringWithAggregatesFilter<"CashRegisterLog"> | string
     userId?: StringWithAggregatesFilter<"CashRegisterLog"> | string
     createdAt?: DateTimeWithAggregatesFilter<"CashRegisterLog"> | Date | string
+    category?: EnumCashMovementCategoryNullableWithAggregatesFilter<"CashRegisterLog"> | $Enums.CashMovementCategory | null
   }
 
   export type UserCreateInput = {
@@ -29267,6 +29318,7 @@ export namespace Prisma {
     amount: number
     description?: string | null
     createdAt?: Date | string
+    category?: $Enums.CashMovementCategory | null
     Branch: BranchCreateNestedOneWithoutCashRegisterLogInput
     User: UserCreateNestedOneWithoutCashRegisterLogInput
     payments?: PaymentCreateNestedManyWithoutCashRegisterLogInput
@@ -29280,6 +29332,7 @@ export namespace Prisma {
     branchId: string
     userId: string
     createdAt?: Date | string
+    category?: $Enums.CashMovementCategory | null
     payments?: PaymentUncheckedCreateNestedManyWithoutCashRegisterLogInput
   }
 
@@ -29289,6 +29342,7 @@ export namespace Prisma {
     amount?: FloatFieldUpdateOperationsInput | number
     description?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    category?: NullableEnumCashMovementCategoryFieldUpdateOperationsInput | $Enums.CashMovementCategory | null
     Branch?: BranchUpdateOneRequiredWithoutCashRegisterLogNestedInput
     User?: UserUpdateOneRequiredWithoutCashRegisterLogNestedInput
     payments?: PaymentUpdateManyWithoutCashRegisterLogNestedInput
@@ -29302,6 +29356,7 @@ export namespace Prisma {
     branchId?: StringFieldUpdateOperationsInput | string
     userId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    category?: NullableEnumCashMovementCategoryFieldUpdateOperationsInput | $Enums.CashMovementCategory | null
     payments?: PaymentUncheckedUpdateManyWithoutCashRegisterLogNestedInput
   }
 
@@ -29313,6 +29368,7 @@ export namespace Prisma {
     branchId: string
     userId: string
     createdAt?: Date | string
+    category?: $Enums.CashMovementCategory | null
   }
 
   export type CashRegisterLogUpdateManyMutationInput = {
@@ -29321,6 +29377,7 @@ export namespace Prisma {
     amount?: FloatFieldUpdateOperationsInput | number
     description?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    category?: NullableEnumCashMovementCategoryFieldUpdateOperationsInput | $Enums.CashMovementCategory | null
   }
 
   export type CashRegisterLogUncheckedUpdateManyInput = {
@@ -29331,6 +29388,7 @@ export namespace Prisma {
     branchId?: StringFieldUpdateOperationsInput | string
     userId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    category?: NullableEnumCashMovementCategoryFieldUpdateOperationsInput | $Enums.CashMovementCategory | null
   }
 
   export type StringFilter<$PrismaModel = never> = {
@@ -30713,6 +30771,13 @@ export namespace Prisma {
     not?: NestedEnumCashLogTypeFilter<$PrismaModel> | $Enums.CashLogType
   }
 
+  export type EnumCashMovementCategoryNullableFilter<$PrismaModel = never> = {
+    equals?: $Enums.CashMovementCategory | EnumCashMovementCategoryFieldRefInput<$PrismaModel> | null
+    in?: $Enums.CashMovementCategory[] | ListEnumCashMovementCategoryFieldRefInput<$PrismaModel> | null
+    notIn?: $Enums.CashMovementCategory[] | ListEnumCashMovementCategoryFieldRefInput<$PrismaModel> | null
+    not?: NestedEnumCashMovementCategoryNullableFilter<$PrismaModel> | $Enums.CashMovementCategory | null
+  }
+
   export type CashRegisterLogCountOrderByAggregateInput = {
     id?: SortOrder
     type?: SortOrder
@@ -30721,6 +30786,7 @@ export namespace Prisma {
     branchId?: SortOrder
     userId?: SortOrder
     createdAt?: SortOrder
+    category?: SortOrder
   }
 
   export type CashRegisterLogAvgOrderByAggregateInput = {
@@ -30735,6 +30801,7 @@ export namespace Prisma {
     branchId?: SortOrder
     userId?: SortOrder
     createdAt?: SortOrder
+    category?: SortOrder
   }
 
   export type CashRegisterLogMinOrderByAggregateInput = {
@@ -30745,6 +30812,7 @@ export namespace Prisma {
     branchId?: SortOrder
     userId?: SortOrder
     createdAt?: SortOrder
+    category?: SortOrder
   }
 
   export type CashRegisterLogSumOrderByAggregateInput = {
@@ -30759,6 +30827,16 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumCashLogTypeFilter<$PrismaModel>
     _max?: NestedEnumCashLogTypeFilter<$PrismaModel>
+  }
+
+  export type EnumCashMovementCategoryNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.CashMovementCategory | EnumCashMovementCategoryFieldRefInput<$PrismaModel> | null
+    in?: $Enums.CashMovementCategory[] | ListEnumCashMovementCategoryFieldRefInput<$PrismaModel> | null
+    notIn?: $Enums.CashMovementCategory[] | ListEnumCashMovementCategoryFieldRefInput<$PrismaModel> | null
+    not?: NestedEnumCashMovementCategoryNullableWithAggregatesFilter<$PrismaModel> | $Enums.CashMovementCategory | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedEnumCashMovementCategoryNullableFilter<$PrismaModel>
+    _max?: NestedEnumCashMovementCategoryNullableFilter<$PrismaModel>
   }
 
   export type AppointmentCreateNestedManyWithoutStaffInput = {
@@ -32861,6 +32939,10 @@ export namespace Prisma {
     set?: $Enums.CashLogType
   }
 
+  export type NullableEnumCashMovementCategoryFieldUpdateOperationsInput = {
+    set?: $Enums.CashMovementCategory | null
+  }
+
   export type BranchUpdateOneRequiredWithoutCashRegisterLogNestedInput = {
     create?: XOR<BranchCreateWithoutCashRegisterLogInput, BranchUncheckedCreateWithoutCashRegisterLogInput>
     connectOrCreate?: BranchCreateOrConnectWithoutCashRegisterLogInput
@@ -33262,6 +33344,13 @@ export namespace Prisma {
     not?: NestedEnumCashLogTypeFilter<$PrismaModel> | $Enums.CashLogType
   }
 
+  export type NestedEnumCashMovementCategoryNullableFilter<$PrismaModel = never> = {
+    equals?: $Enums.CashMovementCategory | EnumCashMovementCategoryFieldRefInput<$PrismaModel> | null
+    in?: $Enums.CashMovementCategory[] | ListEnumCashMovementCategoryFieldRefInput<$PrismaModel> | null
+    notIn?: $Enums.CashMovementCategory[] | ListEnumCashMovementCategoryFieldRefInput<$PrismaModel> | null
+    not?: NestedEnumCashMovementCategoryNullableFilter<$PrismaModel> | $Enums.CashMovementCategory | null
+  }
+
   export type NestedEnumCashLogTypeWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.CashLogType | EnumCashLogTypeFieldRefInput<$PrismaModel>
     in?: $Enums.CashLogType[] | ListEnumCashLogTypeFieldRefInput<$PrismaModel>
@@ -33270,6 +33359,16 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumCashLogTypeFilter<$PrismaModel>
     _max?: NestedEnumCashLogTypeFilter<$PrismaModel>
+  }
+
+  export type NestedEnumCashMovementCategoryNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.CashMovementCategory | EnumCashMovementCategoryFieldRefInput<$PrismaModel> | null
+    in?: $Enums.CashMovementCategory[] | ListEnumCashMovementCategoryFieldRefInput<$PrismaModel> | null
+    notIn?: $Enums.CashMovementCategory[] | ListEnumCashMovementCategoryFieldRefInput<$PrismaModel> | null
+    not?: NestedEnumCashMovementCategoryNullableWithAggregatesFilter<$PrismaModel> | $Enums.CashMovementCategory | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedEnumCashMovementCategoryNullableFilter<$PrismaModel>
+    _max?: NestedEnumCashMovementCategoryNullableFilter<$PrismaModel>
   }
 
   export type AppointmentCreateWithoutStaffInput = {
@@ -33324,6 +33423,7 @@ export namespace Prisma {
     amount: number
     description?: string | null
     createdAt?: Date | string
+    category?: $Enums.CashMovementCategory | null
     Branch: BranchCreateNestedOneWithoutCashRegisterLogInput
     payments?: PaymentCreateNestedManyWithoutCashRegisterLogInput
   }
@@ -33335,6 +33435,7 @@ export namespace Prisma {
     description?: string | null
     branchId: string
     createdAt?: Date | string
+    category?: $Enums.CashMovementCategory | null
     payments?: PaymentUncheckedCreateNestedManyWithoutCashRegisterLogInput
   }
 
@@ -33574,6 +33675,7 @@ export namespace Prisma {
     branchId?: StringFilter<"CashRegisterLog"> | string
     userId?: StringFilter<"CashRegisterLog"> | string
     createdAt?: DateTimeFilter<"CashRegisterLog"> | Date | string
+    category?: EnumCashMovementCategoryNullableFilter<"CashRegisterLog"> | $Enums.CashMovementCategory | null
   }
 
   export type CommissionRuleUpsertWithWhereUniqueWithoutUserInput = {
@@ -34068,6 +34170,7 @@ export namespace Prisma {
     amount: number
     description?: string | null
     createdAt?: Date | string
+    category?: $Enums.CashMovementCategory | null
     User: UserCreateNestedOneWithoutCashRegisterLogInput
     payments?: PaymentCreateNestedManyWithoutCashRegisterLogInput
   }
@@ -34079,6 +34182,7 @@ export namespace Prisma {
     description?: string | null
     userId: string
     createdAt?: Date | string
+    category?: $Enums.CashMovementCategory | null
     payments?: PaymentUncheckedCreateNestedManyWithoutCashRegisterLogInput
   }
 
@@ -37607,6 +37711,7 @@ export namespace Prisma {
     amount: number
     description?: string | null
     createdAt?: Date | string
+    category?: $Enums.CashMovementCategory | null
     Branch: BranchCreateNestedOneWithoutCashRegisterLogInput
     User: UserCreateNestedOneWithoutCashRegisterLogInput
   }
@@ -37619,6 +37724,7 @@ export namespace Prisma {
     branchId: string
     userId: string
     createdAt?: Date | string
+    category?: $Enums.CashMovementCategory | null
   }
 
   export type CashRegisterLogCreateOrConnectWithoutPaymentsInput = {
@@ -37676,6 +37782,7 @@ export namespace Prisma {
     amount?: FloatFieldUpdateOperationsInput | number
     description?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    category?: NullableEnumCashMovementCategoryFieldUpdateOperationsInput | $Enums.CashMovementCategory | null
     Branch?: BranchUpdateOneRequiredWithoutCashRegisterLogNestedInput
     User?: UserUpdateOneRequiredWithoutCashRegisterLogNestedInput
   }
@@ -37688,6 +37795,7 @@ export namespace Prisma {
     branchId?: StringFieldUpdateOperationsInput | string
     userId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    category?: NullableEnumCashMovementCategoryFieldUpdateOperationsInput | $Enums.CashMovementCategory | null
   }
 
   export type InvoiceUpsertWithoutPaymentsInput = {
@@ -38508,6 +38616,7 @@ export namespace Prisma {
     description?: string | null
     branchId: string
     createdAt?: Date | string
+    category?: $Enums.CashMovementCategory | null
   }
 
   export type CommissionRuleCreateManyUserInput = {
@@ -38606,6 +38715,7 @@ export namespace Prisma {
     amount?: FloatFieldUpdateOperationsInput | number
     description?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    category?: NullableEnumCashMovementCategoryFieldUpdateOperationsInput | $Enums.CashMovementCategory | null
     Branch?: BranchUpdateOneRequiredWithoutCashRegisterLogNestedInput
     payments?: PaymentUpdateManyWithoutCashRegisterLogNestedInput
   }
@@ -38617,6 +38727,7 @@ export namespace Prisma {
     description?: NullableStringFieldUpdateOperationsInput | string | null
     branchId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    category?: NullableEnumCashMovementCategoryFieldUpdateOperationsInput | $Enums.CashMovementCategory | null
     payments?: PaymentUncheckedUpdateManyWithoutCashRegisterLogNestedInput
   }
 
@@ -38627,6 +38738,7 @@ export namespace Prisma {
     description?: NullableStringFieldUpdateOperationsInput | string | null
     branchId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    category?: NullableEnumCashMovementCategoryFieldUpdateOperationsInput | $Enums.CashMovementCategory | null
   }
 
   export type CommissionRuleUpdateWithoutUserInput = {
@@ -38778,6 +38890,7 @@ export namespace Prisma {
     description?: string | null
     userId: string
     createdAt?: Date | string
+    category?: $Enums.CashMovementCategory | null
   }
 
   export type CustomerCreateManyBranchInput = {
@@ -38972,6 +39085,7 @@ export namespace Prisma {
     amount?: FloatFieldUpdateOperationsInput | number
     description?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    category?: NullableEnumCashMovementCategoryFieldUpdateOperationsInput | $Enums.CashMovementCategory | null
     User?: UserUpdateOneRequiredWithoutCashRegisterLogNestedInput
     payments?: PaymentUpdateManyWithoutCashRegisterLogNestedInput
   }
@@ -38983,6 +39097,7 @@ export namespace Prisma {
     description?: NullableStringFieldUpdateOperationsInput | string | null
     userId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    category?: NullableEnumCashMovementCategoryFieldUpdateOperationsInput | $Enums.CashMovementCategory | null
     payments?: PaymentUncheckedUpdateManyWithoutCashRegisterLogNestedInput
   }
 
@@ -38993,6 +39108,7 @@ export namespace Prisma {
     description?: NullableStringFieldUpdateOperationsInput | string | null
     userId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    category?: NullableEnumCashMovementCategoryFieldUpdateOperationsInput | $Enums.CashMovementCategory | null
   }
 
   export type CustomerUpdateWithoutBranchInput = {

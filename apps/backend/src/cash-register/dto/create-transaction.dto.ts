@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsNotEmpty, IsNumber, IsOptional, IsPositive, IsString } from 'class-validator';
-import { CashLogType } from '../../prisma/prisma-types';
+import { CashLogType, CashMovementCategory } from '@prisma/client';
 
 export class CreateTransactionDto {
   @ApiProperty({
@@ -35,6 +35,16 @@ export class CreateTransactionDto {
   @IsString()
   @IsNotEmpty({ message: 'Şube ID boş olamaz' })
   branchId: string;
+
+  @ApiProperty({
+    description: 'Manuel hareketin kategorisi (opsiyonel)',
+    enum: CashMovementCategory,
+    required: false,
+    example: CashMovementCategory.SUPPLIES,
+  })
+  @IsEnum(CashMovementCategory)
+  @IsOptional()
+  category?: CashMovementCategory;
 
   // @ApiProperty({
   //   description: 'Referans ID (opsiyonel)',
