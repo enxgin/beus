@@ -47,7 +47,6 @@ export function ExpandableRow({ row, isExpanded, onToggle }: ExpandableRowProps)
     });
   };
 
-  // Derived stats from invoices
   const unpaidInvoices = customer.invoices.filter(inv => inv.status === 'UNPAID').length;
   const partiallyPaidInvoices = customer.invoices.filter(inv => inv.status === 'PARTIALLY_PAID').length;
   const lastInvoiceDate = customer.invoices.length > 0 
