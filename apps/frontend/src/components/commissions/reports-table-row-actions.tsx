@@ -71,8 +71,8 @@ export function ReportsTableRowActions<TData extends { id: string; status: Commi
           Ödendi İşaretle
         </DropdownMenuItem>
         <DropdownMenuItem
-          disabled={commission.status === 'CANCELLED' || mutation.isPending}
-          onClick={() => handleStatusChange('CANCELLED')}
+          disabled={commission.status === 'CANCELED' || mutation.isPending}
+          onClick={() => handleStatusChange('CANCELED')}
         >
           İptal Et
         </DropdownMenuItem>
