@@ -216,10 +216,12 @@ export class CashRegisterService {
       let dailyIncome = 0;
       let dailyOutcome = 0;
 
+      const incomeTypes: CashLogType[] = [CashLogType.INCOME, CashLogType.MANUAL_IN, CashLogType.INVOICE_PAYMENT];
+
       logs.forEach((log) => {
         if (log.type === CashLogType.OPENING || log.type === CashLogType.CLOSING) return;
 
-        if ([CashLogType.INCOME, CashLogType.MANUAL_IN, CashLogType.INVOICE_PAYMENT].includes(log.type)) {
+        if (incomeTypes.includes(log.type)) {
           dailyIncome += log.amount;
         } else {
           dailyOutcome += log.amount;
