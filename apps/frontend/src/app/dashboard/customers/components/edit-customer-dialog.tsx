@@ -105,32 +105,39 @@ export function EditCustomerDialog({ customer, isOpen, onOpenChange }: EditCusto
     },
   })
 
-  // When the dialog opens, populate the form with the customer's data
   useEffect(() => {
-    if (isOpen && customer) {
-      form.reset({
-        name: customer.name,
-        phone: customer.phone,
-        notes: customer.notes || "",
-        branchId: customer.branch?.id || "",
-        discountRate: customer.discountRate || 0,
-        tags: customer.tags?.map(tag => ({
-          name: tag.name,
-          color: tag.color || '#3b82f6'
-        })) || [],
-      })
+    if (customer.tags) {
+      // Etiketleri form için uygun formata dönüştür
+      // API'den gelen etiketler farklı formatlarda olabilir, tutarlı hale getir
+      const formattedTags = Array.isArray(customer.tags) 
+        ? customer.tags.map(tag => {
+            // Etiket bir obje ise
+            if (typeof tag === 'object' && tag !== null) {
+              return {
+                // id varsa koru
+                ...(tag.id ? { id: tag.id } : {}),
+                // name ve color özelliklerini mutlaka dahil et
+                name: tag.name || '',
+                color: tag.color || '#000000'
+              };
+            }
+            // Beklenmedik format durumunda boş obje döndür
+            return { name: '', color: '#000000' };
+          })
+        : [];
       
-      // Set existing tags
-      if (customer.tags && customer.tags.length > 0) {
-        setTags(customer.tags.map(tag => ({
-          name: tag.name,
-          color: tag.color || '#3b82f6'
-        })))
-      } else {
-        setTags([])
-      }
+      setTags(formattedTags);
     }
-  }, [isOpen, customer, form])
+
+    // Form değerlerini müşteri verileriyle doldur
+    form.reset({
+      name: customer.name,
+      phone: customer.phone,
+      notes: customer.notes || "",
+      branchId: customer.branch?.id || "",
+      discountRate: customer.discountRate || 0,
+    });
+  }, [customer, form]);
 
   const onSubmit = async (values: EditCustomerFormValues) => {
     if (!customer) return;
@@ -140,19 +147,26 @@ export function EditCustomerDialog({ customer, isOpen, onOpenChange }: EditCusto
       const tagIds = await Promise.all(
         tags.map(async (tag) => {
           try {
-            // Etiketler global olduğu için branchId olmadan arama yapıyoruz.
-            const response = await api.get(`/tags/name/${tag.name.toLowerCase()}`);
-            return response.data.id;
-          } catch (error: any) {
-            // Etiket bulunamazsa (404), bu şube için oluştur
-            if (error.response && error.response.status === 404) {
-              const newTagResponse = await api.post('/tags', {
-                name: tag.name.toLowerCase(),
-                color: tag.color,
-              });
-              return newTagResponse.data.id;
+            // Önce aynı isimde etiket var mı kontrol et
+            let tagId = null;
+            try {
+              const existingTagResponse = await api.get(`/tags/name/${tag.name.toLowerCase()}`);
+              tagId = existingTagResponse.data.id;
+            } catch (error) {
+              const axiosError = error as any;
+              // Etiket bulunamazsa (404), yeni oluştur
+              if (axiosError.response && axiosError.response.status === 404) {
+                const newTagResponse = await api.post('/tags', {
+                  name: tag.name.toLowerCase(),
+                  color: tag.color,
+                });
+                tagId = newTagResponse.data.id;
+              } else {
+                throw error;
+              }
             }
-            // Diğer hataları tekrar fırlat
+            return tagId;
+          } catch (error: any) {
             throw error;
           }
         })
@@ -256,23 +270,23 @@ export function EditCustomerDialog({ customer, isOpen, onOpenChange }: EditCusto
                     <div className="flex flex-wrap gap-2">
                       {tags.length > 0 ? (
                         tags.map((tag, index) => (
-                          <Badge 
-                            key={index} 
-                            variant="outline" 
-                            className="px-2 py-1"
-                            style={{ borderColor: tag.color, color: tag.color }}
+                          <Button
+                            key={"id" in tag ? tag.id : index}
+                            variant="outline"
+                            size="sm"
+                            className="m-1"
+                            style={{ backgroundColor: tag.color, color: '#fff', borderColor: tag.color }}
                           >
                             {tag.name}
-                            <button 
-                              type="button"
-                              className="ml-1 hover:text-destructive"
+                            <X
+                              className="ml-2 h-3 w-3"
                               onClick={() => {
-                                setTags(tags.filter((_, i) => i !== index));
+                                const newTags = [...tags];
+                                newTags.splice(index, 1);
+                                setTags(newTags);
                               }}
-                            >
-                              <X className="h-3 w-3" />
-                            </button>
-                          </Badge>
+                            />
+                          </Button>
                         ))
                       ) : (
                         <div className="text-sm text-muted-foreground">Henüz etiket eklenmedi</div>
@@ -303,7 +317,12 @@ export function EditCustomerDialog({ customer, isOpen, onOpenChange }: EditCusto
                           className="w-full"
                           onClick={() => {
                             if (tagInput.trim()) {
-                              setTags([...tags, { name: tagInput.trim(), color: tagColor }]);
+                              // Yeni etiket oluşturulurken id atanmaz
+                              // API'ye kaydedildiğinde id atanacak
+                              setTags([...tags, { 
+                                name: tagInput.trim(), 
+                                color: tagColor 
+                              }]);
                               setTagInput('');
                             }
                           }}

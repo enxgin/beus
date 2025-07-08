@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
@@ -187,6 +187,65 @@ export class CustomersService {
 
   remove(id: string) {
     return this.prisma.customer.delete({ where: { id } });
+  }
+
+  async findAllForUser(user: { userId: string; role: string; branchId: string }, branchId?: string) {
+    const where: Prisma.CustomerWhereInput = {};
+    const { role, branchId: userBranchId } = user;
+
+    switch (role) {
+      case 'ADMIN':
+        if (branchId) {
+          where.branchId = branchId;
+        }
+        // No branchId means all branches
+        break;
+
+      case 'SUPER_BRANCH_MANAGER':
+        const managedBranches = await this.prisma.branch.findMany({
+          where: {
+            OR: [
+              { id: userBranchId }, // The main branch
+              { parentBranchId: userBranchId }, // Sub-branches
+            ],
+          },
+        });
+        const managedBranchIds = managedBranches.map((b) => b.id);
+
+        if (branchId) {
+          if (!managedBranchIds.includes(branchId)) {
+            throw new ForbiddenException('Bu şubeye erişim yetkiniz yok.');
+          }
+          where.branchId = branchId;
+        } else {
+          where.branchId = { in: managedBranchIds };
+        }
+        break;
+
+      case 'BRANCH_MANAGER':
+      case 'RECEPTION':
+      case 'STAFF':
+        where.branchId = userBranchId;
+        break;
+
+      default:
+        throw new ForbiddenException('Müşterileri listelemek için yetkiniz yok.');
+    }
+
+    return this.prisma.customer.findMany({
+      where,
+      include: {
+        tags: {
+          include: {
+            tag: true,
+          },
+        },
+        branch: true, // Frontend'de şube adını göstermek için
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
   }
 
   async search(name: string, branchId: string) {

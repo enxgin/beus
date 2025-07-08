@@ -80,14 +80,28 @@ export const columns: ColumnDef<CustomerWithTags>[] = [
       return (
         <div className="flex flex-wrap gap-1">
           {tags.map((tag, index) => {
-            // Her bir etiketin bir obje olduğundan ve `id` ile `name` içerdiğinden emin ol
-            if (typeof tag === 'object' && tag !== null && 'id' in tag && 'name' in tag) {
-              return (
-                <Badge key={tag.id} variant="outline">
-                  {tag.name}
-                </Badge>
-              );
+            // İki farklı etiket formatını destekle:
+            // 1. Backend'den gelen format: { id, name, color }
+            // 2. Frontend'de oluşturulan format: { name, color }
+            if (typeof tag === 'object' && tag !== null) {
+              // Etiket nesnesinde name varsa kullan
+              if ('name' in tag) {
+                // Stil için color varsa kullan, yoksa varsayılan renk
+                const style = 'color' in tag && tag.color 
+                  ? { backgroundColor: tag.color, color: '#fff', borderColor: tag.color } 
+                  : {};
+                
+                // Key için id varsa kullan, yoksa index
+                const key = 'id' in tag && tag.id ? tag.id : `tag-${index}`;
+                
+                return (
+                  <Badge key={key} variant="outline" style={style}>
+                    {tag.name}
+                  </Badge>
+                );
+              }
             }
+            
             // Beklenmedik bir format gelirse, en azından çökmemesi için index'i key olarak kullan
             return (
               <Badge key={index} variant="destructive">

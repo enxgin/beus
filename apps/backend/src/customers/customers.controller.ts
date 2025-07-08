@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, HttpCode, HttpStatus, Req } from '@nestjs/common';
 import { CustomersService } from './customers.service';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
@@ -28,9 +28,11 @@ export class CustomersController {
   @Get()
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Tüm müşterileri listeler' })
-  findAll() {
-    return this.customersService.findAll({});
+  @ApiOperation({ summary: 'Tüm müşterileri listeler (Rol bazlı yetkilendirme ile)' })
+  @ApiQuery({ name: 'branchId', required: false, description: 'Şube IDsi ile filtrele (Sadece Admin ve Üst Düzey Yöneticiler için)' })
+  findAll(@Req() req, @Query('branchId') branchId?: string) {
+    const user = req.user as any; // JWT'den gelen kullanıcı bilgisi
+    return this.customersService.findAllForUser(user, branchId);
   }
 
   @Get('search')
