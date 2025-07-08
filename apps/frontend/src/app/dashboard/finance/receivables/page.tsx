@@ -1,12 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { columns } from "./columns";
-import { useReceivables, Receivable } from "@/hooks/use-receivables";
-import { DataTable } from "@/components/ui/data-table"; // Genel DataTable bileşenini kullanıyoruz
+import { useReceivables } from "@/hooks/use-receivables";
+import { DataTable } from "@/components/ui/data-table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Input } from "@/components/ui/input";
-import { Search, HomeIcon } from "lucide-react";
+import { HomeIcon } from "lucide-react";
+import { columns } from "./columns";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -16,19 +14,6 @@ import {
 
 export default function ReceivablesPage() {
   const { data: receivables, isLoading, isError, error } = useReceivables();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filteredData, setFilteredData] = useState<Receivable[]>([]);
-
-  useEffect(() => {
-    if (receivables) {
-      const filtered = receivables.filter(
-        (r) =>
-          r.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          r.customerPhone?.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-      setFilteredData(filtered);
-    }
-  }, [searchQuery, receivables]);
 
   return (
     <div className="space-y-6">
@@ -45,26 +30,13 @@ export default function ReceivablesPage() {
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem isCurrentPage>
-            <BreadcrumbLink>Alacaklar</BreadcrumbLink>
+            <BreadcrumbLink>Borçlu Müşteriler</BreadcrumbLink>
           </BreadcrumbItem>
         </Breadcrumb>
         <h1 className="text-3xl font-bold tracking-tight mt-2">Alacak Yönetimi</h1>
         <p className="text-muted-foreground mt-1">
-          Ödenmemiş veya kısmen ödenmiş faturaları olan müşterileri burada takip edin.
+          Borçlu olan müşterileri burada takip edin.
         </p>
-      </div>
-
-      <div className="flex items-center justify-between gap-4">
-        <div className="relative flex-1 md:grow-0">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="Müşteri adı veya telefon ile ara..."
-            className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[320px]"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
       </div>
 
       {isLoading ? (
@@ -79,7 +51,11 @@ export default function ReceivablesPage() {
           </p>
         </div>
       ) : (
-        <DataTable data={filteredData} columns={columns} />
+        <DataTable 
+          data={receivables || []} 
+          columns={columns}
+          searchKey="customerName"
+        />
       )}
     </div>
   );

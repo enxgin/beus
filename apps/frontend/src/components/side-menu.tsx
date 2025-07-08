@@ -43,7 +43,7 @@ const menuData = [
     label: 'Finans', icon: Landmark, children: [
       { label: 'Kasa Yönetimi', href: '/dashboard/finance/cash-management', icon: Wallet },
       { label: 'Ödemeler', href: '/dashboard/finance/payments', icon: CreditCard },
-     // { label: 'Alacaklar', href: '/dashboard/finance/receivables', icon: TrendingUp },
+     { label: 'Borçlular', href: '/dashboard/finance/receivables', icon: TrendingUp },
       { label: 'Faturalar', href: '/dashboard/finance/invoices', icon: Receipt },
     ]
   },

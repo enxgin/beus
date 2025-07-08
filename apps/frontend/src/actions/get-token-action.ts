@@ -9,8 +9,8 @@ import { cookies } from 'next/headers';
  * Bu fonksiyon, her iki ismi de kontrol eder ve bulduğu token'ı döndürür.
  */
 export async function getToken() {
-  // Next.js'in önerdiği şekilde, önce cookieStore'u bir değişkene atıyoruz
-  const cookieStore = cookies();
+  // Next.js'in önerdiği şekilde, cookieStore'u await ile alıyoruz
+  const cookieStore = await cookies();
   
   // Standartlaştırılmış isim: 'token'
   let token = cookieStore.get('token')?.value;
@@ -32,7 +32,7 @@ export async function getToken() {
  * Sadece debug amaçlıdır ve normal işleyişte kullanılmaz.
  */
 export async function checkAuthCookies() {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const allCookies = cookieStore.getAll();
   
   const cookieNames = allCookies.map(cookie => cookie.name);

@@ -14,6 +14,8 @@
   
   font-family: var(--font-sans);
   max-width: 100%;
+  color: hsl(var(--foreground));
+  background-color: hsl(var(--background));
 }
 
 /* Butonlar */
@@ -130,6 +132,15 @@
   border-color: hsl(var(--border));
 }
 
+/* Tablo başlıkları */
+.shadcn-calendar-container .fc-col-header {
+  background-color: hsl(var(--muted) / 0.5);
+}
+
+.shadcn-calendar-container .fc-col-header-cell {
+  color: hsl(var(--foreground));
+}
+
 /* Hücre içeriği */
 .shadcn-calendar-container .fc .fc-daygrid-day-number,
 .shadcn-calendar-container .fc .fc-col-header-cell-cushion {
@@ -163,6 +174,20 @@
   color: hsl(var(--muted-foreground));
 }
 
+/* Zaman ızgarası */
+.shadcn-calendar-container .fc .fc-timegrid-slot {
+  background-color: hsl(var(--background));
+}
+
+.shadcn-calendar-container .fc .fc-timegrid-now-indicator-line {
+  border-color: hsl(var(--destructive));
+}
+
+.shadcn-calendar-container .fc .fc-timegrid-now-indicator-arrow {
+  border-color: hsl(var(--destructive));
+  color: hsl(var(--destructive));
+}
+
 /* Bugün vurgusu */
 .shadcn-calendar-container .fc .fc-day-today {
   background-color: hsl(var(--accent) / 0.1) !important;
@@ -172,6 +197,7 @@
 .shadcn-calendar-container .fc-resource-timeline .fc-resource-group,
 .shadcn-calendar-container .fc-resource-timeline .fc-resource-cell {
   background-color: hsl(var(--card));
+  color: hsl(var(--card-foreground));
 }
 
 /* Mobil için genel düzenlemeler */
@@ -216,4 +242,89 @@
 
 .shadcn-calendar-container .fc .fc-view-harness {
   min-height: 400px !important;
+}
+
+/* Dark mode specific overrides */
+.dark .shadcn-calendar-container .fc {
+  --fc-neutral-bg-color: hsl(var(--muted) / 0.3);
+  --fc-page-bg-color: hsl(var(--background));
+  --fc-border-color: hsl(var(--border));
+  --fc-today-bg-color: hsl(var(--accent) / 0.2);
+  --fc-non-business-color: hsl(var(--background));
+  background-color: hsl(var(--background));
+}
+
+.dark .shadcn-calendar-container .fc-theme-standard td,
+.dark .shadcn-calendar-container .fc-theme-standard th {
+  border-color: hsl(var(--border));
+}
+
+.dark .shadcn-calendar-container .fc-col-header {
+  background-color: hsl(var(--muted) / 0.3);
+}
+
+.dark .shadcn-calendar-container .fc-day-other .fc-daygrid-day-top {
+  opacity: 0.6;
+}
+
+.dark .shadcn-calendar-container .fc-highlight {
+  background-color: hsl(var(--accent) / 0.2);
+}
+
+.dark .shadcn-calendar-container .fc-button-primary {
+  background-color: hsl(var(--primary));
+  border-color: hsl(var(--primary));
+}
+
+.dark .shadcn-calendar-container .fc-button-primary:disabled {
+  background-color: hsl(var(--primary) / 0.5);
+  border-color: hsl(var(--primary) / 0.5);
+}
+
+.dark .shadcn-calendar-container .fc-timegrid-slot {
+  background-color: hsl(var(--background));
+}
+
+.dark .shadcn-calendar-container .fc-timegrid-col.fc-day-today {
+  background-color: hsl(var(--accent) / 0.1) !important;
+}
+
+.dark .shadcn-calendar-container .fc-timegrid-col {
+  background-color: hsl(var(--background));
+}
+
+.dark .shadcn-calendar-container .fc-timegrid-slot-minor {
+  border-color: hsl(var(--border) / 0.5);
+}
+
+/* Fix for white backgrounds in resource cells */
+.dark .shadcn-calendar-container .fc-resource-timeline .fc-resource-group,
+.dark .shadcn-calendar-container .fc-resource-timeline .fc-resource-cell,
+.dark .shadcn-calendar-container .fc-resource-timeline .fc-datagrid-cell {
+  background-color: hsl(var(--card));
+  color: hsl(var(--card-foreground));
+}
+
+/* Fix for white backgrounds in all cells */
+.dark .shadcn-calendar-container .fc td,
+.dark .shadcn-calendar-container .fc th {
+  background-color: hsl(var(--background));
+}
+
+/* Fix for white backgrounds in header cells */
+.dark .shadcn-calendar-container .fc-col-header-cell {
+  background-color: hsl(var(--muted) / 0.3);
+}
+
+/* Fix for any remaining white areas */
+.dark .shadcn-calendar-container .fc-view-harness,
+.dark .shadcn-calendar-container .fc-view,
+.dark .shadcn-calendar-container .fc-scrollgrid,
+.dark .shadcn-calendar-container .fc-scrollgrid-section,
+.dark .shadcn-calendar-container .fc-scrollgrid-section > td,
+.dark .shadcn-calendar-container .fc-scroller,
+.dark .shadcn-calendar-container .fc-daygrid-body,
+.dark .shadcn-calendar-container .fc-timegrid-body,
+.dark .shadcn-calendar-container .fc-timegrid-body .fc-daygrid-body {
+  background-color: hsl(var(--background));
 }
