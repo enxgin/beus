@@ -106,8 +106,8 @@ export class CashRegisterController {
     status: 200,
     description: 'Bugünkü kasa günü başarıyla getirildi',
   })
-  getCurrentCashDay(@Query('branchId', ParseUUIDPipe) branchId: string) {
-    return this.cashRegisterService.getCurrentCashDay(branchId);
+  getCurrentCashDay(@Query('branchId', ParseUUIDPipe) branchId: string, @Request() req) {
+    return this.cashRegisterService.getCurrentCashDay(branchId, req.user);
   }
 
   @Get('reports')
@@ -122,6 +122,7 @@ export class CashRegisterController {
     @Query('branchId') branchId?: string,
     @Query('page', new ParseIntPipe({ optional: true })) page = 1,
     @Query('limit', new ParseIntPipe({ optional: true })) limit = 10,
+    @Request() req,
   ) {
     const dto = {
       startDate,
@@ -130,6 +131,6 @@ export class CashRegisterController {
       page,
       limit,
     };
-    return this.cashRegisterService.getCashReports(dto);
+    return this.cashRegisterService.getCashReports(dto, req.user);
   }
 }

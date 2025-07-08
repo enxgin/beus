@@ -248,12 +248,12 @@ export class CashRegisterService {
     }
   }
 
-  async getCurrentCashDay(branchId: string) {
+  async getCurrentCashDay(branchId: string, user: User) {
     const today = new Date();
-    return this.getCashDayDetails(today, branchId);
+    return this.getCashDayDetails(today, branchId, user);
   }
 
-  async createInvoicePaymentTransaction(invoiceId: string, amount: number, branchId: string, userId: string) {
+  async createInvoicePaymentTransaction(invoiceId: string, amount: number, branchId: string, user: User) {
     const description = `Fatura ödemesi #${invoiceId}`;
     const transactionDto: CreateTransactionDto = {
       branchId,
@@ -263,10 +263,10 @@ export class CashRegisterService {
       // referenceId: invoiceId, // DB senkronizasyon sorunu için geçici olarak kapatıldı
       // referenceType: 'INVOICE', // DB senkronizasyon sorunu için geçici olarak kapatıldı
     };
-    return this.createTransaction(transactionDto, userId);
+    return this.createTransaction(transactionDto, user);
   }
 
-  async getCashReports(getCashReportsDto: GetCashReportsDto) {
+  async getCashReports(getCashReportsDto: GetCashReportsDto, user: User) {
     const { page = 1, limit = 10, branchId, userId, startDate, endDate } = getCashReportsDto;
     const skip = (page - 1) * limit;
 
@@ -314,7 +314,7 @@ export class CashRegisterService {
       openingLogs.map(async (log) => {
         const date = new Date(log.createdAt);
         date.setHours(0, 0, 0, 0);
-        const details = await this.getCashDayDetails(date, log.branchId);
+        const details = await this.getCashDayDetails(date, log.branchId, user);
         return {
           id: log.id,
           date: log.createdAt,
