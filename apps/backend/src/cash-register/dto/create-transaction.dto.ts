@@ -36,21 +36,21 @@ export class CreateTransactionDto {
   @IsNotEmpty({ message: 'Şube ID boş olamaz' })
   branchId: string;
 
-  @ApiProperty({
-    description: 'Referans ID (opsiyonel)',
-    example: '1a2b3c4d-5e6f-7g8h-9i0j',
-    required: false,
-  })
-  @IsString()
-  @IsOptional()
+  // @ApiProperty({
+  //   description: 'Referans ID (opsiyonel)',
+  //   example: '1a2b3c4d-5e6f-7g8h-9i0j',
+  //   required: false,
+  // })
+  // @IsString()
+  // @IsOptional()
   // referenceId?: string; // DB senkronizasyon sorunu için geçici olarak kapatıldı
 
-  @ApiProperty({
-    description: 'Referans tipi (opsiyonel)',
-    example: 'invoice',
-    required: false,
-  })
-  @IsString()
-  @IsOptional()
+  // @ApiProperty({
+  //   description: 'Referans tipi (opsiyonel)',
+  //   example: 'invoice',
+  //   required: false,
+  // })
+  // @IsString()
+  // @IsOptional()
   // referenceType?: string; // DB senkronizasyon sorunu için geçici olarak kapatıldı
 }
