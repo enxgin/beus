@@ -45,7 +45,20 @@ export function CommissionRuleForm({ initialData, onSuccess }: CommissionRuleFor
   const queryClient = useQueryClient();
 
   const form = useForm<CommissionRuleFormValues>({
-    resolver: zodResolver(commissionRuleSchema),
+    resolver: zodResolver(
+      commissionRuleSchema.superRefine((data, ctx) => {
+        const { isGlobal, serviceId, userId } = data;
+        const conditions = [isGlobal, !!serviceId, !!userId];
+        const trueCount = conditions.filter((c) => c).length;
+        if (trueCount !== 1) {
+          ctx.addIssue({
+            code: 'custom',
+            message: 'Kural sadece Genel, Hizmete özel veya Personele özel olabilir. Lütfen sadece birini seçin.',
+            path: ['isGlobal'],
+          });
+        }
+      })
+    ),
     defaultValues: initialData || {
       type: "PERCENTAGE",
       value: 0,
