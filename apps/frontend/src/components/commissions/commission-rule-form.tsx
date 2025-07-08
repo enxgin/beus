@@ -46,21 +46,14 @@ export function CommissionRuleForm({ initialData, onSuccess }: CommissionRuleFor
 
   const form = useForm<CommissionRuleFormValues>({
     resolver: zodResolver(commissionRuleSchema),
-    defaultValues: initialData
-      ? { 
-          ...initialData, 
-          isGlobal: initialData.isGlobal ?? false,
-          serviceId: initialData.serviceId || null, 
-          userId: initialData.userId || null 
-        }
-      : {
-          type: "PERCENTAGE",
-          value: 0,
-          description: "",
-          isGlobal: false,
-          serviceId: null,
-          userId: null,
-        },
+    defaultValues: initialData || {
+      type: "PERCENTAGE",
+      value: 0,
+      description: "",
+      isGlobal: false,
+      serviceId: null,
+      userId: null,
+    },
   });
 
   const { data: staffOptions, isLoading: isLoadingStaff } = useQuery({
