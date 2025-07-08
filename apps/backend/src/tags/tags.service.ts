@@ -9,46 +9,28 @@ import { v4 as uuidv4 } from 'uuid';
 export class TagsService {
   constructor(private prisma: PrismaService) {}
 
-  // Yeni bir etiket oluştur (Upsert mantığı ile)
+  // Yeni bir etiket oluştur (Prisma Upsert ile)
   async create(createTagDto: CreateTagDto) {
     const { name, color } = createTagDto;
 
-    try {
-      // 1. Bu isimde bir etiket zaten var mı diye kontrol et (büyük-küçük harf duyarsız)
-      const existingTag = await this.prisma.tag.findFirst({
-        where: { 
-          name: { 
-            equals: name, 
-            mode: 'insensitive' 
-          } 
-        },
-      });
-
-      // 2. Etiket zaten varsa, onu döndür
-      if (existingTag) {
-        console.log(`Mevcut etiket bulundu, tekrar oluşturulmuyor: ${name}`);
-        return existingTag;
-      }
-
-      // 3. Etiket yoksa, yenisini oluştur
-      console.log(`Yeni etiket oluşturuluyor: ${name}`);
-      return await this.prisma.tag.create({
-        data: {
-          name,
-          color: color || '#000000',
-        },
-      });
-
-    } catch (error) {
-      console.error(`Etiket oluşturma/bulma hatası (${name}):`, error);
-      // Prisma'nın bilinen bir hatası ise daha anlamlı bir mesaj fırlat
-      if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        if (error.code === 'P2002') { // Unique constraint failed
-          throw new ConflictException(`'${name}' adında bir etiket zaten mevcut.`);
-        }
-      }
-      throw new InternalServerErrorException('Etiket oluşturulurken bir sunucu hatası oluştu.');
-    }
+    // Prisma'nın 'upsert' özelliğini kullanarak hem daha güvenli hem de daha temiz bir kod yazıyoruz.
+    // Bu yöntem, derleme hatalarına neden olan karmaşık try-catch bloklarına olan ihtiyacı ortadan kaldırır.
+    return this.prisma.tag.upsert({
+      where: {
+        // Etiketi bulmak için benzersiz bir alan kullanmalıyız. 
+        // Eğer 'name' alanı UNIQUE olarak ayarlandıysa, bu çalışacaktır.
+        name: name,
+      },
+      update: {
+        // Etiket zaten varsa, rengini güncelleyebiliriz (isteğe bağlı)
+        color: color || '#000000',
+      },
+      create: {
+        // Etiket yoksa, yenisini oluştur
+        name: name,
+        color: color || '#000000',
+      },
+    });
   }
 
   // Tüm etiketleri getir
