@@ -1,7 +1,7 @@
 "use client";
 
 import { Row } from "@tanstack/react-table";
-import { CustomerReceivable } from "../columns";
+import { Receivable as CustomerReceivable } from "@/hooks/use-receivables";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronRight, Eye } from "lucide-react";
 import {
