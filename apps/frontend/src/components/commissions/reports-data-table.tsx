@@ -21,7 +21,6 @@ export function ReportsDataTable<TData, TValue>({
     columns,
     pageCount,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: () => table.getState().pagination,
     manualPagination: true,
   });
 
