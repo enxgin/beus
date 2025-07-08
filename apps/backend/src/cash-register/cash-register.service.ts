@@ -18,12 +18,10 @@ export class CashRegisterService {
     const { openingBalance, notes } = openCashDayDto;
     let { branchId } = openCashDayDto;
 
-    // Rol bazlı şube kontrolü
     if (user.role !== UserRole.ADMIN) {
       if (!user.branchId) {
         throw new ForbiddenException('Bu kullanıcının atanmış bir şubesi yok.');
       }
-      // Kullanıcının kendi şubesi dışında işlem yapmasını engelle
       branchId = user.branchId;
     }
 
@@ -50,17 +48,13 @@ export class CashRegisterService {
     
     const openingLog = await this.prisma.cashRegisterLog.create({
       data: {
-        branchId, // Güvenlik kontrolünden geçen branchId
+        branchId,
         userId: user.id,
         type: CashLogType.OPENING,
         amount: openingBalance,
-        description: notes ? `Günlük kasa açılışı: ${notes}` : 'Günlük kasa açılışı',
+        description: notes ? `Kasa açılışı: ${notes}` : 'Kasa açılışı',
       },
     });
-    
-    this.logger.log(
-      `Kasa açılış kaydı oluşturuldu: ${openingLog.id}, Şube: ${branchId}, Kullanıcı: ${user.id}`
-    );
 
     return openingLog;
   }
@@ -69,7 +63,6 @@ export class CashRegisterService {
     let { branchId } = closeCashDayDto;
     const { actualBalance, notes } = closeCashDayDto;
 
-    // Rol bazlı şube kontrolü
     if (user.role !== UserRole.ADMIN) {
       if (!user.branchId) {
         throw new ForbiddenException('Bu kullanıcının atanmış bir şubesi yok.');
@@ -93,19 +86,19 @@ export class CashRegisterService {
     });
 
     if (!openingLog) {
-      throw new NotFoundException('Bugün için kasa açılışı bulunamadı.');
+      throw new BadRequestException('Bu şube için bugün açılmış bir kasa bulunamadı.');
     }
 
     const existingClosingLog = await this.prisma.cashRegisterLog.findFirst({
-      where: {
-        branchId,
-        createdAt: { gte: startOfDay, lte: endOfDay },
-        type: CashLogType.CLOSING,
-      },
+        where: {
+            branchId,
+            createdAt: { gte: startOfDay, lte: endOfDay },
+            type: CashLogType.CLOSING,
+        },
     });
 
     if (existingClosingLog) {
-      throw new BadRequestException('Bu kasa zaten kapatılmış.');
+        throw new BadRequestException('Bu şube için bugün zaten kasa kapanışı yapılmış.');
     }
 
     const closingLog = await this.prisma.cashRegisterLog.create({
@@ -125,7 +118,6 @@ export class CashRegisterService {
     let { branchId } = createTransactionDto;
     const { type, amount, description } = createTransactionDto;
 
-    // Rol bazlı şube kontrolü
     if (user.role !== UserRole.ADMIN) {
       if (!user.branchId) {
         throw new ForbiddenException('Bu kullanıcının atanmış bir şubesi yok.');
@@ -139,13 +131,11 @@ export class CashRegisterService {
 
     return this.prisma.cashRegisterLog.create({
       data: {
-        branchId, // Güvenlik kontrolünden geçen branchId
-        userId: user.id, // Bu userId DTO'dan değil, guard'dan gelen auth user'dan alınır.
+        branchId,
+        userId: user.id,
         type,
         amount,
         description,
-        // referenceId, // DB senkronizasyon sorunu için geçici olarak kapatıldı
-        // referenceType, // DB senkronizasyon sorunu için geçici olarak kapatıldı
       },
     });
   }
@@ -161,89 +151,98 @@ export class CashRegisterService {
   }
 
   async getCashDayDetails(date: Date, branchId: string, user: User) {
-    // Rol bazlı yetkilendirme
+    let effectiveBranchId = branchId;
+
     if (user.role !== UserRole.ADMIN) {
       if (!user.branchId) {
         throw new ForbiddenException('Bu kullanıcının atanmış bir şubesi yok.');
       }
-      if (branchId !== user.branchId) {
-        throw new ForbiddenException('Sadece kendi şubenizin verilerini görebilirsiniz.');
-      }
+      effectiveBranchId = user.branchId;
     }
 
+    if (!effectiveBranchId) {
+      throw new BadRequestException('Şube IDsi belirtilmelidir.');
+    }
+
+    const { startOfDay, endOfDay } = this.getStartAndEndOfDay(date);
+
     try {
-      this.logger.debug(`getCashDayDetails çağrıldı: tarih=${date}, branchId=${branchId}`);
-      const { startOfDay, endOfDay } = this.getStartAndEndOfDay(date);
-
-      // Şube kontrolü geçici olarak kaldırıldı. Render.com üzerinde test için.
-
-      this.logger.debug(`Transactions sorgusu yapılıyor: startOfDay=${startOfDay}, endOfDay=${endOfDay}`);
-      const transactions = await this.prisma.cashRegisterLog.findMany({
+      const existingOpeningLog = await this.prisma.cashRegisterLog.findFirst({
         where: {
-          branchId,
+          branchId: effectiveBranchId,
+          createdAt: { gte: startOfDay },
+          type: CashLogType.OPENING,
+        },
+      });
+
+      if (!existingOpeningLog) {
+        return {
+          status: 'NOT_OPENED',
+          transactions: [],
+          dailyIncome: 0,
+          dailyOutcome: 0,
+          currentBalance: 0,
+          expectedBalance: 0,
+          openingBalance: 0,
+          closedAt: null,
+          closedBy: null,
+          actualBalance: null,
+        };
+      }
+
+      const logs = await this.prisma.cashRegisterLog.findMany({
+        where: {
+          branchId: effectiveBranchId,
           createdAt: {
             gte: startOfDay,
             lte: endOfDay,
           },
         },
-        include: {
-          User: { select: { name: true, id: true } },
-        },
         orderBy: {
           createdAt: 'asc',
         },
+        include: {
+          User: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
       });
-      
-      this.logger.debug(`${transactions.length} adet işlem bulundu.`);
 
-      const openingLog = transactions.find((t) => t.type === CashLogType.OPENING);
-      const closingLog = transactions.find((t) => t.type === CashLogType.CLOSING);
+      const closingLog = logs.find((log) => log.type === CashLogType.CLOSING);
 
-      if (!openingLog) {
-        this.logger.debug('Kasa açılış kaydı bulunamadı.');
-        return {
-          status: 'NOT_OPENED',
-          currentBalance: 0,
-          dailyIncome: 0,
-          dailyOutcome: 0,
-          netChange: 0,
-          transactions: [],
-        };
-      }
+      let dailyIncome = 0;
+      let dailyOutcome = 0;
 
-      const incomeTypes = [CashLogType.INCOME, CashLogType.MANUAL_IN, CashLogType.INVOICE_PAYMENT] as const;
-      const outcomeTypes = [CashLogType.OUTCOME, CashLogType.MANUAL_OUT] as const;
+      logs.forEach((log) => {
+        if (log.type === CashLogType.OPENING || log.type === CashLogType.CLOSING) return;
 
-      this.logger.debug('Gelir ve gider hesaplanıyor...');
-      const dailyIncome = transactions
-        .filter(t => incomeTypes.includes(t.type as typeof incomeTypes[number]))
-        .reduce((sum, t) => sum + t.amount, 0);
+        if ([CashLogType.SALE, CashLogType.MANUAL_IN, CashLogType.INVOICE_PAYMENT].includes(log.type)) {
+          dailyIncome += log.amount;
+        } else {
+          dailyOutcome += log.amount;
+        }
+      });
 
-      const dailyOutcome = transactions
-        .filter(t => outcomeTypes.includes(t.type as typeof outcomeTypes[number]))
-        .reduce((sum, t) => sum + t.amount, 0);
-      
-      const openingBalance = openingLog.amount;
-      const currentBalance = openingBalance + dailyIncome - dailyOutcome;
+      const openingBalance = existingOpeningLog.amount;
+      const expectedBalance = openingBalance + dailyIncome - dailyOutcome;
 
-      this.logger.debug(`Kasa durumu: Açılış bakiyesi=${openingBalance}, Gelir=${dailyIncome}, Gider=${dailyOutcome}, Güncel bakiye=${currentBalance}`);
-      
       return {
         status: closingLog ? 'CLOSED' : 'OPEN',
-        currentBalance,
+        transactions: logs,
         dailyIncome,
         dailyOutcome,
-        netChange: dailyIncome - dailyOutcome,
-        transactions,
-        // Raporlama için ek alanlar
-        openingBalance: openingLog.amount,
-        actualBalance: closingLog ? closingLog.amount : null,
-        closedAt: closingLog ? closingLog.createdAt : null,
-        closedBy: closingLog ? (closingLog as any).User : null,
-        expectedBalance: currentBalance
+        currentBalance: expectedBalance,
+        expectedBalance,
+        openingBalance,
+        closedAt: closingLog?.createdAt || null,
+        closedBy: closingLog?.User || null,
+        actualBalance: closingLog?.amount || null,
       };
     } catch (error) {
-      this.logger.error(`getCashDayDetails hatası: ${error.message}`, error.stack);
+      this.logger.error(`Kasa günü detayları alınırken hata: ${error.message}`, error.stack);
       throw new BadRequestException(`Kasa günü detayları alınırken bir hata oluştu: ${error.message}`);
     }
   }
@@ -260,8 +259,6 @@ export class CashRegisterService {
       type: CashLogType.INVOICE_PAYMENT,
       amount,
       description,
-      // referenceId: invoiceId, // DB senkronizasyon sorunu için geçici olarak kapatıldı
-      // referenceType: 'INVOICE', // DB senkronizasyon sorunu için geçici olarak kapatıldı
     };
     return this.createTransaction(transactionDto, user);
   }
