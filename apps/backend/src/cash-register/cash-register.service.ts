@@ -219,7 +219,7 @@ export class CashRegisterService {
       logs.forEach((log) => {
         if (log.type === CashLogType.OPENING || log.type === CashLogType.CLOSING) return;
 
-        if ([CashLogType.SALE, CashLogType.MANUAL_IN, CashLogType.INVOICE_PAYMENT].includes(log.type)) {
+        if ([CashLogType.INCOME, CashLogType.MANUAL_IN, CashLogType.INVOICE_PAYMENT].includes(log.type)) {
           dailyIncome += log.amount;
         } else {
           dailyOutcome += log.amount;
