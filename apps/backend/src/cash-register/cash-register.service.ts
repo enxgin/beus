@@ -94,7 +94,7 @@ export class CashRegisterService {
   }
 
   async createTransaction(createTransactionDto: CreateTransactionDto, userId: string) {
-    const { branchId, type, amount, description, referenceId, referenceType } = createTransactionDto;
+    const { branchId, type, amount, description } = createTransactionDto; // referenceId, referenceType kaldırıldı
 
     return this.prisma.cashRegisterLog.create({
       data: {
@@ -103,8 +103,8 @@ export class CashRegisterService {
         type,
         amount,
         description,
-        referenceId,
-        referenceType,
+        // referenceId, // DB senkronizasyon sorunu için geçici olarak kapatıldı
+        // referenceType, // DB senkronizasyon sorunu için geçici olarak kapatıldı
       },
     });
   }
@@ -209,8 +209,8 @@ export class CashRegisterService {
       type: CashLogType.INVOICE_PAYMENT,
       amount,
       description,
-      referenceId: invoiceId,
-      referenceType: 'INVOICE',
+      // referenceId: invoiceId, // DB senkronizasyon sorunu için geçici olarak kapatıldı
+      // referenceType: 'INVOICE', // DB senkronizasyon sorunu için geçici olarak kapatıldı
     };
     return this.createTransaction(transactionDto, userId);
   }

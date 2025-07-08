@@ -43,7 +43,7 @@ export class CreateTransactionDto {
   })
   @IsString()
   @IsOptional()
-  referenceId?: string;
+  // referenceId?: string; // DB senkronizasyon sorunu için geçici olarak kapatıldı
 
   @ApiProperty({
     description: 'Referans tipi (opsiyonel)',
@@ -52,5 +52,5 @@ export class CreateTransactionDto {
   })
   @IsString()
   @IsOptional()
-  referenceType?: string;
+  // referenceType?: string; // DB senkronizasyon sorunu için geçici olarak kapatıldı
 }
