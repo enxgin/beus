@@ -229,7 +229,7 @@ model Appointment {
 
 model Invoice {
   id            String           @id @default(cuid())
-  invoiceNumber String          @unique @default(cuid())
+  invoiceNumber String?         @unique
   totalAmount   Float
   amountPaid    Float            @default(0)
   debt          Float

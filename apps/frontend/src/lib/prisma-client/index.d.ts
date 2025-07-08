@@ -20020,7 +20020,7 @@ export namespace Prisma {
 
   export type InvoiceGroupByOutputType = {
     id: string
-    invoiceNumber: string
+    invoiceNumber: string | null
     totalAmount: number
     amountPaid: number
     debt: number
@@ -20150,7 +20150,7 @@ export namespace Prisma {
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
-      invoiceNumber: string
+      invoiceNumber: string | null
       totalAmount: number
       amountPaid: number
       debt: number
@@ -27444,7 +27444,7 @@ export namespace Prisma {
     OR?: InvoiceWhereInput[]
     NOT?: InvoiceWhereInput | InvoiceWhereInput[]
     id?: StringFilter<"Invoice"> | string
-    invoiceNumber?: StringFilter<"Invoice"> | string
+    invoiceNumber?: StringNullableFilter<"Invoice"> | string | null
     totalAmount?: FloatFilter<"Invoice"> | number
     amountPaid?: FloatFilter<"Invoice"> | number
     debt?: FloatFilter<"Invoice"> | number
@@ -27463,7 +27463,7 @@ export namespace Prisma {
 
   export type InvoiceOrderByWithRelationInput = {
     id?: SortOrder
-    invoiceNumber?: SortOrder
+    invoiceNumber?: SortOrderInput | SortOrder
     totalAmount?: SortOrder
     amountPaid?: SortOrder
     debt?: SortOrder
@@ -27504,7 +27504,7 @@ export namespace Prisma {
 
   export type InvoiceOrderByWithAggregationInput = {
     id?: SortOrder
-    invoiceNumber?: SortOrder
+    invoiceNumber?: SortOrderInput | SortOrder
     totalAmount?: SortOrder
     amountPaid?: SortOrder
     debt?: SortOrder
@@ -27526,7 +27526,7 @@ export namespace Prisma {
     OR?: InvoiceScalarWhereWithAggregatesInput[]
     NOT?: InvoiceScalarWhereWithAggregatesInput | InvoiceScalarWhereWithAggregatesInput[]
     id?: StringWithAggregatesFilter<"Invoice"> | string
-    invoiceNumber?: StringWithAggregatesFilter<"Invoice"> | string
+    invoiceNumber?: StringNullableWithAggregatesFilter<"Invoice"> | string | null
     totalAmount?: FloatWithAggregatesFilter<"Invoice"> | number
     amountPaid?: FloatWithAggregatesFilter<"Invoice"> | number
     debt?: FloatWithAggregatesFilter<"Invoice"> | number
@@ -29003,7 +29003,7 @@ export namespace Prisma {
 
   export type InvoiceCreateInput = {
     id?: string
-    invoiceNumber?: string
+    invoiceNumber?: string | null
     totalAmount: number
     amountPaid?: number
     debt: number
@@ -29019,7 +29019,7 @@ export namespace Prisma {
 
   export type InvoiceUncheckedCreateInput = {
     id?: string
-    invoiceNumber?: string
+    invoiceNumber?: string | null
     totalAmount: number
     amountPaid?: number
     debt: number
@@ -29035,7 +29035,7 @@ export namespace Prisma {
 
   export type InvoiceUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
-    invoiceNumber?: StringFieldUpdateOperationsInput | string
+    invoiceNumber?: NullableStringFieldUpdateOperationsInput | string | null
     totalAmount?: FloatFieldUpdateOperationsInput | number
     amountPaid?: FloatFieldUpdateOperationsInput | number
     debt?: FloatFieldUpdateOperationsInput | number
@@ -29051,7 +29051,7 @@ export namespace Prisma {
 
   export type InvoiceUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
-    invoiceNumber?: StringFieldUpdateOperationsInput | string
+    invoiceNumber?: NullableStringFieldUpdateOperationsInput | string | null
     totalAmount?: FloatFieldUpdateOperationsInput | number
     amountPaid?: FloatFieldUpdateOperationsInput | number
     debt?: FloatFieldUpdateOperationsInput | number
@@ -29067,7 +29067,7 @@ export namespace Prisma {
 
   export type InvoiceCreateManyInput = {
     id?: string
-    invoiceNumber?: string
+    invoiceNumber?: string | null
     totalAmount: number
     amountPaid?: number
     debt: number
@@ -29081,7 +29081,7 @@ export namespace Prisma {
 
   export type InvoiceUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
-    invoiceNumber?: StringFieldUpdateOperationsInput | string
+    invoiceNumber?: NullableStringFieldUpdateOperationsInput | string | null
     totalAmount?: FloatFieldUpdateOperationsInput | number
     amountPaid?: FloatFieldUpdateOperationsInput | number
     debt?: FloatFieldUpdateOperationsInput | number
@@ -29092,7 +29092,7 @@ export namespace Prisma {
 
   export type InvoiceUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
-    invoiceNumber?: StringFieldUpdateOperationsInput | string
+    invoiceNumber?: NullableStringFieldUpdateOperationsInput | string | null
     totalAmount?: FloatFieldUpdateOperationsInput | number
     amountPaid?: FloatFieldUpdateOperationsInput | number
     debt?: FloatFieldUpdateOperationsInput | number
@@ -34269,7 +34269,7 @@ export namespace Prisma {
 
   export type InvoiceCreateWithoutBranchInput = {
     id?: string
-    invoiceNumber?: string
+    invoiceNumber?: string | null
     totalAmount: number
     amountPaid?: number
     debt: number
@@ -34284,7 +34284,7 @@ export namespace Prisma {
 
   export type InvoiceUncheckedCreateWithoutBranchInput = {
     id?: string
-    invoiceNumber?: string
+    invoiceNumber?: string | null
     totalAmount: number
     amountPaid?: number
     debt: number
@@ -34671,7 +34671,7 @@ export namespace Prisma {
     OR?: InvoiceScalarWhereInput[]
     NOT?: InvoiceScalarWhereInput | InvoiceScalarWhereInput[]
     id?: StringFilter<"Invoice"> | string
-    invoiceNumber?: StringFilter<"Invoice"> | string
+    invoiceNumber?: StringNullableFilter<"Invoice"> | string | null
     totalAmount?: FloatFilter<"Invoice"> | number
     amountPaid?: FloatFilter<"Invoice"> | number
     debt?: FloatFilter<"Invoice"> | number
@@ -35143,7 +35143,7 @@ export namespace Prisma {
 
   export type InvoiceCreateWithoutCustomerInput = {
     id?: string
-    invoiceNumber?: string
+    invoiceNumber?: string | null
     totalAmount: number
     amountPaid?: number
     debt: number
@@ -35158,7 +35158,7 @@ export namespace Prisma {
 
   export type InvoiceUncheckedCreateWithoutCustomerInput = {
     id?: string
-    invoiceNumber?: string
+    invoiceNumber?: string | null
     totalAmount: number
     amountPaid?: number
     debt: number
@@ -37024,7 +37024,7 @@ export namespace Prisma {
 
   export type InvoiceCreateWithoutAppointmentInput = {
     id?: string
-    invoiceNumber?: string
+    invoiceNumber?: string | null
     totalAmount: number
     amountPaid?: number
     debt: number
@@ -37039,7 +37039,7 @@ export namespace Prisma {
 
   export type InvoiceUncheckedCreateWithoutAppointmentInput = {
     id?: string
-    invoiceNumber?: string
+    invoiceNumber?: string | null
     totalAmount: number
     amountPaid?: number
     debt: number
@@ -37310,7 +37310,7 @@ export namespace Prisma {
 
   export type InvoiceUpdateWithoutAppointmentInput = {
     id?: StringFieldUpdateOperationsInput | string
-    invoiceNumber?: StringFieldUpdateOperationsInput | string
+    invoiceNumber?: NullableStringFieldUpdateOperationsInput | string | null
     totalAmount?: FloatFieldUpdateOperationsInput | number
     amountPaid?: FloatFieldUpdateOperationsInput | number
     debt?: FloatFieldUpdateOperationsInput | number
@@ -37325,7 +37325,7 @@ export namespace Prisma {
 
   export type InvoiceUncheckedUpdateWithoutAppointmentInput = {
     id?: StringFieldUpdateOperationsInput | string
-    invoiceNumber?: StringFieldUpdateOperationsInput | string
+    invoiceNumber?: NullableStringFieldUpdateOperationsInput | string | null
     totalAmount?: FloatFieldUpdateOperationsInput | number
     amountPaid?: FloatFieldUpdateOperationsInput | number
     debt?: FloatFieldUpdateOperationsInput | number
@@ -37772,7 +37772,7 @@ export namespace Prisma {
 
   export type InvoiceCreateWithoutPaymentsInput = {
     id?: string
-    invoiceNumber?: string
+    invoiceNumber?: string | null
     totalAmount: number
     amountPaid?: number
     debt: number
@@ -37787,7 +37787,7 @@ export namespace Prisma {
 
   export type InvoiceUncheckedCreateWithoutPaymentsInput = {
     id?: string
-    invoiceNumber?: string
+    invoiceNumber?: string | null
     totalAmount: number
     amountPaid?: number
     debt: number
@@ -37851,7 +37851,7 @@ export namespace Prisma {
 
   export type InvoiceUpdateWithoutPaymentsInput = {
     id?: StringFieldUpdateOperationsInput | string
-    invoiceNumber?: StringFieldUpdateOperationsInput | string
+    invoiceNumber?: NullableStringFieldUpdateOperationsInput | string | null
     totalAmount?: FloatFieldUpdateOperationsInput | number
     amountPaid?: FloatFieldUpdateOperationsInput | number
     debt?: FloatFieldUpdateOperationsInput | number
@@ -37866,7 +37866,7 @@ export namespace Prisma {
 
   export type InvoiceUncheckedUpdateWithoutPaymentsInput = {
     id?: StringFieldUpdateOperationsInput | string
-    invoiceNumber?: StringFieldUpdateOperationsInput | string
+    invoiceNumber?: NullableStringFieldUpdateOperationsInput | string | null
     totalAmount?: FloatFieldUpdateOperationsInput | number
     amountPaid?: FloatFieldUpdateOperationsInput | number
     debt?: FloatFieldUpdateOperationsInput | number
@@ -38136,7 +38136,7 @@ export namespace Prisma {
 
   export type InvoiceCreateWithoutCommissionInput = {
     id?: string
-    invoiceNumber?: string
+    invoiceNumber?: string | null
     totalAmount: number
     amountPaid?: number
     debt: number
@@ -38151,7 +38151,7 @@ export namespace Prisma {
 
   export type InvoiceUncheckedCreateWithoutCommissionInput = {
     id?: string
-    invoiceNumber?: string
+    invoiceNumber?: string | null
     totalAmount: number
     amountPaid?: number
     debt: number
@@ -38299,7 +38299,7 @@ export namespace Prisma {
 
   export type InvoiceUpdateWithoutCommissionInput = {
     id?: StringFieldUpdateOperationsInput | string
-    invoiceNumber?: StringFieldUpdateOperationsInput | string
+    invoiceNumber?: NullableStringFieldUpdateOperationsInput | string | null
     totalAmount?: FloatFieldUpdateOperationsInput | number
     amountPaid?: FloatFieldUpdateOperationsInput | number
     debt?: FloatFieldUpdateOperationsInput | number
@@ -38314,7 +38314,7 @@ export namespace Prisma {
 
   export type InvoiceUncheckedUpdateWithoutCommissionInput = {
     id?: StringFieldUpdateOperationsInput | string
-    invoiceNumber?: StringFieldUpdateOperationsInput | string
+    invoiceNumber?: NullableStringFieldUpdateOperationsInput | string | null
     totalAmount?: FloatFieldUpdateOperationsInput | number
     amountPaid?: FloatFieldUpdateOperationsInput | number
     debt?: FloatFieldUpdateOperationsInput | number
@@ -38953,7 +38953,7 @@ export namespace Prisma {
 
   export type InvoiceCreateManyBranchInput = {
     id?: string
-    invoiceNumber?: string
+    invoiceNumber?: string | null
     totalAmount: number
     amountPaid?: number
     debt: number
@@ -39204,7 +39204,7 @@ export namespace Prisma {
 
   export type InvoiceUpdateWithoutBranchInput = {
     id?: StringFieldUpdateOperationsInput | string
-    invoiceNumber?: StringFieldUpdateOperationsInput | string
+    invoiceNumber?: NullableStringFieldUpdateOperationsInput | string | null
     totalAmount?: FloatFieldUpdateOperationsInput | number
     amountPaid?: FloatFieldUpdateOperationsInput | number
     debt?: FloatFieldUpdateOperationsInput | number
@@ -39219,7 +39219,7 @@ export namespace Prisma {
 
   export type InvoiceUncheckedUpdateWithoutBranchInput = {
     id?: StringFieldUpdateOperationsInput | string
-    invoiceNumber?: StringFieldUpdateOperationsInput | string
+    invoiceNumber?: NullableStringFieldUpdateOperationsInput | string | null
     totalAmount?: FloatFieldUpdateOperationsInput | number
     amountPaid?: FloatFieldUpdateOperationsInput | number
     debt?: FloatFieldUpdateOperationsInput | number
@@ -39234,7 +39234,7 @@ export namespace Prisma {
 
   export type InvoiceUncheckedUpdateManyWithoutBranchInput = {
     id?: StringFieldUpdateOperationsInput | string
-    invoiceNumber?: StringFieldUpdateOperationsInput | string
+    invoiceNumber?: NullableStringFieldUpdateOperationsInput | string | null
     totalAmount?: FloatFieldUpdateOperationsInput | number
     amountPaid?: FloatFieldUpdateOperationsInput | number
     debt?: FloatFieldUpdateOperationsInput | number
@@ -39501,7 +39501,7 @@ export namespace Prisma {
 
   export type InvoiceCreateManyCustomerInput = {
     id?: string
-    invoiceNumber?: string
+    invoiceNumber?: string | null
     totalAmount: number
     amountPaid?: number
     debt: number
@@ -39612,7 +39612,7 @@ export namespace Prisma {
 
   export type InvoiceUpdateWithoutCustomerInput = {
     id?: StringFieldUpdateOperationsInput | string
-    invoiceNumber?: StringFieldUpdateOperationsInput | string
+    invoiceNumber?: NullableStringFieldUpdateOperationsInput | string | null
     totalAmount?: FloatFieldUpdateOperationsInput | number
     amountPaid?: FloatFieldUpdateOperationsInput | number
     debt?: FloatFieldUpdateOperationsInput | number
@@ -39627,7 +39627,7 @@ export namespace Prisma {
 
   export type InvoiceUncheckedUpdateWithoutCustomerInput = {
     id?: StringFieldUpdateOperationsInput | string
-    invoiceNumber?: StringFieldUpdateOperationsInput | string
+    invoiceNumber?: NullableStringFieldUpdateOperationsInput | string | null
     totalAmount?: FloatFieldUpdateOperationsInput | number
     amountPaid?: FloatFieldUpdateOperationsInput | number
     debt?: FloatFieldUpdateOperationsInput | number
@@ -39642,7 +39642,7 @@ export namespace Prisma {
 
   export type InvoiceUncheckedUpdateManyWithoutCustomerInput = {
     id?: StringFieldUpdateOperationsInput | string
-    invoiceNumber?: StringFieldUpdateOperationsInput | string
+    invoiceNumber?: NullableStringFieldUpdateOperationsInput | string | null
     totalAmount?: FloatFieldUpdateOperationsInput | number
     amountPaid?: FloatFieldUpdateOperationsInput | number
     debt?: FloatFieldUpdateOperationsInput | number
