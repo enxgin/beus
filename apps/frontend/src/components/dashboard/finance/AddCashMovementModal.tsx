@@ -34,7 +34,7 @@ import {
 import { CashLogType, CashMovementCategory } from '@prisma/client';
 import { toast } from 'sonner';
 import { createManualCashMovement } from '@/actions/cash-register-actions';
-import { useAuth } from '@/stores/auth.store';
+import { useAuthStore } from '@/stores/auth.store';
 
 const formSchema = z.object({
   type: z.enum([CashLogType.MANUAL_IN, CashLogType.MANUAL_OUT], {
@@ -62,7 +62,7 @@ const categoryLabels: Record<CashMovementCategory, string> = {
 
 export function AddCashMovementModal() {
   const [isOpen, setIsOpen] = useState(false);
-  const { user, token } = useAuth();
+  const { user, token } = useAuthStore();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {

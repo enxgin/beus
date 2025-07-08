@@ -20,7 +20,7 @@ import {
 import { useState, useEffect } from 'react';
 
 import { getCashDayDetails } from '@/actions/cash-register-actions';
-import { useAuth } from '@/stores/auth.store';
+import { useAuthStore } from '@/stores/auth.store';
 import { AddCashMovementModal } from '@/components/dashboard/finance/AddCashMovementModal';
 import { OpenCashDayDialog } from './_components/open-cash-day-dialog';
 import { QuickActions } from './_components/quick-actions';
@@ -30,7 +30,7 @@ import { TransactionList } from './_components/transaction-list';
 export default function CashManagementPage() {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [isOpeningDialogOpen, setIsOpeningDialogOpen] = useState(false);
-  const { user, token } = useAuth();
+  const { user, token } = useAuthStore();
   const branchId = user?.branchId;
   
   // Token durumunu kontrol etmek için
