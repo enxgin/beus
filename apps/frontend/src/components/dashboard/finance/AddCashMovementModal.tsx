@@ -66,6 +66,9 @@ export function AddCashMovementModal() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      type: undefined,
+      category: undefined,
+      amount: 0,
       description: '',
     },
   });
@@ -115,7 +118,7 @@ export function AddCashMovementModal() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Hareket Türü</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value || ''}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Gelir veya Gider seçin..." />
@@ -136,7 +139,7 @@ export function AddCashMovementModal() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Kategori</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value || ''}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Bir kategori seçin..." />

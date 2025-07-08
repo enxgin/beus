@@ -133,7 +133,7 @@ export async function createManualCashMovement(token: string | null | undefined,
     }
 
     const headers = getAuthHeaders(token);
-    const response = await fetch(`${API_URL}/api/v1/cash-register/transaction`, {
+    const response = await fetch(`${API_URL}/api/v1/cash-register/transactions`, {
       method: 'POST',
       headers,
       body: JSON.stringify(validatedFields.data),

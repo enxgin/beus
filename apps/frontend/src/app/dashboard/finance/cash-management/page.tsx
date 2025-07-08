@@ -57,7 +57,15 @@ export default function CashManagementPage() {
     return <div className="text-center text-red-500">Hata: {error.message}</div>;
   }
 
-  const { status, currentBalance, dailyIncome, dailyOutcome, netChange, transactions, openingBalance } = data || {};
+  const { 
+    status = 'CLOSED', 
+    currentBalance = 0, 
+    dailyIncome = 0, 
+    dailyOutcome = 0, 
+    netChange = 0, 
+    transactions = [], 
+    openingBalance = 0 
+  } = data || {};
 
   return (
     <>

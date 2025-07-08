@@ -231,12 +231,14 @@ export class CashRegisterService {
 
       const openingBalance = existingOpeningLog.amount;
       const expectedBalance = openingBalance + dailyIncome - dailyOutcome;
+      const netChange = dailyIncome - dailyOutcome;
 
       return {
         status: closingLog ? 'CLOSED' : 'OPEN',
         transactions: logs,
         dailyIncome,
         dailyOutcome,
+        netChange, // <-- EKLENDİ
         currentBalance: expectedBalance,
         expectedBalance,
         openingBalance,
