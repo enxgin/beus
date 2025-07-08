@@ -72,12 +72,6 @@ export function ExpandableRow({ row, isExpanded, onToggle }: ExpandableRowProps)
             <span className="font-medium">{customer.customerName}</span>
             {customer.customerPhone && (
               <span className="text-xs text-muted-foreground">{customer.customerPhone}</span>
-<<<<<<< HEAD
-=======
-            )}
-            {customer.email && (
-              <span className="text-xs text-muted-foreground">{customer.email}</span>
->>>>>>> f01bdfa0c26f96d501eef3a61768e14ee5222fd0
             )}
           </div>
         </TableCell>
