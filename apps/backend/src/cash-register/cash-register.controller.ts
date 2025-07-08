@@ -32,7 +32,7 @@ export class CashRegisterController {
     description: 'Kasa günü başarıyla açıldı',
   })
   openCashDay(@Body() openCashDayDto: OpenCashDayDto, @Request() req) {
-    return this.cashRegisterService.openCashDay(openCashDayDto, req.user.id);
+    return this.cashRegisterService.openCashDay(openCashDayDto, req.user);
   }
 
   @Post('close-day')
@@ -42,7 +42,8 @@ export class CashRegisterController {
     description: 'Kasa günü başarıyla kapatıldı',
   })
   closeCashDay(@Body() closeCashDayDto: CloseCashDayDto, @Request() req) {
-    return this.cashRegisterService.closeCashDay(closeCashDayDto, req.user.id);
+    // TODO: Servis katmanını da user nesnesi alacak şekilde güncelle
+    return this.cashRegisterService.closeCashDay(closeCashDayDto, req.user);
   }
 
   @Post('transactions')
@@ -52,7 +53,8 @@ export class CashRegisterController {
     description: 'Kasa işlemi başarıyla oluşturuldu',
   })
   createTransaction(@Body() createTransactionDto: CreateTransactionDto, @Request() req) {
-    return this.cashRegisterService.createTransaction(createTransactionDto, req.user.id);
+    // TODO: Servis katmanını da user nesnesi alacak şekilde güncelle
+    return this.cashRegisterService.createTransaction(createTransactionDto, req.user);
   }
 
   @Post('manual-income')
@@ -66,7 +68,7 @@ export class CashRegisterController {
       ...dto,
       type: CashLogType.MANUAL_IN,
     };
-    return this.cashRegisterService.createTransaction(createTransactionDto, req.user.id);
+    return this.cashRegisterService.createTransaction(createTransactionDto, req.user);
   }
 
   @Post('manual-expense')
@@ -80,7 +82,7 @@ export class CashRegisterController {
       ...dto,
       type: CashLogType.MANUAL_OUT,
     };
-    return this.cashRegisterService.createTransaction(createTransactionDto, req.user.id);
+    return this.cashRegisterService.createTransaction(createTransactionDto, req.user);
   }
 
   @Get('day-details')
@@ -92,9 +94,10 @@ export class CashRegisterController {
   getCashDayDetails(
     @Query('date') dateStr: string,
     @Query('branchId') branchId: string,
+    @Request() req,
   ) {
     const date = dateStr ? new Date(dateStr) : new Date();
-    return this.cashRegisterService.getCashDayDetails(date, branchId);
+    return this.cashRegisterService.getCashDayDetails(date, branchId, req.user);
   }
 
   @Get('current')

@@ -1,9 +1,10 @@
-import { Injectable, Logger, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { OpenCashDayDto } from './dto/open-cash-day.dto';
 import { CloseCashDayDto } from './dto/close-cash-day.dto';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { GetCashReportsDto } from './dto/get-cash-reports.dto';
+import { User, UserRole } from '@prisma/client';
 import { CashLogType } from '../prisma/prisma-types';
 import { Prisma } from '@prisma/client';
 
@@ -13,8 +14,22 @@ export class CashRegisterService {
 
   constructor(private prisma: PrismaService) {}
 
-  async openCashDay(openCashDayDto: OpenCashDayDto, userId: string) {
-    const { branchId, openingBalance, notes } = openCashDayDto;
+  async openCashDay(openCashDayDto: OpenCashDayDto, user: User) {
+    const { openingBalance, notes } = openCashDayDto;
+    let { branchId } = openCashDayDto;
+
+    // Rol bazlı şube kontrolü
+    if (user.role !== UserRole.ADMIN) {
+      if (!user.branchId) {
+        throw new ForbiddenException('Bu kullanıcının atanmış bir şubesi yok.');
+      }
+      // Kullanıcının kendi şubesi dışında işlem yapmasını engelle
+      branchId = user.branchId;
+    }
+
+    if (!branchId) {
+      throw new BadRequestException('ADMIN rolü için bir şube IDsi belirtilmelidir.');
+    }
 
     const today = new Date();
     const { startOfDay } = this.getStartAndEndOfDay(today);
@@ -35,8 +50,8 @@ export class CashRegisterService {
     
     const openingLog = await this.prisma.cashRegisterLog.create({
       data: {
-        branchId,
-        userId,
+        branchId, // Güvenlik kontrolünden geçen branchId
+        userId: user.id,
         type: CashLogType.OPENING,
         amount: openingBalance,
         description: notes ? `Günlük kasa açılışı: ${notes}` : 'Günlük kasa açılışı',
@@ -44,14 +59,27 @@ export class CashRegisterService {
     });
     
     this.logger.log(
-      `Kasa açılış kaydı oluşturuldu: ${openingLog.id}, Şube: ${branchId}, Kullanıcı: ${userId}`
+      `Kasa açılış kaydı oluşturuldu: ${openingLog.id}, Şube: ${branchId}, Kullanıcı: ${user.id}`
     );
 
     return openingLog;
   }
 
-  async closeCashDay(closeCashDayDto: CloseCashDayDto, userId: string) {
-    const { branchId, actualBalance, notes } = closeCashDayDto;
+  async closeCashDay(closeCashDayDto: CloseCashDayDto, user: User) {
+    let { branchId } = closeCashDayDto;
+    const { actualBalance, notes } = closeCashDayDto;
+
+    // Rol bazlı şube kontrolü
+    if (user.role !== UserRole.ADMIN) {
+      if (!user.branchId) {
+        throw new ForbiddenException('Bu kullanıcının atanmış bir şubesi yok.');
+      }
+      branchId = user.branchId;
+    }
+
+    if (!branchId) {
+      throw new BadRequestException('ADMIN rolü için bir şube IDsi belirtilmelidir.');
+    }
 
     const today = new Date();
     const { startOfDay, endOfDay } = this.getStartAndEndOfDay(today);
@@ -83,7 +111,7 @@ export class CashRegisterService {
     const closingLog = await this.prisma.cashRegisterLog.create({
       data: {
         branchId,
-        userId,
+        userId: user.id,
         type: CashLogType.CLOSING,
         amount: actualBalance,
         description: notes ? `Günlük kasa kapanışı: ${notes}` : 'Günlük kasa kapanışı',
@@ -93,13 +121,26 @@ export class CashRegisterService {
     return closingLog;
   }
 
-  async createTransaction(createTransactionDto: CreateTransactionDto, userId: string) {
-    const { branchId, type, amount, description } = createTransactionDto; // referenceId, referenceType kaldırıldı
+  async createTransaction(createTransactionDto: CreateTransactionDto, user: User) {
+    let { branchId } = createTransactionDto;
+    const { type, amount, description } = createTransactionDto;
+
+    // Rol bazlı şube kontrolü
+    if (user.role !== UserRole.ADMIN) {
+      if (!user.branchId) {
+        throw new ForbiddenException('Bu kullanıcının atanmış bir şubesi yok.');
+      }
+      branchId = user.branchId;
+    }
+
+    if (!branchId) {
+      throw new BadRequestException('ADMIN rolü için bir şube IDsi belirtilmelidir.');
+    }
 
     return this.prisma.cashRegisterLog.create({
       data: {
-        branchId,
-        userId, // Bu userId DTO'dan değil, guard'dan gelen auth user'dan alınır.
+        branchId, // Güvenlik kontrolünden geçen branchId
+        userId: user.id, // Bu userId DTO'dan değil, guard'dan gelen auth user'dan alınır.
         type,
         amount,
         description,
@@ -119,7 +160,17 @@ export class CashRegisterService {
     return { startOfDay, endOfDay };
   }
 
-  async getCashDayDetails(date: Date, branchId: string) {
+  async getCashDayDetails(date: Date, branchId: string, user: User) {
+    // Rol bazlı yetkilendirme
+    if (user.role !== UserRole.ADMIN) {
+      if (!user.branchId) {
+        throw new ForbiddenException('Bu kullanıcının atanmış bir şubesi yok.');
+      }
+      if (branchId !== user.branchId) {
+        throw new ForbiddenException('Sadece kendi şubenizin verilerini görebilirsiniz.');
+      }
+    }
+
     try {
       this.logger.debug(`getCashDayDetails çağrıldı: tarih=${date}, branchId=${branchId}`);
       const { startOfDay, endOfDay } = this.getStartAndEndOfDay(date);
