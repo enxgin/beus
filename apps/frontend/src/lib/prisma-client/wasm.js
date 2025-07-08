@@ -270,6 +270,7 @@ exports.Prisma.AppointmentScalarFieldEnum = {
 
 exports.Prisma.InvoiceScalarFieldEnum = {
   id: 'id',
+  invoiceNumber: 'invoiceNumber',
   totalAmount: 'totalAmount',
   amountPaid: 'amountPaid',
   debt: 'debt',

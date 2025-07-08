@@ -21,18 +21,15 @@ export class FinanceService {
       };
     }
 
-    const invoicePayload = {
-      include: {
-        customer: true,
-        payments: true,
-      },
-    };
+    const invoiceWithDetails = Prisma.validator<Prisma.InvoiceDefaultArgs>()({
+      include: { customer: true, payments: true },
+    });
 
-    type InvoiceWithDetails = Prisma.InvoiceGetPayload<typeof invoicePayload>;
+    type InvoiceWithDetails = Prisma.InvoiceGetPayload<typeof invoiceWithDetails>;
 
     const invoices: InvoiceWithDetails[] = await this.prisma.invoice.findMany({
       where,
-      ...invoicePayload,
+      include: { customer: true, payments: true },
       orderBy: {
         createdAt: 'desc',
       },
@@ -66,7 +63,7 @@ export class FinanceService {
       });
 
       return acc;
-    }, {});
+    }, {} as Record<string, { customerId: string; customerName: string; customerPhone: string; totalDebt: number; totalPaid: number; invoices: any[] }>);
 
     // Obje'yi array'e çevir ve kalan borca göre sırala
     return Object.values(receivablesByCustomer).map((r: any) => ({

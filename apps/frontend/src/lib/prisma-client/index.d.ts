@@ -19835,6 +19835,7 @@ export namespace Prisma {
 
   export type InvoiceMinAggregateOutputType = {
     id: string | null
+    invoiceNumber: string | null
     totalAmount: number | null
     amountPaid: number | null
     debt: number | null
@@ -19848,6 +19849,7 @@ export namespace Prisma {
 
   export type InvoiceMaxAggregateOutputType = {
     id: string | null
+    invoiceNumber: string | null
     totalAmount: number | null
     amountPaid: number | null
     debt: number | null
@@ -19861,6 +19863,7 @@ export namespace Prisma {
 
   export type InvoiceCountAggregateOutputType = {
     id: number
+    invoiceNumber: number
     totalAmount: number
     amountPaid: number
     debt: number
@@ -19888,6 +19891,7 @@ export namespace Prisma {
 
   export type InvoiceMinAggregateInputType = {
     id?: true
+    invoiceNumber?: true
     totalAmount?: true
     amountPaid?: true
     debt?: true
@@ -19901,6 +19905,7 @@ export namespace Prisma {
 
   export type InvoiceMaxAggregateInputType = {
     id?: true
+    invoiceNumber?: true
     totalAmount?: true
     amountPaid?: true
     debt?: true
@@ -19914,6 +19919,7 @@ export namespace Prisma {
 
   export type InvoiceCountAggregateInputType = {
     id?: true
+    invoiceNumber?: true
     totalAmount?: true
     amountPaid?: true
     debt?: true
@@ -20014,6 +20020,7 @@ export namespace Prisma {
 
   export type InvoiceGroupByOutputType = {
     id: string
+    invoiceNumber: string
     totalAmount: number
     amountPaid: number
     debt: number
@@ -20046,6 +20053,7 @@ export namespace Prisma {
 
   export type InvoiceSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    invoiceNumber?: boolean
     totalAmount?: boolean
     amountPaid?: boolean
     debt?: boolean
@@ -20065,6 +20073,7 @@ export namespace Prisma {
 
   export type InvoiceSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    invoiceNumber?: boolean
     totalAmount?: boolean
     amountPaid?: boolean
     debt?: boolean
@@ -20081,6 +20090,7 @@ export namespace Prisma {
 
   export type InvoiceSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    invoiceNumber?: boolean
     totalAmount?: boolean
     amountPaid?: boolean
     debt?: boolean
@@ -20097,6 +20107,7 @@ export namespace Prisma {
 
   export type InvoiceSelectScalar = {
     id?: boolean
+    invoiceNumber?: boolean
     totalAmount?: boolean
     amountPaid?: boolean
     debt?: boolean
@@ -20108,7 +20119,7 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type InvoiceOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "totalAmount" | "amountPaid" | "debt" | "status" | "customerId" | "branchId" | "appointmentId" | "createdAt" | "updatedAt", ExtArgs["result"]["invoice"]>
+  export type InvoiceOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "invoiceNumber" | "totalAmount" | "amountPaid" | "debt" | "status" | "customerId" | "branchId" | "appointmentId" | "createdAt" | "updatedAt", ExtArgs["result"]["invoice"]>
   export type InvoiceInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     appointment?: boolean | Invoice$appointmentArgs<ExtArgs>
     branch?: boolean | BranchDefaultArgs<ExtArgs>
@@ -20139,6 +20150,7 @@ export namespace Prisma {
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
+      invoiceNumber: string
       totalAmount: number
       amountPaid: number
       debt: number
@@ -20577,6 +20589,7 @@ export namespace Prisma {
    */
   interface InvoiceFieldRefs {
     readonly id: FieldRef<"Invoice", 'String'>
+    readonly invoiceNumber: FieldRef<"Invoice", 'String'>
     readonly totalAmount: FieldRef<"Invoice", 'Float'>
     readonly amountPaid: FieldRef<"Invoice", 'Float'>
     readonly debt: FieldRef<"Invoice", 'Float'>
@@ -26008,6 +26021,7 @@ export namespace Prisma {
 
   export const InvoiceScalarFieldEnum: {
     id: 'id',
+    invoiceNumber: 'invoiceNumber',
     totalAmount: 'totalAmount',
     amountPaid: 'amountPaid',
     debt: 'debt',
@@ -27430,6 +27444,7 @@ export namespace Prisma {
     OR?: InvoiceWhereInput[]
     NOT?: InvoiceWhereInput | InvoiceWhereInput[]
     id?: StringFilter<"Invoice"> | string
+    invoiceNumber?: StringFilter<"Invoice"> | string
     totalAmount?: FloatFilter<"Invoice"> | number
     amountPaid?: FloatFilter<"Invoice"> | number
     debt?: FloatFilter<"Invoice"> | number
@@ -27448,6 +27463,7 @@ export namespace Prisma {
 
   export type InvoiceOrderByWithRelationInput = {
     id?: SortOrder
+    invoiceNumber?: SortOrder
     totalAmount?: SortOrder
     amountPaid?: SortOrder
     debt?: SortOrder
@@ -27466,6 +27482,7 @@ export namespace Prisma {
 
   export type InvoiceWhereUniqueInput = Prisma.AtLeast<{
     id?: string
+    invoiceNumber?: string
     appointmentId?: string
     AND?: InvoiceWhereInput | InvoiceWhereInput[]
     OR?: InvoiceWhereInput[]
@@ -27483,10 +27500,11 @@ export namespace Prisma {
     customer?: XOR<CustomerScalarRelationFilter, CustomerWhereInput>
     payments?: PaymentListRelationFilter
     commission?: XOR<StaffCommissionNullableScalarRelationFilter, StaffCommissionWhereInput> | null
-  }, "id" | "appointmentId">
+  }, "id" | "invoiceNumber" | "appointmentId">
 
   export type InvoiceOrderByWithAggregationInput = {
     id?: SortOrder
+    invoiceNumber?: SortOrder
     totalAmount?: SortOrder
     amountPaid?: SortOrder
     debt?: SortOrder
@@ -27508,6 +27526,7 @@ export namespace Prisma {
     OR?: InvoiceScalarWhereWithAggregatesInput[]
     NOT?: InvoiceScalarWhereWithAggregatesInput | InvoiceScalarWhereWithAggregatesInput[]
     id?: StringWithAggregatesFilter<"Invoice"> | string
+    invoiceNumber?: StringWithAggregatesFilter<"Invoice"> | string
     totalAmount?: FloatWithAggregatesFilter<"Invoice"> | number
     amountPaid?: FloatWithAggregatesFilter<"Invoice"> | number
     debt?: FloatWithAggregatesFilter<"Invoice"> | number
@@ -28984,6 +29003,7 @@ export namespace Prisma {
 
   export type InvoiceCreateInput = {
     id?: string
+    invoiceNumber?: string
     totalAmount: number
     amountPaid?: number
     debt: number
@@ -28999,6 +29019,7 @@ export namespace Prisma {
 
   export type InvoiceUncheckedCreateInput = {
     id?: string
+    invoiceNumber?: string
     totalAmount: number
     amountPaid?: number
     debt: number
@@ -29014,6 +29035,7 @@ export namespace Prisma {
 
   export type InvoiceUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
+    invoiceNumber?: StringFieldUpdateOperationsInput | string
     totalAmount?: FloatFieldUpdateOperationsInput | number
     amountPaid?: FloatFieldUpdateOperationsInput | number
     debt?: FloatFieldUpdateOperationsInput | number
@@ -29029,6 +29051,7 @@ export namespace Prisma {
 
   export type InvoiceUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
+    invoiceNumber?: StringFieldUpdateOperationsInput | string
     totalAmount?: FloatFieldUpdateOperationsInput | number
     amountPaid?: FloatFieldUpdateOperationsInput | number
     debt?: FloatFieldUpdateOperationsInput | number
@@ -29044,6 +29067,7 @@ export namespace Prisma {
 
   export type InvoiceCreateManyInput = {
     id?: string
+    invoiceNumber?: string
     totalAmount: number
     amountPaid?: number
     debt: number
@@ -29057,6 +29081,7 @@ export namespace Prisma {
 
   export type InvoiceUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
+    invoiceNumber?: StringFieldUpdateOperationsInput | string
     totalAmount?: FloatFieldUpdateOperationsInput | number
     amountPaid?: FloatFieldUpdateOperationsInput | number
     debt?: FloatFieldUpdateOperationsInput | number
@@ -29067,6 +29092,7 @@ export namespace Prisma {
 
   export type InvoiceUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
+    invoiceNumber?: StringFieldUpdateOperationsInput | string
     totalAmount?: FloatFieldUpdateOperationsInput | number
     amountPaid?: FloatFieldUpdateOperationsInput | number
     debt?: FloatFieldUpdateOperationsInput | number
@@ -30503,6 +30529,7 @@ export namespace Prisma {
 
   export type InvoiceCountOrderByAggregateInput = {
     id?: SortOrder
+    invoiceNumber?: SortOrder
     totalAmount?: SortOrder
     amountPaid?: SortOrder
     debt?: SortOrder
@@ -30522,6 +30549,7 @@ export namespace Prisma {
 
   export type InvoiceMaxOrderByAggregateInput = {
     id?: SortOrder
+    invoiceNumber?: SortOrder
     totalAmount?: SortOrder
     amountPaid?: SortOrder
     debt?: SortOrder
@@ -30535,6 +30563,7 @@ export namespace Prisma {
 
   export type InvoiceMinOrderByAggregateInput = {
     id?: SortOrder
+    invoiceNumber?: SortOrder
     totalAmount?: SortOrder
     amountPaid?: SortOrder
     debt?: SortOrder
@@ -34240,6 +34269,7 @@ export namespace Prisma {
 
   export type InvoiceCreateWithoutBranchInput = {
     id?: string
+    invoiceNumber?: string
     totalAmount: number
     amountPaid?: number
     debt: number
@@ -34254,6 +34284,7 @@ export namespace Prisma {
 
   export type InvoiceUncheckedCreateWithoutBranchInput = {
     id?: string
+    invoiceNumber?: string
     totalAmount: number
     amountPaid?: number
     debt: number
@@ -34640,6 +34671,7 @@ export namespace Prisma {
     OR?: InvoiceScalarWhereInput[]
     NOT?: InvoiceScalarWhereInput | InvoiceScalarWhereInput[]
     id?: StringFilter<"Invoice"> | string
+    invoiceNumber?: StringFilter<"Invoice"> | string
     totalAmount?: FloatFilter<"Invoice"> | number
     amountPaid?: FloatFilter<"Invoice"> | number
     debt?: FloatFilter<"Invoice"> | number
@@ -35111,6 +35143,7 @@ export namespace Prisma {
 
   export type InvoiceCreateWithoutCustomerInput = {
     id?: string
+    invoiceNumber?: string
     totalAmount: number
     amountPaid?: number
     debt: number
@@ -35125,6 +35158,7 @@ export namespace Prisma {
 
   export type InvoiceUncheckedCreateWithoutCustomerInput = {
     id?: string
+    invoiceNumber?: string
     totalAmount: number
     amountPaid?: number
     debt: number
@@ -36990,6 +37024,7 @@ export namespace Prisma {
 
   export type InvoiceCreateWithoutAppointmentInput = {
     id?: string
+    invoiceNumber?: string
     totalAmount: number
     amountPaid?: number
     debt: number
@@ -37004,6 +37039,7 @@ export namespace Prisma {
 
   export type InvoiceUncheckedCreateWithoutAppointmentInput = {
     id?: string
+    invoiceNumber?: string
     totalAmount: number
     amountPaid?: number
     debt: number
@@ -37274,6 +37310,7 @@ export namespace Prisma {
 
   export type InvoiceUpdateWithoutAppointmentInput = {
     id?: StringFieldUpdateOperationsInput | string
+    invoiceNumber?: StringFieldUpdateOperationsInput | string
     totalAmount?: FloatFieldUpdateOperationsInput | number
     amountPaid?: FloatFieldUpdateOperationsInput | number
     debt?: FloatFieldUpdateOperationsInput | number
@@ -37288,6 +37325,7 @@ export namespace Prisma {
 
   export type InvoiceUncheckedUpdateWithoutAppointmentInput = {
     id?: StringFieldUpdateOperationsInput | string
+    invoiceNumber?: StringFieldUpdateOperationsInput | string
     totalAmount?: FloatFieldUpdateOperationsInput | number
     amountPaid?: FloatFieldUpdateOperationsInput | number
     debt?: FloatFieldUpdateOperationsInput | number
@@ -37734,6 +37772,7 @@ export namespace Prisma {
 
   export type InvoiceCreateWithoutPaymentsInput = {
     id?: string
+    invoiceNumber?: string
     totalAmount: number
     amountPaid?: number
     debt: number
@@ -37748,6 +37787,7 @@ export namespace Prisma {
 
   export type InvoiceUncheckedCreateWithoutPaymentsInput = {
     id?: string
+    invoiceNumber?: string
     totalAmount: number
     amountPaid?: number
     debt: number
@@ -37811,6 +37851,7 @@ export namespace Prisma {
 
   export type InvoiceUpdateWithoutPaymentsInput = {
     id?: StringFieldUpdateOperationsInput | string
+    invoiceNumber?: StringFieldUpdateOperationsInput | string
     totalAmount?: FloatFieldUpdateOperationsInput | number
     amountPaid?: FloatFieldUpdateOperationsInput | number
     debt?: FloatFieldUpdateOperationsInput | number
@@ -37825,6 +37866,7 @@ export namespace Prisma {
 
   export type InvoiceUncheckedUpdateWithoutPaymentsInput = {
     id?: StringFieldUpdateOperationsInput | string
+    invoiceNumber?: StringFieldUpdateOperationsInput | string
     totalAmount?: FloatFieldUpdateOperationsInput | number
     amountPaid?: FloatFieldUpdateOperationsInput | number
     debt?: FloatFieldUpdateOperationsInput | number
@@ -38094,6 +38136,7 @@ export namespace Prisma {
 
   export type InvoiceCreateWithoutCommissionInput = {
     id?: string
+    invoiceNumber?: string
     totalAmount: number
     amountPaid?: number
     debt: number
@@ -38108,6 +38151,7 @@ export namespace Prisma {
 
   export type InvoiceUncheckedCreateWithoutCommissionInput = {
     id?: string
+    invoiceNumber?: string
     totalAmount: number
     amountPaid?: number
     debt: number
@@ -38255,6 +38299,7 @@ export namespace Prisma {
 
   export type InvoiceUpdateWithoutCommissionInput = {
     id?: StringFieldUpdateOperationsInput | string
+    invoiceNumber?: StringFieldUpdateOperationsInput | string
     totalAmount?: FloatFieldUpdateOperationsInput | number
     amountPaid?: FloatFieldUpdateOperationsInput | number
     debt?: FloatFieldUpdateOperationsInput | number
@@ -38269,6 +38314,7 @@ export namespace Prisma {
 
   export type InvoiceUncheckedUpdateWithoutCommissionInput = {
     id?: StringFieldUpdateOperationsInput | string
+    invoiceNumber?: StringFieldUpdateOperationsInput | string
     totalAmount?: FloatFieldUpdateOperationsInput | number
     amountPaid?: FloatFieldUpdateOperationsInput | number
     debt?: FloatFieldUpdateOperationsInput | number
@@ -38907,6 +38953,7 @@ export namespace Prisma {
 
   export type InvoiceCreateManyBranchInput = {
     id?: string
+    invoiceNumber?: string
     totalAmount: number
     amountPaid?: number
     debt: number
@@ -39157,6 +39204,7 @@ export namespace Prisma {
 
   export type InvoiceUpdateWithoutBranchInput = {
     id?: StringFieldUpdateOperationsInput | string
+    invoiceNumber?: StringFieldUpdateOperationsInput | string
     totalAmount?: FloatFieldUpdateOperationsInput | number
     amountPaid?: FloatFieldUpdateOperationsInput | number
     debt?: FloatFieldUpdateOperationsInput | number
@@ -39171,6 +39219,7 @@ export namespace Prisma {
 
   export type InvoiceUncheckedUpdateWithoutBranchInput = {
     id?: StringFieldUpdateOperationsInput | string
+    invoiceNumber?: StringFieldUpdateOperationsInput | string
     totalAmount?: FloatFieldUpdateOperationsInput | number
     amountPaid?: FloatFieldUpdateOperationsInput | number
     debt?: FloatFieldUpdateOperationsInput | number
@@ -39185,6 +39234,7 @@ export namespace Prisma {
 
   export type InvoiceUncheckedUpdateManyWithoutBranchInput = {
     id?: StringFieldUpdateOperationsInput | string
+    invoiceNumber?: StringFieldUpdateOperationsInput | string
     totalAmount?: FloatFieldUpdateOperationsInput | number
     amountPaid?: FloatFieldUpdateOperationsInput | number
     debt?: FloatFieldUpdateOperationsInput | number
@@ -39451,6 +39501,7 @@ export namespace Prisma {
 
   export type InvoiceCreateManyCustomerInput = {
     id?: string
+    invoiceNumber?: string
     totalAmount: number
     amountPaid?: number
     debt: number
@@ -39561,6 +39612,7 @@ export namespace Prisma {
 
   export type InvoiceUpdateWithoutCustomerInput = {
     id?: StringFieldUpdateOperationsInput | string
+    invoiceNumber?: StringFieldUpdateOperationsInput | string
     totalAmount?: FloatFieldUpdateOperationsInput | number
     amountPaid?: FloatFieldUpdateOperationsInput | number
     debt?: FloatFieldUpdateOperationsInput | number
@@ -39575,6 +39627,7 @@ export namespace Prisma {
 
   export type InvoiceUncheckedUpdateWithoutCustomerInput = {
     id?: StringFieldUpdateOperationsInput | string
+    invoiceNumber?: StringFieldUpdateOperationsInput | string
     totalAmount?: FloatFieldUpdateOperationsInput | number
     amountPaid?: FloatFieldUpdateOperationsInput | number
     debt?: FloatFieldUpdateOperationsInput | number
@@ -39589,6 +39642,7 @@ export namespace Prisma {
 
   export type InvoiceUncheckedUpdateManyWithoutCustomerInput = {
     id?: StringFieldUpdateOperationsInput | string
+    invoiceNumber?: StringFieldUpdateOperationsInput | string
     totalAmount?: FloatFieldUpdateOperationsInput | number
     amountPaid?: FloatFieldUpdateOperationsInput | number
     debt?: FloatFieldUpdateOperationsInput | number
