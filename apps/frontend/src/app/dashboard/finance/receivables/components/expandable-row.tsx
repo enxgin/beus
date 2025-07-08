@@ -39,12 +39,20 @@ export function ExpandableRow({ row, isExpanded, onToggle }: ExpandableRowProps)
   };
 
   const formatDate = (dateString: string) => {
+    if (!dateString) return "-";
     return new Date(dateString).toLocaleDateString("tr-TR", {
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
     });
   };
+
+  // Derived stats from invoices
+  const unpaidInvoices = customer.invoices.filter(inv => inv.status === 'UNPAID').length;
+  const partiallyPaidInvoices = customer.invoices.filter(inv => inv.status === 'PARTIALLY_PAID').length;
+  const lastInvoiceDate = customer.invoices.length > 0 
+    ? customer.invoices.reduce((latest, inv) => new Date(inv.createdAt) > new Date(latest.createdAt) ? inv : latest).createdAt
+    : null;
 
   return (
     <>
@@ -65,63 +73,51 @@ export function ExpandableRow({ row, isExpanded, onToggle }: ExpandableRowProps)
             {customer.customerPhone && (
               <span className="text-xs text-muted-foreground">{customer.customerPhone}</span>
             )}
-            {customer.email && (
-              <span className="text-xs text-muted-foreground">{customer.email}</span>
-            )}
           </div>
         </TableCell>
-        <TableCell className="text-right font-medium">
-          {formatCurrency(customer.totalDue)}
-        </TableCell>
-        <TableCell>
-          <div className="flex flex-col">
-            {customer.unpaidInvoices > 0 && (
-              <Badge variant="destructive" className="w-fit mb-1">
-                {customer.unpaidInvoices} Ödenmemiş
-              </Badge>
-            )}
-            {customer.partiallyPaidInvoices > 0 && (
-              <Badge variant="outline" className="w-fit">
-                {customer.partiallyPaidInvoices} Kısmen Ödenmiş
-              </Badge>
-            )}
-          </div>
-        </TableCell>
-        <TableCell>
-          {customer.lastInvoiceDate
-            ? formatDate(customer.lastInvoiceDate)
-            : "-"}
-        </TableCell>
-        <TableCell className="text-right">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 w-8 p-0"
-            onClick={(e) => {
-              e.stopPropagation();
-              router.push(`/dashboard/customers/${customer.id}`);
-            }}
-          >
-            <Eye className="h-4 w-4" />
-          </Button>
-        </TableCell>
+        <TableCell className="text-right font-medium">{formatCurrency(customer.totalDebt)}</TableCell>
+        <TableCell className="text-right">{formatCurrency(customer.totalPaid)}</TableCell>
+        <TableCell className="text-right font-bold text-red-600">{formatCurrency(customer.remainingDebt)}</TableCell>
+        <TableCell className="text-center"><Badge>{customer.invoices.length}</Badge></TableCell>
       </TableRow>
 
       {isExpanded && (
-        <TableRow>
-          <TableCell colSpan={5} className="p-0 bg-muted/30">
+        <TableRow className="bg-muted/20 hover:bg-muted/20">
+          <TableCell colSpan={5} className="p-0">
             <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.3 }}
-              className="px-10 py-4 overflow-x-auto"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              className="overflow-hidden p-4"
             >
-              <h4 className="text-sm font-medium mb-2">Fatura Detayları</h4>
+              <h4 className="font-semibold mb-2">Müşteri Borç Detayları</h4>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
+                  <div>
+                      <p className="text-muted-foreground">Toplam Borç</p>
+                      <p className="font-semibold">{formatCurrency(customer.totalDebt)}</p>
+                  </div>
+                  <div>
+                      <p className="text-muted-foreground">Ödenmemiş Fatura</p>
+                      <p className="font-semibold">{unpaidInvoices} adet</p>
+                  </div>
+                  <div>
+                      <p className="text-muted-foreground">Kısmi Ödenmiş Fatura</p>
+                      <p className="font-semibold">{partiallyPaidInvoices} adet</p>
+                  </div>
+                  <div>
+                      <p className="text-muted-foreground">Son Fatura Tarihi</p>
+                      <p className="font-semibold">
+                        {lastInvoiceDate ? formatDate(lastInvoiceDate) : "-"}
+                      </p>
+                  </div>
+              </div>
+
+              <h4 className="font-semibold mb-2 mt-4">Faturalar</h4>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[100px]">Fatura No</TableHead>
+                    <TableHead>Fatura No</TableHead>
                     <TableHead>Tarih</TableHead>
                     <TableHead>Durum</TableHead>
                     <TableHead className="text-right">Toplam</TableHead>
@@ -132,7 +128,7 @@ export function ExpandableRow({ row, isExpanded, onToggle }: ExpandableRowProps)
                 </TableHeader>
                 <TableBody>
                   {customer.invoices.map((invoice) => (
-                    <TableRow key={invoice.id}>
+                    <TableRow key={invoice.invoiceId}>
                       <TableCell className="font-medium">
                         {invoice.invoiceNumber}
                       </TableCell>
@@ -145,7 +141,7 @@ export function ExpandableRow({ row, isExpanded, onToggle }: ExpandableRowProps)
                         {formatCurrency(invoice.paidAmount)}
                       </TableCell>
                       <TableCell className="text-right font-medium">
-                        {formatCurrency(invoice.dueAmount)}
+                        {formatCurrency(invoice.remainingAmount)}
                       </TableCell>
                       <TableCell>
                         <Button
@@ -153,7 +149,7 @@ export function ExpandableRow({ row, isExpanded, onToggle }: ExpandableRowProps)
                           size="sm"
                           className="h-8 w-8 p-0"
                           onClick={() =>
-                            router.push(`/dashboard/finance/invoices/${invoice.id}`)
+                            router.push(`/dashboard/finance/invoices/${invoice.invoiceId}`)
                           }
                         >
                           <Eye className="h-4 w-4" />
