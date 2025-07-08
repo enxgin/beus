@@ -28,6 +28,14 @@ export class TagsController {
     return this.tagsService.findAll();
   }
 
+  @Get('name/:name')
+  @ApiOperation({ summary: 'İsim ile etiket bilgisi getir' })
+  @ApiResponse({ status: 200, description: 'Etiket bulundu' })
+  @ApiResponse({ status: 404, description: 'Etiket bulunamadı' })
+  findByName(@Param('name') name: string) {
+    return this.tagsService.findByName(name);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'ID ile etiket bilgisi getir' })
   @ApiResponse({ status: 200, description: 'Etiket bulundu' })

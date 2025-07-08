@@ -8,26 +8,45 @@ import { v4 as uuidv4 } from 'uuid';
 export class TagsService {
   constructor(private prisma: PrismaService) {}
 
-  // Yeni bir etiket oluştur
+  // Yeni bir etiket oluştur (Upsert mantığı ile)
   async create(createTagDto: CreateTagDto) {
+    const { name, color } = createTagDto;
+
     try {
-      const id = uuidv4();
-      console.log(`Etiket oluşturuluyor: ${createTagDto.name}, ${createTagDto.color || '#000000'}`);
-      
-      // NOW() fonksiyonunu kullanarak timestamp sorununu çözüyoruz
-      await this.prisma.$executeRaw`
-        INSERT INTO "Tag" ("id", "name", "color", "createdAt", "updatedAt")
-        VALUES (${id}, ${createTagDto.name}, ${createTagDto.color || '#000000'}, NOW(), NOW())
-      `;
-      
-      const result = await this.prisma.$queryRaw<any[]>`
-        SELECT * FROM "Tag" WHERE "id" = ${id}
-      `;
-      
-      return result[0];
+      // 1. Bu isimde bir etiket zaten var mı diye kontrol et (büyük-küçük harf duyarsız)
+      const existingTag = await this.prisma.tag.findFirst({
+        where: { 
+          name: { 
+            equals: name, 
+            mode: 'insensitive' 
+          } 
+        },
+      });
+
+      // 2. Etiket zaten varsa, onu döndür
+      if (existingTag) {
+        console.log(`Mevcut etiket bulundu, tekrar oluşturulmuyor: ${name}`);
+        return existingTag;
+      }
+
+      // 3. Etiket yoksa, yenisini oluştur
+      console.log(`Yeni etiket oluşturuluyor: ${name}`);
+      return await this.prisma.tag.create({
+        data: {
+          name,
+          color: color || '#000000',
+        },
+      });
+
     } catch (error) {
-      console.error('Etiket oluşturma hatası:', error);
-      throw error;
+      console.error(`Etiket oluşturma/bulma hatası (${name}):`, error);
+      // Prisma'nın bilinen bir hatası ise daha anlamlı bir mesaj fırlat
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === 'P2002') { // Unique constraint failed
+          throw new ConflictException(`'${name}' adında bir etiket zaten mevcut.`);
+        }
+      }
+      throw new InternalServerErrorException('Etiket oluşturulurken bir sunucu hatası oluştu.');
     }
   }
 
@@ -59,6 +78,25 @@ export class TagsService {
       if (error instanceof NotFoundException) throw error;
       console.error(`Etiket getirme hatası (ID: ${id}):`, error);
       throw new NotFoundException(`Etiket bulunamadı: ID ${id}`);
+    }
+  }
+
+  // İsim ile belirli bir etiketi getir
+  async findByName(name: string) {
+    try {
+      const result = await this.prisma.$queryRaw<any[]>`
+        SELECT * FROM "Tag" WHERE "name" = ${name}
+      `;
+
+      if (!result || result.length === 0) {
+        throw new NotFoundException(`Etiket bulunamadı: İsim ${name}`);
+      }
+
+      return result[0];
+    } catch (error) {
+      if (error instanceof NotFoundException) throw error;
+      console.error(`Etiket getirme hatası (İsim: ${name}):`, error);
+      throw new NotFoundException(`Etiket bulunamadı: İsim ${name}`);
     }
   }
 

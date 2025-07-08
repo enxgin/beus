@@ -133,38 +133,54 @@ export function EditCustomerDialog({ customer, isOpen, onOpenChange }: EditCusto
   }, [isOpen, customer, form])
 
   const onSubmit = async (values: EditCustomerFormValues) => {
-    if (!customer) return
+    if (!customer) return;
 
     try {
-      // Telefon numarasını formatlayalım (boşlukları kaldıralım)
-      // Backend'in beklediği formatı oluşturalım
-      const formattedValues = {
+      // 1. Etiketleri ID'ye dönüştür veya oluştur
+      const tagIds = await Promise.all(
+        tags.map(async (tag) => {
+          try {
+            // Etiketler global olduğu için branchId olmadan arama yapıyoruz.
+            const response = await api.get(`/tags/name/${tag.name.toLowerCase()}`);
+            return response.data.id;
+          } catch (error: any) {
+            // Etiket bulunamazsa (404), bu şube için oluştur
+            if (error.response && error.response.status === 404) {
+              const newTagResponse = await api.post('/tags', {
+                name: tag.name.toLowerCase(),
+                color: tag.color,
+              });
+              return newTagResponse.data.id;
+            }
+            // Diğer hataları tekrar fırlat
+            throw error;
+          }
+        })
+      );
+
+      // 2. Backend'e gönderilecek veriyi hazırla
+      const dataToSend = {
         name: values.name,
         phone: values.phone.replace(/\s+/g, ''),
         branchId: values.branchId,
         notes: values.notes,
-        discountRate: values.discountRate || 0,
-        // Artık etiketleri doğrudan gönderebiliriz
-        tags: tags
-      }
+        discountRate: (Number(values.discountRate) || 0) / 100,
+        tagIds: tagIds,
+      };
 
-      // API isteğini gönderelim
-      await api.patch(`/customers/${customer.id}`, formattedValues)
+      // 3. Müşteriyi güncelle
+      await api.patch(`/customers/${customer.id}`, dataToSend);
       
-      // Başarılı olduğunda
-      toast.success('Müşteri bilgileri başarıyla güncellendi.')
-      queryClient.invalidateQueries({ queryKey: ["customers"] })
-      queryClient.invalidateQueries({ queryKey: ["customer", customer.id] })
-      onOpenChange(false) // Diyalogu kapat
+      toast.success("Müşteri bilgileri başarıyla güncellendi.");
+      queryClient.invalidateQueries({ queryKey: ["customers"] });
+      queryClient.invalidateQueries({ queryKey: ["customer", customer.id] });
+      onOpenChange(false);
     } catch (error: any) {
-      // Hata detaylarını göster
-      console.error('Güncelleme hatası:', error)
-      
-      // API'den gelen hata mesajını göster (varsa)
-      const errorMessage = error.response?.data?.message || 'Müşteri bilgileri güncellenirken bir hata oluştu.'
-      toast.error(errorMessage)
+      console.error("Müşteri güncellenirken hata:", error);
+      const errorMessage = error.response?.data?.message || "Müşteri güncellenirken bir hata oluştu.";
+      toast.error(Array.isArray(errorMessage) ? errorMessage.join(', ') : errorMessage);
     }
-  }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>

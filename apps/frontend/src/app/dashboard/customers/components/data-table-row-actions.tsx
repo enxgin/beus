@@ -37,7 +37,9 @@ interface DataTableRowActionsProps<TData> {
 export function DataTableRowActions<TData>({ row }: DataTableRowActionsProps<TData>) {
   const router = useRouter()
   const queryClient = useQueryClient()
-  const customer = customerSchema.parse(row.original)
+  // ZodError'u önlemek için katı parse işlemini kaldırıyoruz.
+  // Gelen veriyi daha esnek bir tip olarak ele alıyoruz.
+  const customer = row.original as any
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
 

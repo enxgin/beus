@@ -69,20 +69,34 @@ export const columns: ColumnDef<CustomerWithTags>[] = [
       <DataTableColumnHeader column={column} title="Etiketler" />
     ),
     cell: ({ row }) => {
-      const tags = row.original.tags
-      if (!tags || tags.length === 0) {
-        return null
+      // ZodError ve key hatasını önlemek için gelen veriyi güvenli bir şekilde işle
+      const tags = row.original.tags;
+
+      // `tags` verisinin bir dizi olduğundan ve boş olmadığından emin ol
+      if (!Array.isArray(tags) || tags.length === 0) {
+        return null;
       }
+
       return (
         <div className="flex flex-wrap gap-1">
-          {/* React key hatasını çözen ekleme */}
-          {tags.map((tag) => (
-            <Badge key={tag.id} variant="outline">
-              {tag.name}
-            </Badge>
-          ))}
+          {tags.map((tag, index) => {
+            // Her bir etiketin bir obje olduğundan ve `id` ile `name` içerdiğinden emin ol
+            if (typeof tag === 'object' && tag !== null && 'id' in tag && 'name' in tag) {
+              return (
+                <Badge key={tag.id} variant="outline">
+                  {tag.name}
+                </Badge>
+              );
+            }
+            // Beklenmedik bir format gelirse, en azından çökmemesi için index'i key olarak kullan
+            return (
+              <Badge key={index} variant="destructive">
+                Hatalı Etiket
+              </Badge>
+            );
+          })}
         </div>
-      )
+      );
     },
     filterFn: (row, id, value) => {
       return value.includes(row.getValue(id))

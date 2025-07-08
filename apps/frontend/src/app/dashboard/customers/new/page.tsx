@@ -109,20 +109,39 @@ export default function NewCustomerPage() {
       color: tag.color
     }));
     
-    // Müşteri verilerini hazırla
-    const customerData = {
-      name: values.name,
-      phone: phoneNumber,
-      notes: values.notes || undefined, // Null/empty string yerine undefined gönder
-      discountRate: Number(values.discountRate) || 0, // String'i Number'a dönüştür
-      tags: formattedTags.length > 0 ? formattedTags : undefined, // Boş dizi yerine undefined gönder
-      branchId: userBranch.id
-    }
-      
     try {
-      
-      // API isteği
-      const response = await api.post('/customers', customerData)
+      // 1. Etiketleri ID'ye dönüştür veya oluştur
+      const tagIds = await Promise.all(
+        tags.map(async (tag) => {
+          try {
+            // Etiketler global olduğu için branchId olmadan arama yapıyoruz.
+            const response = await api.get(`/tags/name/${tag.name.toLowerCase()}`);
+            return response.data.id;
+          } catch (error: any) {
+            if (error.response && error.response.status === 404) {
+              const newTagResponse = await api.post('/tags', {
+                name: tag.name.toLowerCase(),
+                color: tag.color,
+              });
+              return newTagResponse.data.id;
+            }
+            throw error;
+          }
+        })
+      );
+
+      // 2. Backend'e gönderilecek veriyi hazırla
+      const customerData = {
+        name: values.name,
+        phone: phoneNumber,
+        notes: values.notes || undefined,
+        discountRate: (Number(values.discountRate) || 0) / 100,
+        branchId: userBranch.id,
+        tagIds: tagIds.length > 0 ? tagIds : undefined,
+      };
+
+      // 3. API isteği
+      const response = await api.post('/customers', customerData);
       
       // Success toast
       toast.success("Müşteri başarıyla eklendi")
