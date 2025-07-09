@@ -168,31 +168,47 @@ export class CustomersService {
       delete (customerData as any).id;
     }
 
-    return this.prisma.customer.update({
-      where: { id },
-      data: {
-        ...customerData,
-        // `tags` ilişkisini güncellemek için `set` kullanıyoruz.
-        // Bu, mevcut tüm etiketleri ayırır ve sadece `tagIds` listesindekileri bağlar.
-        tags: {
-          // 1. Mevcut tüm etiket ilişkilerini sil.
-          deleteMany: {},
-          // 2. Yeni etiket ilişkilerini oluştur.
-          create: tagIds?.map((tagId) => ({
-            tag: {
-              connect: { id: tagId },
+    // Etiket ilişkilerini yönetmek için transaction kullanıyoruz
+    return this.prisma.$transaction(async (tx) => {
+      // 1. Önce müşterinin temel bilgilerini güncelle
+      const updatedCustomer = await tx.customer.update({
+        where: { id },
+        data: customerData,
+      });
+
+      // 2. Eğer tagIds gönderildiyse, etiket ilişkilerini güncelle
+      if (tagIds) {
+        // Önce müşterinin mevcut tüm etiket ilişkilerini sil
+        await tx.customerTag.deleteMany({
+          where: { customerId: id },
+        });
+
+        // Eğer yeni etiketler varsa, onları ekle
+        if (tagIds.length > 0) {
+          // Her bir etiket için bir CustomerTag ilişkisi oluştur
+          for (const tagId of tagIds) {
+            await tx.customerTag.create({
+              data: {
+                customerId: id,
+                tagId: tagId,
+              },
+            });
+          }
+        }
+      }
+
+      // 3. Güncellenmiş müşteriyi tüm ilişkileriyle birlikte döndür
+      return tx.customer.findUnique({
+        where: { id },
+        include: {
+          tags: {
+            include: {
+              tag: true,
             },
-          })),
-        },
-      },
-      include: {
-        tags: {
-          include: {
-            tag: true,
           },
+          branch: true,
         },
-        branch: true,
-      },
+      });
     });
   }
 
