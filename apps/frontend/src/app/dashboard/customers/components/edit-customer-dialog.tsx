@@ -134,11 +134,14 @@ export function EditCustomerDialog({ customer, open, onOpenChange }: EditCustome
 
   const onSubmit = async (data: EditCustomerFormValues) => {
     const phoneWithoutSpaces = data.phone.replace(/\s/g, '');
+    const { tags, ...restData } = data;
     const submissionData = {
-        ...data,
-        phone: phoneWithoutSpaces,
-        email: data.email === '' ? undefined : data.email,
-        notes: data.notes === '' ? undefined : data.notes,
+      ...restData,
+      phone: phoneWithoutSpaces,
+      email: data.email === '' ? undefined : data.email,
+      notes: data.notes === '' ? undefined : data.notes,
+      // Sadece ID'si olan (yani DB'de kayıtlı) etiketleri gönder
+      tagIds: tags?.filter(tag => !!tag.id).map(tag => tag.id) || [],
     };
 
     try {
