@@ -164,6 +164,8 @@ export class PackagesService {
             });
           } else if (packageItem.type === 'SESSION' && packageItem.totalSessions) {
             remainingSessions['sessions'] = packageItem.totalSessions;
+          } else if (packageItem.type === PackageType.TIME && packageItem.totalMinutes) {
+            remainingSessions['minutes'] = packageItem.totalMinutes;
           }
 
           return tx.customerPackage.create({
