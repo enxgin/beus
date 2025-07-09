@@ -161,7 +161,8 @@ export class CustomersService {
   }
 
   async update(id: string, updateCustomerDto: UpdateCustomerDto) {
-    const { tagIds, ...customerData } = updateCustomerDto;
+    // DTO'dan `id` ve `tagIds` alanlarını ayır, geri kalanı `customerData` olsun.
+    const { id: dtoId, tagIds, ...customerData } = updateCustomerDto as any;
 
     return this.prisma.$transaction(async (prisma) => {
       // 1. Müşteri verilerini güncelle
