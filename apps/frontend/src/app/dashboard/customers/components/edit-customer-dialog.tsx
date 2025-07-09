@@ -71,26 +71,44 @@ export function EditCustomerDialog({ customer, open, onOpenChange }: EditCustome
   // Bileşen mount olduğunda ve müşteri değiştiğinde etiketleri normalize et
   useEffect(() => {
     if (customer) {
-      // API'den gelen etiketleri normalize et - farklı formatları destekle
+      console.log('Müşteri verileri:', customer);
+      console.log('Müşteri etiketleri (ham):', customer.tags);
+      
+      // API'den gelen etiketleri normalize et
       let normalizedTags: TagType[] = [];
       
-      if (customer.tags && Array.isArray(customer.tags)) {
-        normalizedTags = customer.tags.map((tagItem: any, index: number) => {
-          // API yanıt formatına uygun olarak tag alt nesnesini al
-          const tagObj = tagItem.tag || tagItem;
+      // Eğer etiketler varsa
+      if (customer.tags && Array.isArray(customer.tags) && customer.tags.length > 0) {
+        // Her bir etiket için
+        normalizedTags = customer.tags.map((tagItem: any) => {
+          console.log('Etiket öğesi işleniyor:', tagItem);
           
-          // Tag bir string ise
-          if (typeof tagObj === 'string') {
-            return { id: `existing-${index}`, name: tagObj, color: '#3b82f6' };
-          }
-          // Tag bir nesne ise
-          else if (typeof tagObj === 'object' && tagObj !== null) {
-            return { 
-              id: tagObj.id || tagItem.id || `existing-${index}`,
-              name: tagObj.name || `Etiket ${index+1}`, 
-              color: tagObj.color || '#3b82f6'
+          // Doğrudan Tag nesnesi ise (muhtemelen bu format)
+          if (tagItem.id && tagItem.name) {
+            return {
+              id: tagItem.id,
+              name: tagItem.name,
+              color: tagItem.color || '#3b82f6'
             };
           }
+          // CustomerTag formatında ise (tag alt nesnesi içinde)
+          else if (tagItem.tag && tagItem.tag.id) {
+            return {
+              id: tagItem.tag.id,
+              name: tagItem.tag.name,
+              color: tagItem.tag.color || '#3b82f6'
+            };
+          }
+          // CustomerTag formatında ama tagId ve customerId içeriyorsa
+          else if (tagItem.tagId) {
+            return {
+              id: tagItem.tagId,
+              name: tagItem.name || 'Etiket',
+              color: tagItem.color || '#3b82f6'
+            };
+          }
+          
+          console.warn('Tanımlanamayan etiket formatı:', tagItem);
           return null;
         }).filter(Boolean) as TagType[];
       }
@@ -98,7 +116,7 @@ export function EditCustomerDialog({ customer, open, onOpenChange }: EditCustome
       console.log('Normalize edilmiş etiketler:', normalizedTags);
       setTags(normalizedTags);
     }
-  }, [customer])
+  }, [customer]); // customer değiştiğinde yeniden çalıştır
 
   const form = useForm<EditCustomerFormValues>({
     resolver: zodResolver(editCustomerSchema),
@@ -133,27 +151,54 @@ export function EditCustomerDialog({ customer, open, onOpenChange }: EditCustome
   }, [tags, form])
 
   const onSubmit = async (data: EditCustomerFormValues) => {
-    const phoneWithoutSpaces = data.phone.replace(/\s/g, '');
-    const { tags, ...restData } = data;
-    
-    // Sadece veritabanında kayıtlı olan etiketlerin ID'lerini al
-    // Geçici ID'ler (new- ile başlayan) filtreleniyor
-    const existingTagIds = tags
-      ?.filter(tag => !!tag.id && !String(tag.id).startsWith('new-'))
-      .map(tag => tag.id as string)
-      || [];
-      
-    console.log('Mevcut etiket ID\'leri:', existingTagIds);
-    
-    const submissionData = {
-      ...restData,
-      phone: phoneWithoutSpaces,
-      email: data.email === '' ? undefined : data.email,
-      notes: data.notes === '' ? undefined : data.notes,
-      tagIds: existingTagIds, // Backend'e sadece var olan etiket ID'lerini gönder
-    };
-
     try {
+      const phoneWithoutSpaces = data.phone.replace(/\s/g, '');
+      const { tags, ...restData } = data;
+      
+      // Etiketleri detaylı şekilde logla
+      console.log('Form gönderiminde tüm etiketler:', tags);
+      
+      // Etiket ID'lerini ayıkla
+      let validTagIds: string[] = [];
+      
+      if (tags && Array.isArray(tags)) {
+        // Sadece geçerli veritabanı ID'lerini al
+        validTagIds = tags
+          .filter(tag => {
+            if (!tag || !tag.id) {
+              console.log('Geçersiz etiket veya ID yok:', tag);
+              return false;
+            }
+            
+            const tagId = String(tag.id);
+            
+            // Geçici ID'leri filtrele (temp- veya new- ile başlayan)
+            if (tagId.startsWith('temp-') || tagId.startsWith('new-')) {
+              console.log('Geçici ID filtrelendi:', tagId);
+              return false;
+            }
+            
+            console.log('Geçerli etiket ID:', tagId);
+            return true;
+          })
+          .map(tag => {
+            const tagId = String(tag.id);
+            console.log(`Etiket gönderiliyor: ID=${tagId}, Name=${tag.name}`);
+            return tagId;
+          });
+      }
+      
+      console.log(`Backend'e gönderilecek ${validTagIds.length} adet etiket ID:`, validTagIds);
+      
+      // Gönderilecek veriyi hazırla
+      const submissionData = {
+        ...restData,
+        phone: phoneWithoutSpaces,
+        email: data.email === '' ? undefined : data.email,
+        notes: data.notes === '' ? undefined : data.notes,
+        tagIds: validTagIds, // Her durumda dizi gönder (boş olsa bile)
+      };
+
       console.log('Gönderilecek veri:', submissionData);
       await api.patch(`/customers/${customer.id}`, submissionData);
       toast.success("Müşteri başarıyla güncellendi.");

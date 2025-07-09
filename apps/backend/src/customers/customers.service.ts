@@ -99,6 +99,7 @@ export class CustomersService {
                 tag: true,
               },
             },
+            branch: true, // Şube bilgisini de döndür
           },
         });
       });
