@@ -577,114 +577,184 @@ export class PackagesService {
   }
 
   // Müşteri Paketleri İşlemleri
+  // İstek önbelleği için Map kullanıyoruz
+  private customerPackageRequests = new Map<string, Promise<any>>();
+
   async createCustomerPackage(createCustomerPackageDto: CreateCustomerPackageDto) {
-    try {
-      console.log('Müşteri paketi oluşturma isteği alındı:', JSON.stringify(createCustomerPackageDto, null, 2));
+    // İstek için benzersiz bir anahtar oluştur
+    const requestKey = `${createCustomerPackageDto.customerId}_${createCustomerPackageDto.packageId}_${Date.now()}`;
+    console.log('=== PAKET SATIŞ BAŞLANGICI ===');
+    console.log('Müşteri paketi oluşturma isteği alındı:', JSON.stringify(createCustomerPackageDto, null, 2));
+    console.log('İstek zamanı:', new Date().toISOString());
+    console.log('İstek anahtarı:', requestKey);
+    
+    // Eğer aynı istek zaten işleniyor ise, bekleyen işlemi döndür
+    if (this.customerPackageRequests.has(requestKey)) {
+      console.log('Bu istek zaten işleniyor, bekleyen işlem döndürülüyor...');
+      return this.customerPackageRequests.get(requestKey);
+    }
       
-      const { customerId, packageId, salesCode, notes, startDate } = createCustomerPackageDto;
-
-      // Müşteri ve paket varlığını kontrol et
-      const customer = await this.prisma.customer.findUnique({
-        where: { id: customerId },
-      });
-
-      if (!customer) {
-        console.error(`Müşteri bulunamadı: ID ${customerId}`);
-        throw new NotFoundException(`Müşteri bulunamadı: ID ${customerId}`);
-      }
-
-      const packageItem = await this.prisma.package.findUnique({
-        where: { id: packageId },
-        include: {
-          services: {
-            include: {
-              service: true,
-            },
-          },
-        },
-      });
-
-      if (!packageItem) {
-        console.error(`Paket bulunamadı: ID ${packageId}`);
-        throw new NotFoundException(`Paket bulunamadı: ID ${packageId}`);
-      }
-
-      // Başlangıç tarihini kontrol et
-      let purchaseDate;
+    // İşlemi bir Promise olarak oluştur
+    const processPromise = new Promise(async (resolve, reject) => {
       try {
-        purchaseDate = startDate ? new Date(startDate) : new Date();
-        if (isNaN(purchaseDate.getTime())) {
-          throw new Error('Geçersiz tarih formatı');
-        }
-      } catch (error) {
-        console.error('Tarih dönüştürme hatası:', error);
-        throw new BadRequestException('Geçersiz başlangıç tarihi formatı');
-      }
+        const { customerId, packageId, salesCode, notes, startDate } = createCustomerPackageDto;
 
-      // Bitiş tarihini hesapla
-      const expiryDate = new Date(purchaseDate);
-      expiryDate.setDate(expiryDate.getDate() + packageItem.validityDays);
-
-      // Servis bazlı kalan seanslar için JSON objesi oluştur
-      const remainingServiceSessions: Record<string, number> = {};
-      
-      if (packageItem.services && packageItem.services.length > 0) {
-        packageItem.services.forEach(service => {
-          remainingServiceSessions[service.serviceId] = service.quantity;
+        // Müşteri ve paket varlığını kontrol et
+        const customer = await this.prisma.customer.findUnique({
+          where: { id: customerId },
         });
-      } else if (packageItem.type === 'SESSION' && packageItem.totalSessions) {
-        remainingServiceSessions['default'] = packageItem.totalSessions;
-      } else {
-        // Hiçbir servis yoksa ve seans bazlı değilse, boş bir JSON objesi oluştur
-        remainingServiceSessions['default'] = 0;
-      }
 
-      console.log('Oluşturulacak müşteri paketi verileri:', {
-        purchaseDate,
-        expiryDate,
-        remainingSessions: remainingServiceSessions,
-        customerId,
-        packageId,
-        salesCode,
-        notes
-      });
+        if (!customer) {
+          console.error(`Müşteri bulunamadı: ID ${customerId}`);
+          reject(new NotFoundException(`Müşteri bulunamadı: ID ${customerId}`));
+          return;
+        }
 
-      // Müşteri paketi oluştur
-      return this.prisma.customerPackage.create({
-        data: {
-          purchaseDate,
-          expiryDate,
-          remainingSessions: JSON.stringify(remainingServiceSessions), // Prisma şemasında Json tipinde
-          customerId,
-          packageId,
-          ...(salesCode ? { salesCode } : {}), // Conditional spread operator ile ekle
-          ...(notes ? { notes } : {}), // Conditional spread operator ile ekle
-        },
-        include: {
-          customer: true,
-          package: {
-            include: {
-              services: {
-                include: {
-                  service: true,
-                },
+        const packageItem = await this.prisma.package.findUnique({
+          where: { id: packageId },
+          include: {
+            services: {
+              include: {
+                service: true,
               },
             },
           },
-        },
-      });
-    } catch (error) {
-      console.error('Müşteri paketi oluşturulurken hata:', error);
-      
-      if (error instanceof PrismaClientKnownRequestError) {
-        if (error.code === 'P2002') {
-          throw new BadRequestException('Bu müşteri için aynı paket zaten satılmış.');
-        } else if (error.code === 'P2003') {
-          throw new BadRequestException('Geçersiz müşteri veya paket ID.');
+        });
+
+        if (!packageItem) {
+          console.error(`Paket bulunamadı: ID ${packageId}`);
+          reject(new NotFoundException(`Paket bulunamadı: ID ${packageId}`));
+          return;
         }
+
+        // Başlangıç tarihini kontrol et
+        let purchaseDate;
+        try {
+          purchaseDate = startDate ? new Date(startDate) : new Date();
+          if (isNaN(purchaseDate.getTime())) {
+            throw new Error('Geçersiz tarih formatı');
+          }
+        } catch (error) {
+          console.error('Tarih dönüştürme hatası:', error);
+          reject(new BadRequestException('Geçersiz başlangıç tarihi formatı'));
+          return;
+        }
+
+        // Bitiş tarihini hesapla
+        let expiryDate = null;
+        if (packageItem.validityDays) {
+          expiryDate = new Date(purchaseDate);
+          expiryDate.setDate(expiryDate.getDate() + packageItem.validityDays);
+        }
+
+        // Servis bazlı kalan seanslar için JSON objesi oluştur
+        const remainingServiceSessions: Record<string, number> = {};
+
+        if (packageItem.services && packageItem.services.length > 0) {
+          packageItem.services.forEach(service => {
+            remainingServiceSessions[service.serviceId] = service.quantity;
+          });
+        } else if (packageItem.type === 'SESSION' && packageItem.totalSessions) {
+          remainingServiceSessions['default'] = packageItem.totalSessions;
+        } else {
+          // Hiçbir servis yoksa ve seans bazlı değilse, boş bir JSON objesi oluştur
+          remainingServiceSessions['default'] = 0;
+        }
+
+        console.log('Oluşturulacak müşteri paketi verileri:', {
+          purchaseDate,
+          expiryDate,
+          remainingSessions: remainingServiceSessions,
+          customerId,
+          packageId,
+          salesCode,
+          notes
+        });
+
+        // Transaction içinde işlemi gerçekleştir
+        console.log('Prisma transaction başlatılıyor...');
+        try {
+          const result = await this.prisma.$transaction(async (prisma) => {
+            // Önce aynı müşteri ve paket için kayıt var mı kontrol et
+            const existingPackage = await prisma.customerPackage.findFirst({
+              where: {
+                customerId,
+                packageId,
+                purchaseDate: {
+                  gte: new Date(new Date().setHours(0, 0, 0, 0)) // Bugünün başlangıcı
+                }
+              }
+            });
+
+            if (existingPackage) {
+              console.log('Bu müşteri için bu paket bugün zaten satılmış:', existingPackage.id);
+              return existingPackage;
+            }
+
+            // Müşteri paketi oluştur
+            console.log('Prisma create çağrısı yapılıyor...');
+            return await prisma.customerPackage.create({
+              data: {
+                purchaseDate,
+                expiryDate,
+                remainingSessions: remainingServiceSessions, // Prisma şemasında Json tipinde
+                customerId,
+                packageId,
+                ...(salesCode ? { salesCode } : {}), // Conditional spread operator ile ekle
+                ...(notes ? { notes } : {}), // Conditional spread operator ile ekle
+              },
+              include: {
+                customer: true,
+                package: {
+                  include: {
+                    services: {
+                      include: {
+                        service: true,
+                      },
+                    },
+                  },
+                },
+              },
+            });
+          });
+
+          console.log('Müşteri paketi başarıyla oluşturuldu:', result.id);
+          console.log('=== PAKET SATIŞ TAMAMLANDI ===');
+          resolve(result);
+        } catch (error) {
+          console.error('Müşteri paketi oluşturulurken hata:', error);
+          
+          if (error instanceof PrismaClientKnownRequestError) {
+            if (error.code === 'P2002') {
+              reject(new BadRequestException('Bu müşteri için aynı paket zaten satılmış.'));
+            } else if (error.code === 'P2003') {
+              reject(new BadRequestException('Geçersiz müşteri veya paket ID.'));
+            } else {
+              reject(error);
+            }
+          } else {
+            reject(error);
+          }
+        }
+      } catch (error) {
+        console.error('Müşteri paketi işlemi sırasında beklenmeyen hata:', error);
+        reject(error);
       }
-      
+    });
+    
+    // Promise'i Map'e ekle
+    this.customerPackageRequests.set(requestKey, processPromise);
+    
+    try {
+      // İşlemi bekle ve sonucu döndür
+      const result = await processPromise;
+      return result;
+    } catch (error) {
+      console.error('Müşteri paketi oluşturulurken genel hata:', error);
       throw error;
+    } finally {
+      // İşlem tamamlandığında veya hata oluştuğunda Map'ten kaldır
+      this.customerPackageRequests.delete(requestKey);
     }
   }
 
