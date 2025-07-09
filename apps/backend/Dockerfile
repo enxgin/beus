@@ -21,21 +21,19 @@ WORKDIR /usr/src/app
 # Copy all package files again for building
 COPY package.json package-lock.json* ./
 COPY apps/backend/package.json ./apps/backend/
-COPY tsconfig.json ./
-
-# Copy prisma schema if it exists at the root
-COPY prisma ./prisma/
 
 # Install all dependencies (including devDependencies)
 RUN npm install
 
-# Copy source code
+# Copy source code and config files
+# Monorepo olduğu için, ilgili uygulamanın kaynak kodunu ve prisma şemasını kopyalıyoruz.
 COPY apps/backend/src ./apps/backend/src
-COPY apps/backend/tsconfig.build.json ./apps/backend/
+COPY apps/backend/prisma ./apps/backend/prisma
 COPY apps/backend/tsconfig.json ./apps/backend/
+COPY apps/backend/nest-cli.json ./apps/backend/
 
 # Generate Prisma Client
-RUN npx prisma generate
+RUN npx prisma generate --schema=./apps/backend/prisma/schema.prisma
 
 # Build the application
 RUN npm run build --workspace=backend
@@ -54,7 +52,7 @@ COPY --from=deps /usr/src/app/package.json ./
 COPY --from=deps /usr/src/app/apps/backend/package.json ./apps/backend/
 
 # Copy built application from builder stage
-COPY --from=builder /usr/src/app/dist ./dist
+COPY --from=builder /usr/src/app/apps/backend/dist ./dist
 
 # Copy Prisma client
 COPY --from=builder /usr/src/app/node_modules/.prisma ./node_modules/.prisma
@@ -63,4 +61,4 @@ COPY --from=builder /usr/src/app/node_modules/.prisma ./node_modules/.prisma
 EXPOSE 3000
 
 # Command to run the application
-CMD ["node", "dist/apps/backend/main.js"]
+CMD ["node", "dist/main.js"]
