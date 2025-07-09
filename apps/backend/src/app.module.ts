@@ -11,7 +11,6 @@ import { AppointmentsModule } from './appointments/appointments.module';
 import { PackagesModule } from './packages/packages.module';
 import * as path from 'path';
 import { InvoicesModule } from './invoices/invoices.module';
-import { TagsModule } from './tags/tags.module';
 import { ServiceCategoriesModule } from './service-categories/service-categories.module';
 import { StaffModule } from './staff/staff.module';
 import { DashboardModule } from './dashboard/dashboard.module';
@@ -36,7 +35,6 @@ import { FinanceModule } from './finance/finance.module';
     AppointmentsModule,
     PackagesModule,
     InvoicesModule,
-    TagsModule,
     ServiceCategoriesModule,
     StaffModule,
     DashboardModule,
