@@ -161,55 +161,61 @@ export class CustomersService {
   }
 
   async update(id: string, updateCustomerDto: UpdateCustomerDto) {
+    // DTO'dan tagIds'i ayır, geri kalanı customerData olsun
     const { tagIds, ...customerData } = updateCustomerDto;
 
-    // Güvenlik için, güncelleme verisinden 'id' alanını çıkaralım.
+    // Güvenlik için, güncelleme verisinden 'id' alanını çıkaralım
     if ('id' in customerData) {
       delete (customerData as any).id;
     }
 
-    // Etiket ilişkilerini yönetmek için transaction kullanıyoruz
-    return this.prisma.$transaction(async (tx) => {
-      // 1. Önce müşterinin temel bilgilerini güncelle
-      const updatedCustomer = await tx.customer.update({
-        where: { id },
-        data: customerData,
-      });
-
-      // 2. Eğer tagIds gönderildiyse, etiket ilişkilerini güncelle
-      if (tagIds) {
-        // Önce müşterinin mevcut tüm etiket ilişkilerini sil
-        await tx.customerTag.deleteMany({
-          where: { customerId: id },
+    try {
+      // Etiket ilişkilerini yönetmek için transaction kullanıyoruz
+      return await this.prisma.$transaction(async (tx) => {
+        // 1. Önce müşterinin temel bilgilerini güncelle
+        const updatedCustomer = await tx.customer.update({
+          where: { id },
+          data: customerData,
         });
 
-        // Eğer yeni etiketler varsa, onları ekle
-        if (tagIds.length > 0) {
-          // Her bir etiket için bir CustomerTag ilişkisi oluştur
-          for (const tagId of tagIds) {
-            await tx.customerTag.create({
-              data: {
-                customerId: id,
-                tagId: tagId,
-              },
-            });
+        // 2. Eğer tagIds gönderildiyse, etiket ilişkilerini güncelle
+        if (tagIds) {
+          // Önce müşterinin mevcut tüm etiket ilişkilerini sil
+          await tx.customerTag.deleteMany({
+            where: { customerId: id },
+          });
+
+          // Eğer yeni etiketler varsa, onları ekle
+          if (tagIds.length > 0) {
+            // Her bir etiket için bir CustomerTag ilişkisi oluştur
+            for (const tagId of tagIds) {
+              await tx.customerTag.create({
+                data: {
+                  customerId: id,
+                  tagId: tagId,
+                },
+              });
+            }
           }
         }
-      }
 
-      // 3. Güncellenmiş müşteriyi tüm ilişkileriyle birlikte döndür
-      return tx.customer.findUnique({
-        where: { id },
-        include: {
-          tags: {
-            include: {
-              tag: true,
+        // 3. Güncellenmiş müşteriyi tüm ilişkileriyle birlikte döndür
+        return tx.customer.findUnique({
+          where: { id },
+          include: {
+            tags: {
+              include: {
+                tag: true,
+              },
             },
+            branch: true,
           },
-          branch: true,
-        },
+        });
       });
-    });
+    } catch (error) {
+      console.error('Müşteri güncellenirken hata oluştu:', error);
+      throw error;
+    }
   }
 
   remove(id: string) {

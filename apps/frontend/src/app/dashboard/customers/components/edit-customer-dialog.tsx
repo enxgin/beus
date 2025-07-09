@@ -135,24 +135,34 @@ export function EditCustomerDialog({ customer, open, onOpenChange }: EditCustome
   const onSubmit = async (data: EditCustomerFormValues) => {
     const phoneWithoutSpaces = data.phone.replace(/\s/g, '');
     const { tags, ...restData } = data;
+    
+    // Önemli: Backend'e sadece veritabanında olan ve "new-" öneki taşımayan etiket ID'lerini gönder
+    // Bu, frontend'de geçici olarak eklenen "new-" önekli etiketlerin filtrelenmesini sağlar
+    const validTagIds = tags
+      ?.filter(tag => !!tag.id && !tag.id.toString().startsWith('new-')) // Sadece geçerli DB etiket ID'leri
+      .map(tag => tag.id as string) // string array'ine dönüştür
+      || [];
+    
+    console.log('Gönderilecek tag ID\'leri:', validTagIds);
+    
     const submissionData = {
       ...restData,
       phone: phoneWithoutSpaces,
       email: data.email === '' ? undefined : data.email,
       notes: data.notes === '' ? undefined : data.notes,
-      // Sadece ID'si olan (yani DB'de kayıtlı) etiketleri gönder
-      tagIds: tags?.filter(tag => !!tag.id).map(tag => tag.id) || [],
+      tagIds: validTagIds, // Backend DTO'ya uygun şekilde sadece ID'leri gönder
     };
 
     try {
-      await api.patch(`/customers/${customer.id}`, submissionData)
-      toast.success("Müşteri başarıyla güncellendi.")
-      queryClient.invalidateQueries({ queryKey: ["customers"] })
-      queryClient.invalidateQueries({ queryKey: ["customer", customer.id] })
-      onOpenChange(false)
+      console.log('Gönderilecek veri:', submissionData);
+      await api.patch(`/customers/${customer.id}`, submissionData);
+      toast.success("Müşteri başarıyla güncellendi.");
+      queryClient.invalidateQueries({ queryKey: ["customers"] });
+      queryClient.invalidateQueries({ queryKey: ["customer", customer.id] });
+      onOpenChange(false);
     } catch (error) {
-      console.error("Failed to update customer:", error)
-      toast.error("Müşteri güncellenirken bir hata oluştu.")
+      console.error("Failed to update customer:", error);
+      toast.error("Müşteri güncellenirken bir hata oluştu.");
     }
   }
 
