@@ -46,27 +46,66 @@ export class CustomersService {
     return { message: 'Seed successful: 20 random customers created.' };
   }
 
-  create(createCustomerDto: CreateCustomerDto) {
+  async create(createCustomerDto: CreateCustomerDto) {
     const { tagIds, ...customerData } = createCustomerDto;
-    return this.prisma.customer.create({
-      data: {
-        ...customerData,
-        tags: {
-          create: tagIds?.map((id) => ({
-            tag: {
-              connect: { id: id },
-            },
-          })),
-        },
-      },
-      include: {
-        tags: {
+    
+    try {
+      console.log('Yeni müşteri oluşturuluyor, tagIds:', tagIds);
+      
+      // Etiket ilişkilerini doğru şekilde yönetmek için transaction kullanıyoruz
+      return await this.prisma.$transaction(async (tx) => {
+        // 1. Önce temel müşteri bilgilerini oluştur
+        const newCustomer = await tx.customer.create({
+          data: customerData,
+        });
+        
+        // 2. Eğer tagIds gönderildiyse, etiket ilişkilerini oluştur
+        if (tagIds && Array.isArray(tagIds) && tagIds.length > 0) {
+          console.log(`${tagIds.length} adet etiket ilişkisi eklenecek`);
+          
+          // Her bir etiket için CustomerTag ilişkisi oluştur
+          for (const tagId of tagIds) {
+            if (!tagId) continue; // Boş ID'leri atla
+            
+            try {
+              // Önce etiketin var olduğunu kontrol et
+              const tagExists = await tx.tag.findUnique({
+                where: { id: tagId },
+              });
+              
+              if (tagExists) {
+                await tx.customerTag.create({
+                  data: {
+                    customerId: newCustomer.id,
+                    tagId: tagId,
+                  },
+                });
+                console.log(`Etiket ilişkisi eklendi: ${tagId}`);
+              } else {
+                console.warn(`Etiket bulunamadı, ID: ${tagId}`);
+              }
+            } catch (err) {
+              console.error(`Etiket ilişkisi oluşturulurken hata: ${tagId}`, err);
+            }
+          }
+        }
+        
+        // 3. Oluşturulan müşteriyi tüm ilişkileriyle birlikte döndür
+        return tx.customer.findUnique({
+          where: { id: newCustomer.id },
           include: {
-            tag: true,
+            tags: {
+              include: {
+                tag: true,
+              },
+            },
           },
-        },
-      },
-    });
+        });
+      });
+    } catch (error) {
+      console.error('Müşteri oluşturulurken hata oluştu:', error);
+      throw error;
+    }
   }
 
   findAll(params: {
@@ -170,6 +209,8 @@ export class CustomersService {
     }
 
     try {
+      console.log(`Müşteri güncelleniyor (ID: ${id}), tagIds:`, tagIds);
+      
       // Etiket ilişkilerini yönetmek için transaction kullanıyoruz
       return await this.prisma.$transaction(async (tx) => {
         // 1. Önce müşterinin temel bilgilerini güncelle
@@ -179,24 +220,45 @@ export class CustomersService {
         });
 
         // 2. Eğer tagIds gönderildiyse, etiket ilişkilerini güncelle
-        if (tagIds) {
+        if (tagIds && Array.isArray(tagIds)) {
+          console.log(`${tagIds.length} adet etiket ilişkisi güncellenecek`);
+          
           // Önce müşterinin mevcut tüm etiket ilişkilerini sil
-          await tx.customerTag.deleteMany({
+          const deleteResult = await tx.customerTag.deleteMany({
             where: { customerId: id },
           });
+          console.log(`${deleteResult.count} adet eski etiket ilişkisi silindi`);
 
           // Eğer yeni etiketler varsa, onları ekle
           if (tagIds.length > 0) {
             // Her bir etiket için bir CustomerTag ilişkisi oluştur
             for (const tagId of tagIds) {
-              await tx.customerTag.create({
-                data: {
-                  customerId: id,
-                  tagId: tagId,
-                },
-              });
+              if (!tagId) continue; // Boş ID'leri atla
+              
+              try {
+                // Önce etiketin var olduğunu kontrol et
+                const tagExists = await tx.tag.findUnique({
+                  where: { id: tagId },
+                });
+                
+                if (tagExists) {
+                  await tx.customerTag.create({
+                    data: {
+                      customerId: id,
+                      tagId: tagId,
+                    },
+                  });
+                  console.log(`Etiket ilişkisi eklendi: ${tagId}`);
+                } else {
+                  console.warn(`Etiket bulunamadı, ID: ${tagId}`);
+                }
+              } catch (err) {
+                console.error(`Etiket ilişkisi oluşturulurken hata: ${tagId}`, err);
+              }
             }
           }
+        } else {
+          console.log('tagIds gönderilmedi veya geçerli bir dizi değil');
         }
 
         // 3. Güncellenmiş müşteriyi tüm ilişkileriyle birlikte döndür

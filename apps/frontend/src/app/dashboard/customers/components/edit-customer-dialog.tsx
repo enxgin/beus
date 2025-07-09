@@ -136,21 +136,21 @@ export function EditCustomerDialog({ customer, open, onOpenChange }: EditCustome
     const phoneWithoutSpaces = data.phone.replace(/\s/g, '');
     const { tags, ...restData } = data;
     
-    // Önemli: Backend'e sadece veritabanında olan ve "new-" öneki taşımayan etiket ID'lerini gönder
-    // Bu, frontend'de geçici olarak eklenen "new-" önekli etiketlerin filtrelenmesini sağlar
-    const validTagIds = tags
-      ?.filter(tag => !!tag.id && !tag.id.toString().startsWith('new-')) // Sadece geçerli DB etiket ID'leri
-      .map(tag => tag.id as string) // string array'ine dönüştür
+    // Sadece veritabanında kayıtlı olan etiketlerin ID'lerini al
+    // Geçici ID'ler (new- ile başlayan) filtreleniyor
+    const existingTagIds = tags
+      ?.filter(tag => !!tag.id && !String(tag.id).startsWith('new-'))
+      .map(tag => tag.id as string)
       || [];
-    
-    console.log('Gönderilecek tag ID\'leri:', validTagIds);
+      
+    console.log('Mevcut etiket ID\'leri:', existingTagIds);
     
     const submissionData = {
       ...restData,
       phone: phoneWithoutSpaces,
       email: data.email === '' ? undefined : data.email,
       notes: data.notes === '' ? undefined : data.notes,
-      tagIds: validTagIds, // Backend DTO'ya uygun şekilde sadece ID'leri gönder
+      tagIds: existingTagIds, // Backend'e sadece var olan etiket ID'lerini gönder
     };
 
     try {
