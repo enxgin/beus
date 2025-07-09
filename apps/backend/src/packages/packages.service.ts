@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+import { Prisma, PackageType } from '@prisma/client';
 import { CreatePackageDto } from './dto/create-package.dto';
 import { UpdatePackageDto } from './dto/update-package.dto';
 import { CreateCustomerPackageDto } from './dto/create-customer-package.dto';
@@ -12,819 +12,210 @@ export class PackagesService {
 
   // Paket Tanımlamaları İşlemleri
   async createPackage(createPackageDto: CreatePackageDto, user: any) {
-    try {
-      console.log('Gelen DTO verisi:', JSON.stringify(createPackageDto, null, 2));
-      
-      const { services, type, totalSessions, totalMinutes, ...packageData } = createPackageDto;
-      
-      // Prisma için temiz bir data objesi oluşturuyoruz
-      const prismaPackageData: Record<string, any> = {
-        ...packageData,
-        price: typeof packageData.price === 'number' ? packageData.price : parseFloat(packageData.price as unknown as string),
-        validityDays: typeof packageData.validityDays === 'number' ? packageData.validityDays : parseInt(packageData.validityDays as unknown as string),
-      };
-      
-      // Boş string ise değer atanmamalı
-      if (prismaPackageData.description === '') {
-        delete prismaPackageData.description;
-      }
-      
-      // Opsiyonel alanları dönüştür
-      if (packageData.discountedPrice !== undefined) {
-        prismaPackageData.discountedPrice = typeof packageData.discountedPrice === 'number'
-          ? packageData.discountedPrice
-          : parseFloat(packageData.discountedPrice as unknown as string);
-      }
-      
-      if (packageData.branchId && packageData.branchId.trim() !== '') {
-        prismaPackageData.branchId = packageData.branchId;
-      }
-      
-      // Tip alanını Prisma enum'a dönüştür (session -> SESSION, time -> TIME)
-      if (type) {
-        console.log('Paket tipi dönüştürülüyor:', type);
-        if (type === 'session') {
-          prismaPackageData.type = 'SESSION';
-        } else if (type === 'time') {
-          prismaPackageData.type = 'TIME';
-        } else {
-          console.log('Geçersiz paket tipi:', type);
-          throw new BadRequestException(`Geçersiz paket tipi: ${type}. 'session' veya 'time' olmalıdır.`);
-        }
-      }
-      
-      // Sayısal alanları dönüştür ve kontrol et
-      if (packageData.price !== undefined) {
-        const price = Number(packageData.price);
-        if (isNaN(price)) {
-          throw new BadRequestException('Fiyat geçerli bir sayı olmalıdır.');
-        }
-        prismaPackageData.price = price;
-      }
-      
-      if (packageData.validityDays !== undefined) {
-        const validityDays = Number(packageData.validityDays);
-        if (isNaN(validityDays)) {
-          throw new BadRequestException('Geçerlilik günleri sayı olmalıdır.');
-        }
-        prismaPackageData.validityDays = validityDays;
-      }
-      
-      if (packageData.discountedPrice !== undefined) {
-        const discountedPrice = Number(packageData.discountedPrice);
-        if (isNaN(discountedPrice)) {
-          throw new BadRequestException('İndirimli fiyat geçerli bir sayı olmalıdır.');
-        }
-        prismaPackageData.discountedPrice = discountedPrice;
-      }
-      
-      if (packageData.commissionRate !== undefined) {
-        const commissionRate = Number(packageData.commissionRate);
-        if (isNaN(commissionRate)) {
-          throw new BadRequestException('Komisyon oranı geçerli bir sayı olmalıdır.');
-        }
-        prismaPackageData.commissionRate = commissionRate;
-      }
-      
-      if (packageData.commissionFixed !== undefined) {
-        const commissionFixed = Number(packageData.commissionFixed);
-        if (isNaN(commissionFixed)) {
-          throw new BadRequestException('Sabit komisyon tutarı geçerli bir sayı olmalıdır.');
-        }
-        prismaPackageData.commissionFixed = commissionFixed;
-      }
-      
-      // totalSessions ve totalMinutes işlemleri
-      if (totalSessions !== undefined) {
-        const sessions = Number(totalSessions);
-        if (isNaN(sessions)) {
-          throw new BadRequestException('Toplam seans sayısı geçerli bir sayı olmalıdır.');
-        }
-        prismaPackageData.totalSessions = sessions;
-      }
-      
-      if (totalMinutes !== undefined) {
-        const minutes = Number(totalMinutes);
-        if (isNaN(minutes)) {
-          throw new BadRequestException('Toplam dakika geçerli bir sayı olmalıdır.');
-        }
-        prismaPackageData.totalMinutes = minutes;
-      }
-      
-      // Zorunlu alanların kontrolü
-      if (!packageData.name) {
-        throw new BadRequestException('Paket adı zorunludur.');
-      }
-      prismaPackageData.name = packageData.name;
+    const { services, branchId, type, ...packageData } = createPackageDto;
 
-      if (packageData.price === undefined) {
-        throw new BadRequestException('Paket fiyatı zorunludur.');
-      }
-      
-      if (packageData.validityDays === undefined) {
-        throw new BadRequestException('Paket geçerlilik gün sayısı zorunludur.');
-      }
-      
-      console.log('Prisma paket verisi:', JSON.stringify(prismaPackageData, null, 2));
-      
-      // Hizmetler kontrolü
-      if (!services || !Array.isArray(services) || services.length === 0) {
-        throw new BadRequestException('En az bir hizmet eklenmelidir.');
-      }
-      
-      // Hizmetleri hazırla
-      const packageServices = [];
-      
-      // Tüm hizmetlerin var olduğundan emin ol
-      for (const serviceItem of services) {
-        if (!serviceItem.serviceId) {
-          throw new BadRequestException('Her hizmet için serviceId gereklidir.');
-        }
-        
-        const service = await this.prisma.service.findUnique({
-          where: { id: serviceItem.serviceId },
-        });
+    const data: Prisma.PackageCreateInput = {
+      ...packageData,
+      type: type as PackageType,
+      services: {
+        create: services?.map((service) => ({
+          serviceId: service.serviceId,
+          quantity: service.quantity,
+        })),
+      },
+    };
 
-        if (!service) {
-          throw new NotFoundException(`Hizmet bulunamadı: ID ${serviceItem.serviceId}`);
-        }
-        
-        // Miktar kontrol
-        if (serviceItem.quantity === undefined || serviceItem.quantity === null) {
-          throw new BadRequestException(`Hizmet için miktar belirtilmelidir: ${serviceItem.serviceId}`);
-        }
-        
-        // Miktar sayıya dönüştürülüyor
-        const quantity = Number(serviceItem.quantity);
-        if (isNaN(quantity) || quantity <= 0) {
-          throw new BadRequestException(`Geçersiz hizmet miktarı: ${serviceItem.serviceId} için ${quantity}`);
-        }
-        
-        packageServices.push({
-          quantity: quantity,
-          service: {
-            connect: { id: serviceItem.serviceId }
-          }
-        });
-      }
-      
-      console.log('Hizmetler doğrulandı, paket oluşturuluyor...');
-      
-      try {
-        // ÖNEMLİ: Frontend'den gelen ismi gelen tüm alanları kontrol et
-        // 1. Frontend'den gelen `isActive` alanını yok say, bu artık Prisma modelinde yok
-        // 2. Frontend'den gelen `type` alanının büyük harfe dönüştürülmesi gerekiyor (session -> SESSION)
-        
-        console.log('Frontend DTO detaylı inceleme:', {
-          receivedType: prismaPackageData.type,
-          typeOfReceivedType: typeof prismaPackageData.type,
-          isActiveReceived: prismaPackageData.isActive !== undefined
-        });
-        
-        // Sadece veritabanında olan bilinen alanları kullan
-        const packageData: any = {
-          // Temel zorunlu alanlar
-          name: prismaPackageData.name,
-          price: prismaPackageData.price,
-          validityDays: prismaPackageData.validityDays,
-        };
-        
-        // Type alanı dönüşümü (lowercase -> UPPERCASE)
-        // Örn: "session" -> "SESSION", "time" -> "TIME" 
-        if (prismaPackageData.type) {
-          // type değeri varsa büyük harfe dönüştür
-          packageData.type = prismaPackageData.type.toString().toUpperCase();
-        } else {
-          // Varsayılan tip SESSION
-          packageData.type = 'SESSION';
-        }
-        
-        // Şube bilgisi otomatik olarak kullanıcının rolüne göre belirlenir
-        // STAFF, RECEPTION, BRANCH_MANAGER, SUPER_BRANCH_MANAGER, ADMIN rollerinin bağlı olduğu şube otomatik eklenecek
-        if (user && user.branch && user.branch.id) {
-          // Kullanıcı bilgilerinden şube ID'sini al
-          packageData.branchId = user.branch.id;
-          console.log(`Kullanıcının şubesi otomatik eklendi: ${user.branch.id}`);
-        } 
-        // Frontend'den gönderilen şube bilgisi sadece ADMIN için geçerli (override)
-        else if (user?.role === 'ADMIN' && prismaPackageData.branchId && prismaPackageData.branchId.trim()) {
-          packageData.branchId = prismaPackageData.branchId;
-          console.log(`Admin tarafından manuel şube atandı: ${prismaPackageData.branchId}`);
-        } else {
-          console.warn('Dikkat: Paket şube bilgisi belirtilmemiş!');
-        }
-        
-        if (prismaPackageData.description && prismaPackageData.description.trim()) {
-          packageData.description = prismaPackageData.description;
-        }
-        
-        // Sayısal değerler - Sadece değer varsa ve Number() ile dönüştürerek ekle
-        ['discountedPrice', 'totalSessions', 'totalMinutes', 'commissionRate', 'commissionFixed'].forEach(field => {
-          if (prismaPackageData[field] !== undefined && prismaPackageData[field] !== null) {
-            packageData[field] = Number(prismaPackageData[field]);
-          }
-        });
-        
-        // Önemli: isActive alanını kesinlikle yok saymalıyız
-        
-        // Hizmetleri ekle
-        if (packageServices && packageServices.length > 0) {
-          packageData.services = {
-            create: packageServices.map(service => ({
-              serviceId: service.service.connect.id,
-              quantity: service.quantity
-            }))
-          };
-        }
-        
-        // Veri oluşturma öncesi son kontrol
-        console.log('Son paket verisi:', JSON.stringify(packageData, null, 2));
-        
-        // Paket oluştur - isActive alanı içermediğinden emin ol
-        // TypeScript hatasını bypass etmek için as any kullan
-        return await this.prisma.package.create({
-          data: packageData,
-          include: {
-            services: {
-              include: {
-                service: true
-              }
-            }
-          }
-        } as any);
-      } catch (err) {
-        console.error('===== Prisma paket oluşturma HATASI =====');
-        console.error(err);
-        
-        if (err.code) {
-          console.error('Prisma Hata Kodu:', err.code);
-        }
-        
-        if (err.meta) {
-          console.error('Prisma Meta Bilgisi:', err.meta);
-        }
-        
-        throw new BadRequestException(`Paket oluşturulamadı: ${err.message || 'Bilinmeyen hata'}`);
-      }
-    } catch (error) {
-      console.error('Paket oluşturma hatası:', error);
-      
-      if (error instanceof BadRequestException || error instanceof NotFoundException) {
-        throw error; // Zaten formatlanmış hatalar
-      } else {
-        // Prisma hatalarını yakala ve formatla
-        console.error('Detaylı hata bilgisi:', error);
-        throw new BadRequestException(
-          'Paket oluşturulurken bir hata oluştu: ' + (error.message || 'Bilinmeyen hata')
-        );
-      }
+    if (branchId) {
+      data.branch = { connect: { id: branchId } };
     }
+
+    const newPackage = await this.prisma.package.create({
+      data,
+      include: { services: true },
+    });
+    return newPackage;
   }
 
   async findAllPackages(params: {
     skip?: number;
     take?: number;
-    where?: any;
-    orderBy?: any;
-    user?: any; // Kullanıcı bilgisi eklendi
+    cursor?: Prisma.PackageWhereUniqueInput;
+    where?: Prisma.PackageWhereInput;
+    orderBy?: Prisma.PackageOrderByWithRelationInput;
   }) {
-    const { skip, take, where = {}, orderBy, user } = params;
-    
-    // Rol bazlı erişim filtreleme
-    let roleBasedFilter = {};
-    
-    if (user) {
-      // Kullanıcının rolüne göre filtreleme
-      switch(user.role) {
-        case 'ADMIN':
-          // Admin tüm paketleri görür, filtre yok
-          break;
-          
-        case 'SUPER_BRANCH_MANAGER':
-          // Şube yöneticisi bağlı olduğu tüm şubelerin paketlerini görür
-          if (user.branch && user.branch.id) {
-            // Burada user.managedBranches içinde bağlı olduğu şubeler olduğunu varsayıyoruz
-            // Ya da bir servis çağırılabilir
-            const managedBranchIds = user.managedBranches?.map(branch => branch.id) || [];
-            roleBasedFilter = {
-              OR: [
-                { branchId: user.branch.id },
-                { branchId: { in: managedBranchIds } }
-              ]
-            };
-          }
-          break;
-          
-        case 'BRANCH_MANAGER':
-        case 'RECEPTION':
-        case 'STAFF':
-          // Bu roller sadece kendi şubelerine ait paketleri görür
-          if (user.branch && user.branch.id) {
-            roleBasedFilter = { branchId: user.branch.id };
-          }
-          break;
-          
-        default:
-          // Diğer roller hiçbir paket görmez - boş sonuc döner
-          roleBasedFilter = { id: 'no-access' }; // Hiçbir paket eşleşmeyecek
-      }
-      
-      console.log(`Rol bazlı filtreleme uygulanıyor: ${user.role}`, roleBasedFilter);
-    }
-
-    return this.prisma.package.findMany({
-      skip,
-      take,
-      where: { ...where, ...roleBasedFilter },
-      orderBy,
-      include: {
-        services: {
-          include: {
-            service: true,
-          },
-        },
-        branch: true, // Şube bilgilerini dahil et
-      },
-    });
+    const { skip, take, cursor, where, orderBy } = params;
+    return this.prisma.package.findMany({ skip, take, cursor, where, orderBy });
   }
 
   async findPackageById(id: string) {
-    const packageItem = await this.prisma.package.findUnique({
+    const pkg = await this.prisma.package.findUnique({
       where: { id },
-      include: {
-        services: {
-          include: {
-            service: true,
-          },
-        },
-        branch: true, // Şube bilgilerini dahil et
-      },
+      include: { services: { include: { service: true } } },
     });
-
-    if (!packageItem) {
+    if (!pkg) {
       throw new NotFoundException(`Paket bulunamadı: ID ${id}`);
     }
-
-    return packageItem;
+    return pkg;
   }
 
   async updatePackage(id: string, updatePackageDto: UpdatePackageDto) {
-    const { services, ...packageData } = updatePackageDto;
+    const { branchId, type, services, ...packageData } = updatePackageDto;
 
-    // Paketin var olduğundan emin ol
-    const packageExists = await this.prisma.package.findUnique({
-      where: { id },
-    });
+    const data: Prisma.PackageUpdateInput = {
+      ...packageData,
+    };
 
-    if (!packageExists) {
-      throw new NotFoundException(`Paket bulunamadı: ID ${id}`);
+    if (branchId) {
+      data.branch = { connect: { id: branchId } };
     }
 
-    // Services güncellenecek mi?
-    if (services && services.length > 0) {
-      // Önce mevcut tüm servisleri sil
-      await this.prisma.packageService.deleteMany({
-        where: {
-          packageId: id,
-        },
-      });
+    if (type) {
+      data.type = type as PackageType;
+    }
 
-      // Tüm hizmetlerin var olduğundan emin ol
-      for (const serviceItem of services) {
-        const service = await this.prisma.service.findUnique({
-          where: { id: serviceItem.serviceId },
-        });
-
-        if (!service) {
-          throw new NotFoundException(`Hizmet bulunamadı: ID ${serviceItem.serviceId}`);
-        }
-      }
-
-      // Update için data oluştur
-      const updateData: any = {};
-      
-      // Temel alanlara öncelik ver
-      if (packageData.name !== undefined) updateData.name = packageData.name;
-      if (packageData.price !== undefined) updateData.price = Number(packageData.price);
-      if (packageData.validityDays !== undefined) updateData.validityDays = Number(packageData.validityDays);
-      // Description alanını boş string olarak kabul et
-      updateData.description = packageData.description || ""
-      
-      // branchId kontrol
-      if (packageData.branchId) {
-        if (packageData.branchId.trim() !== '') {
-          updateData.branchId = packageData.branchId;
-        }
-      }
-      
-      // Diğer alanlar
-      if (packageData.isActive !== undefined) updateData.isActive = packageData.isActive;
-      if (packageData.discountedPrice !== undefined) updateData.discountedPrice = Number(packageData.discountedPrice);
-      if (packageData.totalSessions !== undefined) updateData.totalSessions = Number(packageData.totalSessions);
-      if (packageData.totalMinutes !== undefined) updateData.totalMinutes = Number(packageData.totalMinutes);
-      if (packageData.commissionRate !== undefined) updateData.commissionRate = Number(packageData.commissionRate);
-      if (packageData.commissionFixed !== undefined) updateData.commissionFixed = Number(packageData.commissionFixed);
-      
-      // Type alanını kontrol et ve dönüştür
-      if (packageData.type) {
-        if (packageData.type === 'session') {
-          updateData.type = 'SESSION';
-        } else if (packageData.type === 'time') {
-          updateData.type = 'TIME';
-        }
-      }
-      
-      // Servisleri ekle
-      updateData.services = {
-        create: services.map(service => ({
-          quantity: Number(service.quantity),
-          service: {
-            connect: {
-              id: service.serviceId,
-            },
-          },
+    if (services) {
+      data.services = {
+        deleteMany: {},
+        create: services.map((service) => ({
+          serviceId: service.serviceId,
+          quantity: service.quantity,
         })),
       };
-      
-      console.log('Güncellenecek paket verisi:', JSON.stringify(updateData, null, 2));
-      
-      // Paketi güncelle
-      return this.prisma.package.update({
-        where: { id },
-        data: updateData,
-        include: {
-          services: {
-            include: {
-              service: true,
-            },
-          },
-        },
-      });
     }
 
-    // Sadece paket bilgilerini güncelle
-    const updateData: any = {};
-    
-    // Temel alanlara öncelik ver
-    if (packageData.name !== undefined) updateData.name = packageData.name;
-    if (packageData.price !== undefined) updateData.price = Number(packageData.price);
-    if (packageData.validityDays !== undefined) updateData.validityDays = Number(packageData.validityDays);
-    // NOT: Prisma şemasında description alanı yok, bu yüzden kaldırıldı
-    
-    // branchId kontrol
-    if (packageData.branchId) {
-      if (packageData.branchId.trim() !== '') {
-        updateData.branchId = packageData.branchId;
-      }
-    }
-    
-    // Diğer alanlar
-    if (packageData.isActive !== undefined) updateData.isActive = packageData.isActive;
-    if (packageData.discountedPrice !== undefined) updateData.discountedPrice = Number(packageData.discountedPrice);
-    if (packageData.totalSessions !== undefined) updateData.totalSessions = Number(packageData.totalSessions);
-    if (packageData.totalMinutes !== undefined) updateData.totalMinutes = Number(packageData.totalMinutes);
-    if (packageData.commissionRate !== undefined) updateData.commissionRate = Number(packageData.commissionRate);
-    if (packageData.commissionFixed !== undefined) updateData.commissionFixed = Number(packageData.commissionFixed);
-    
-    // Type alanını kontrol et ve dönüştür
-    if (packageData.type) {
-      if (packageData.type === 'session') {
-        updateData.type = 'SESSION';
-      } else if (packageData.type === 'time') {
-        updateData.type = 'TIME';
-      }
-    }
-    
-    console.log('Güncellenecek paket verisi (servis olmadan):', JSON.stringify(updateData, null, 2));
-    
     return this.prisma.package.update({
       where: { id },
-      data: updateData,
-      include: {
-        services: {
-          include: {
-            service: true,
-          },
-        },
-      },
+      data,
     });
   }
 
-  async updatePackageService(packageId: string, serviceData: UpdatePackageServiceDto) {
-    // Hizmetin pakette olduğundan emin ol
-    const packageService = await this.prisma.packageService.findUnique({
-      where: {
-        packageId_serviceId: {
-          packageId,
-          serviceId: serviceData.serviceId,
-        },
-      },
-    });
-
-    if (!packageService) {
-      throw new NotFoundException(
-        `Hizmet bu pakette bulunamadı. Paket ID: ${packageId}, Hizmet ID: ${serviceData.serviceId}`,
-      );
-    }
-
-    // Hizmet miktarını güncelle
+  async updatePackageService(id: string, updatePackageServiceDto: UpdatePackageServiceDto) {
     return this.prisma.packageService.update({
       where: {
         packageId_serviceId: {
-          packageId,
-          serviceId: serviceData.serviceId,
+          packageId: id,
+          serviceId: updatePackageServiceDto.serviceId,
         },
       },
-      data: {
-        quantity: serviceData.quantity,
-      },
-      include: {
-        service: true,
-        package: true,
-      },
+      data: { quantity: updatePackageServiceDto.quantity },
     });
   }
 
   async removePackage(id: string) {
-    // Paketin var olduğunu kontrol et
-    const packageExists = await this.prisma.package.findUnique({
-      where: { id },
+    const customerPackages = await this.prisma.customerPackage.findMany({
+      where: { packageId: id },
     });
-
-    if (!packageExists) {
-      throw new NotFoundException(`Paket bulunamadı: ID ${id}`);
-    }
-
-    // Paket herhangi bir müşteriye satılmış mı kontrol et
-    const customerPackagesCount = await this.prisma.customerPackage.count({
-      where: {
-        packageId: id,
-      },
-    });
-
-    if (customerPackagesCount > 0) {
+    if (customerPackages.length > 0) {
       throw new BadRequestException(
-        `Bu paket ${customerPackagesCount} müşteriye satılmıştır. Önce müşteri paketlerini silmelisiniz.`,
+        'Bu paketi silmeden önce, bu pakete sahip tüm müşteri paketlerini silmelisiniz.',
       );
     }
-
-    return this.prisma.package.delete({
-      where: { id },
-      include: {
-        services: true,
-      },
-    });
+    return this.prisma.package.delete({ where: { id } });
   }
 
   // Müşteri Paketleri İşlemleri
-  // İstek önbelleği için Map kullanıyoruz
-  private customerPackageRequests = new Map<string, Promise<any>>();
-
   async createCustomerPackage(createCustomerPackageDto: CreateCustomerPackageDto) {
-    // İstek için benzersiz bir anahtar oluştur
-    const requestKey = `${createCustomerPackageDto.customerId}_${createCustomerPackageDto.packageId}_${Date.now()}`;
-    console.log('=== PAKET SATIŞ BAŞLANGICI ===');
-    console.log('Müşteri paketi oluşturma isteği alındı:', JSON.stringify(createCustomerPackageDto, null, 2));
-    console.log('İstek zamanı:', new Date().toISOString());
-    console.log('İstek anahtarı:', requestKey);
-    
-    // Eğer aynı istek zaten işleniyor ise, bekleyen işlemi döndür
-    if (this.customerPackageRequests.has(requestKey)) {
-      console.log('Bu istek zaten işleniyor, bekleyen işlem döndürülüyor...');
-      return this.customerPackageRequests.get(requestKey);
-    }
-      
-    // İşlemi bir Promise olarak oluştur
-    const processPromise = new Promise(async (resolve, reject) => {
-      try {
-        const { customerId, packageId, salesCode, notes, startDate } = createCustomerPackageDto;
+    const { customerId, packageId, salesCode, notes, startDate } = createCustomerPackageDto;
 
-        // Müşteri ve paket varlığını kontrol et
-        const customer = await this.prisma.customer.findUnique({
-          where: { id: customerId },
-        });
-
-        if (!customer) {
-          console.error(`Müşteri bulunamadı: ID ${customerId}`);
-          reject(new NotFoundException(`Müşteri bulunamadı: ID ${customerId}`));
-          return;
-        }
-
-        const packageItem = await this.prisma.package.findUnique({
-          where: { id: packageId },
-          include: {
-            services: {
-              include: {
-                service: true,
-              },
-            },
-          },
-        });
-
-        if (!packageItem) {
-          console.error(`Paket bulunamadı: ID ${packageId}`);
-          reject(new NotFoundException(`Paket bulunamadı: ID ${packageId}`));
-          return;
-        }
-
-        // Başlangıç tarihini kontrol et
-        let purchaseDate;
-        try {
-          purchaseDate = startDate ? new Date(startDate) : new Date();
-          if (isNaN(purchaseDate.getTime())) {
-            throw new Error('Geçersiz tarih formatı');
-          }
-        } catch (error) {
-          console.error('Tarih dönüştürme hatası:', error);
-          reject(new BadRequestException('Geçersiz başlangıç tarihi formatı'));
-          return;
-        }
-
-        // Bitiş tarihini hesapla
-        let expiryDate = null;
-        if (packageItem.validityDays) {
-          expiryDate = new Date(purchaseDate);
-          expiryDate.setDate(expiryDate.getDate() + packageItem.validityDays);
-        }
-
-        // Servis bazlı kalan seanslar için JSON objesi oluştur
-        const remainingServiceSessions: Record<string, number> = {};
-
-        if (packageItem.services && packageItem.services.length > 0) {
-          packageItem.services.forEach(service => {
-            remainingServiceSessions[service.serviceId] = service.quantity;
-          });
-        } else if (packageItem.type === 'SESSION' && packageItem.totalSessions) {
-          remainingServiceSessions['default'] = packageItem.totalSessions;
-        } else {
-          // Hiçbir servis yoksa ve seans bazlı değilse, boş bir JSON objesi oluştur
-          remainingServiceSessions['default'] = 0;
-        }
-
-        console.log('Oluşturulacak müşteri paketi verileri:', {
-          purchaseDate,
-          expiryDate,
-          remainingSessions: remainingServiceSessions,
-          customerId,
-          packageId,
-          salesCode,
-          notes
-        });
-
-        // Transaction içinde işlemi gerçekleştir
-        console.log('Prisma transaction başlatılıyor...');
-        try {
-          const result = await this.prisma.$transaction(async (prisma) => {
-            // Önce aynı müşteri ve paket için kayıt var mı kontrol et
-            const existingPackage = await prisma.customerPackage.findFirst({
-              where: {
-                customerId,
-                packageId,
-                purchaseDate: {
-                  gte: new Date(new Date().setHours(0, 0, 0, 0)) // Bugünün başlangıcı
-                }
-              }
-            });
-
-            if (existingPackage) {
-              console.log('Bu müşteri için bu paket bugün zaten satılmış:', existingPackage.id);
-              return existingPackage;
-            }
-
-            // Müşteri paketi oluştur
-            console.log('Prisma create çağrısı yapılıyor...');
-            return await prisma.customerPackage.create({
-              data: {
-                purchaseDate,
-                expiryDate,
-                remainingSessions: remainingServiceSessions, // Prisma şemasında Json tipinde
-                customerId,
-                packageId,
-                ...(salesCode ? { salesCode } : {}), // Conditional spread operator ile ekle
-                ...(notes ? { notes } : {}), // Conditional spread operator ile ekle
-              },
-              include: {
-                customer: true,
-                package: {
-                  include: {
-                    services: {
-                      include: {
-                        service: true,
-                      },
-                    },
-                  },
-                },
-              },
-            });
-          });
-
-          console.log('Müşteri paketi başarıyla oluşturuldu:', result.id);
-          console.log('=== PAKET SATIŞ TAMAMLANDI ===');
-          resolve(result);
-        } catch (error) {
-          console.error('Müşteri paketi oluşturulurken hata:', error);
-          
-          if (error instanceof PrismaClientKnownRequestError) {
-            if (error.code === 'P2002') {
-              reject(new BadRequestException('Bu müşteri için aynı paket zaten satılmış.'));
-            } else if (error.code === 'P2003') {
-              reject(new BadRequestException('Geçersiz müşteri veya paket ID.'));
-            } else {
-              reject(error);
-            }
-          } else {
-            reject(error);
-          }
-        }
-      } catch (error) {
-        console.error('Müşteri paketi işlemi sırasında beklenmeyen hata:', error);
-        reject(error);
-      }
-    });
-    
-    // Promise'i Map'e ekle
-    this.customerPackageRequests.set(requestKey, processPromise);
-    
     try {
-      // İşlemi bekle ve sonucu döndür
-      const result = await processPromise;
+      const result = await this.prisma.$transaction(
+        async (tx) => {
+          const todayStart = new Date();
+          todayStart.setHours(0, 0, 0, 0);
+
+          const existingPackage = await tx.customerPackage.findFirst({
+            where: {
+              customerId,
+              packageId,
+              purchaseDate: { gte: todayStart },
+            },
+          });
+
+          if (existingPackage) {
+            console.log('Bu müşteri için bu paket bugün zaten satılmış:', existingPackage.id);
+            return existingPackage;
+          }
+
+          const customer = await tx.customer.findUnique({ where: { id: customerId } });
+          if (!customer) {
+            throw new NotFoundException(`Müşteri bulunamadı: ID ${customerId}`);
+          }
+
+          const packageItem = await tx.package.findUnique({
+            where: { id: packageId },
+            include: { services: { include: { service: true } } },
+          });
+
+          if (!packageItem) {
+            throw new NotFoundException(`Paket bulunamadı: ID ${packageId}`);
+          }
+
+          const purchaseDate = startDate ? new Date(startDate) : new Date();
+          let expiryDate: Date | null = null;
+          if (packageItem.validityDays) {
+            expiryDate = new Date(purchaseDate);
+            expiryDate.setDate(expiryDate.getDate() + packageItem.validityDays);
+          }
+
+          const remainingSessions: Record<string, number> = {};
+          if (packageItem.services?.length > 0) {
+            packageItem.services.forEach((service) => {
+              remainingSessions[service.serviceId] = service.quantity;
+            });
+          } else if (packageItem.type === 'SESSION' && packageItem.totalSessions) {
+            remainingSessions['sessions'] = packageItem.totalSessions;
+          }
+
+          return tx.customerPackage.create({
+            data: {
+              purchaseDate,
+              expiryDate,
+              remainingSessions: remainingSessions as any,
+              notes,
+              salesCode,
+              customerId,
+              packageId,
+            },
+            include: {
+              customer: true,
+              package: true,
+            },
+          });
+        },
+        {
+          isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+          timeout: 15000,
+        },
+      );
       return result;
     } catch (error) {
-      console.error('Müşteri paketi oluşturulurken genel hata:', error);
-      throw error;
-    } finally {
-      // İşlem tamamlandığında veya hata oluştuğunda Map'ten kaldır
-      this.customerPackageRequests.delete(requestKey);
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+        throw new BadRequestException('Bu paket zaten müşteriye satılmış.');
+      }
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new BadRequestException(`Paket satışı sırasında bir hata oluştu: ${error.message}`);
     }
   }
 
   async findAllCustomerPackages(params: {
     skip?: number;
     take?: number;
-    customerId?: string;
-    active?: boolean;
+    cursor?: Prisma.CustomerPackageWhereUniqueInput;
+    where?: Prisma.CustomerPackageWhereInput;
+    orderBy?: Prisma.CustomerPackageOrderByWithRelationInput;
+    include?: Prisma.CustomerPackageInclude;
   }) {
-    const { skip, take, customerId, active } = params;
-
-    console.log('findAllCustomerPackages çağrıldı, parametreler:', { skip, take, customerId, active });
-
-    // Filtreleri oluştur
-    const where: any = {};
-    
-    // Özel durum: customerId 'all' ise tüm müşterilerin paketlerini getir
-    if (customerId && customerId !== 'all') {
-      where.customerId = customerId;
-      console.log(`Müşteri ID'sine göre filtreleme yapılıyor: ${customerId}`);
-    } else if (customerId === 'all') {
-      console.log('Tüm müşterilerin paketleri getiriliyor (customerId=all)');
-    } else {
-      console.log('customerId belirtilmedi, tüm paketler getiriliyor');
-    }
-    
-    console.log('CustomerPackage sorgusu için filtreler:', { skip, take, customerId, active, where });
-
-    // Sadece aktif paketleri listele
-    if (active) {
-      where.expiryDate = { gte: new Date() };
-    }
-
-    try {
-      const result = await this.prisma.customerPackage.findMany({
-        skip,
-        take,
-        where,
-        include: {
-          customer: true,
-          package: {
-            include: {
-              services: {
-                include: {
-                  service: true,
-                },
-              },
-            },
-          },
-          usageHistory: {
-            include: {
-              appointment: {
-                include: {
-                  service: true,
-                },
-              },
-            },
-          },
-        },
-        orderBy: {
-          purchaseDate: 'desc',
-        },
-      });
-      
-      console.log(`Bulunan paket sayısı: ${result.length}`);
-      return result;
-    } catch (error) {
-      console.error('Paketleri getirirken hata oluştu:', error);
-      throw error;
-    }
+    const { skip, take, cursor, where, orderBy, include } = params;
+    return this.prisma.customerPackage.findMany({
+      skip,
+      take,
+      cursor,
+      where,
+      orderBy,
+      include: include || { customer: true, package: true },
+    });
   }
 
   async findCustomerPackageById(id: string) {
@@ -832,27 +223,14 @@ export class PackagesService {
       where: { id },
       include: {
         customer: true,
-        package: {
-          include: {
-            services: {
-              include: {
-                service: true,
-              },
-            },
-          },
-        },
+        package: true,
         usageHistory: {
           include: {
             appointment: {
               include: {
                 service: true,
-                staff: {
-                  select: {
-                    id: true,
-                    name: true,
-                    email: true,
-                  },
-                },
+                customer: true,
+                branch: true,
               },
             },
           },
@@ -866,115 +244,72 @@ export class PackagesService {
     if (!customerPackage) {
       throw new NotFoundException(`Müşteri paketi bulunamadı: ID ${id}`);
     }
-
     return customerPackage;
   }
 
   async usePackageSession(customerPackageId: string, appointmentId: string) {
-    // Müşteri paketinin var olduğundan emin ol
-    const customerPackage = await this.prisma.customerPackage.findUnique({
-      where: { id: customerPackageId },
-    });
+    return this.prisma.$transaction(async (tx) => {
+      const customerPackage = await tx.customerPackage.findUnique({
+        where: { id: customerPackageId },
+      });
+      if (!customerPackage) {
+        throw new NotFoundException(`Müşteri paketi bulunamadı: ID ${customerPackageId}`);
+      }
 
-    if (!customerPackage) {
-      throw new NotFoundException(`Müşteri paketi bulunamadı: ID ${customerPackageId}`);
-    }
+      const appointment = await tx.appointment.findUnique({
+        where: { id: appointmentId },
+      });
+      if (!appointment) {
+        throw new NotFoundException(`Randevu bulunamadı: ID ${appointmentId}`);
+      }
 
-    // Randevunun var olduğundan emin ol
-    const appointment = await this.prisma.appointment.findUnique({
-      where: { id: appointmentId },
-      include: {
-        service: true,
-      },
-    });
+      if (appointment.status !== 'COMPLETED') {
+        throw new BadRequestException(`Paket kullanımı için randevu durumu 'COMPLETED' olmalıdır.`);
+      }
 
-    if (!appointment) {
-      throw new NotFoundException(`Randevu bulunamadı: ID ${appointmentId}`);
-    }
+      const remainingSessions = customerPackage.remainingSessions as Record<string, number>;
+      const serviceId = appointment.serviceId;
 
-    // Müşteri ve randevu müşterisi eşleşiyor mu kontrol et
-    if (appointment.customerId !== customerPackage.customerId) {
-      throw new BadRequestException(`Bu randevu, paket sahibi müşteriye ait değil.`);
-    }
+      if (!remainingSessions[serviceId] || remainingSessions[serviceId] <= 0) {
+        throw new BadRequestException(`Bu paket, seçilen hizmeti kapsamıyor veya kalan seans sayısı sıfır.`);
+      }
 
-    // Daha önce bu randevu için paket kullanılmış mı kontrol et
-    const existingUsage = await this.prisma.packageUsageHistory.findUnique({
-      where: { appointmentId },
-    });
+      if (customerPackage.expiryDate && customerPackage.expiryDate < new Date()) {
+        throw new BadRequestException(`Bu paket süresi dolmuştur.`);
+      }
 
-    if (existingUsage) {
-      throw new BadRequestException(`Bu randevu için paket kullanımı zaten kaydedilmiş.`);
-    }
+      remainingSessions[serviceId] -= 1;
 
-    // Randevuda verilen hizmet pakette var mı kontrol et
-    const remainingSessions = customerPackage.remainingSessions as Record<string, number>;
-    const serviceId = appointment.serviceId;
+      await tx.customerPackage.update({
+        where: { id: customerPackageId },
+        data: { remainingSessions: remainingSessions as any },
+      });
 
-    if (!remainingSessions[serviceId] || remainingSessions[serviceId] <= 0) {
-      throw new BadRequestException(`Bu paket, seçilen hizmeti kapsamıyor veya kalan seans sayısı sıfır.`);
-    }
-
-    // Paket süresinin dolmadığından emin ol
-    if (customerPackage.expiryDate < new Date()) {
-      throw new BadRequestException(`Bu paket süresi dolmuştur.`);
-    }
-
-    // Kalan seans sayısını azalt
-    remainingSessions[serviceId] -= 1;
-
-    // Paket kullanım kaydını oluştur
-    const packageUsage = await this.prisma.packageUsageHistory.create({
-      data: {
-        customerPackageId,
-        appointmentId,
-      },
-      include: {
-        customerPackage: true,
-        appointment: {
-          include: {
-            service: true,
-          },
+      return tx.packageUsageHistory.create({
+        data: {
+          customerPackageId,
+          appointmentId,
         },
-      },
+      });
     });
-
-    // Müşteri paketini güncelle
-    await this.prisma.customerPackage.update({
-      where: { id: customerPackageId },
-      data: {
-        remainingSessions,
-      },
-    });
-
-    return packageUsage;
   }
 
   async removeCustomerPackage(id: string) {
-    // Müşteri paketinin var olduğundan emin ol
     const customerPackage = await this.prisma.customerPackage.findUnique({
       where: { id },
-      include: {
-        usageHistory: true,
-      },
+      include: { usageHistory: true },
     });
 
     if (!customerPackage) {
       throw new NotFoundException(`Müşteri paketi bulunamadı: ID ${id}`);
     }
 
-    // Eğer paket kullanımı varsa silmeyi engelle
     if (customerPackage.usageHistory.length > 0) {
       throw new BadRequestException(
         `Bu paket için ${customerPackage.usageHistory.length} kullanım kaydı var. İptal etmeden önce kullanım kayıtlarını silmelisiniz.`,
       );
     }
 
-    return this.prisma.customerPackage.delete({
-      where: { id },
-      include: {
-        customer: true,
-        package: true,
-      },
-    });
+    return this.prisma.customerPackage.delete({ where: { id } });
   }
 }

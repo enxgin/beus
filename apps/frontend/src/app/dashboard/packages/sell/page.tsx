@@ -776,8 +776,8 @@ export default function SellPackagePage() {
                   İptal
                 </Button>
                 <Button 
-                  onClick={form.handleSubmit(onSubmit)} 
-                  disabled={isSubmitting || !isValid}
+                onClick={() => form.handleSubmit(onSubmit)()} 
+                disabled={isSubmitting || !isValid}
                 >
                   {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Satışı Tamamla
