@@ -175,10 +175,14 @@ export class CustomersService {
         // `tags` ilişkisini güncellemek için `set` kullanıyoruz.
         // Bu, mevcut tüm etiketleri ayırır ve sadece `tagIds` listesindekileri bağlar.
         tags: {
-          // 'set' operasyonu, mevcut tüm etiket bağlantılarını siler
-          // ve sadece `tagIds` listesindekileri bağlar.
-          // Her bir tagId için { id: tagId } formatında bir nesne oluştururuz.
-          set: tagIds ? tagIds.map((id) => ({ id: id })) : [],
+          // 1. Mevcut tüm etiket ilişkilerini sil.
+          deleteMany: {},
+          // 2. Yeni etiket ilişkilerini oluştur.
+          create: tagIds?.map((tagId) => ({
+            tag: {
+              connect: { id: tagId },
+            },
+          })),
         },
       },
       include: {
