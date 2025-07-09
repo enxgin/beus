@@ -160,28 +160,46 @@ export class CustomersService {
     return [];
   }
 
-  update(id: string, updateCustomerDto: UpdateCustomerDto) {
+  async update(id: string, updateCustomerDto: UpdateCustomerDto) {
     const { tagIds, ...customerData } = updateCustomerDto;
-    return this.prisma.customer.update({
-      where: { id },
-      data: {
-        ...customerData,
-        tags: {
-          deleteMany: {},
-          create: tagIds?.map((tagId) => ({
-            tag: {
-              connect: { id: tagId },
+
+    return this.prisma.$transaction(async (prisma) => {
+      // 1. Müşteri verilerini güncelle
+      const updatedCustomer = await prisma.customer.update({
+        where: { id },
+        data: customerData,
+      });
+
+      // 2. Etiketler gönderildiyse, mevcut etiketleri silip yenilerini ekle
+      if (tagIds) {
+        // Önce müşterinin mevcut tüm etiket bağlantılarını sil
+        await prisma.customerTag.deleteMany({
+          where: { customerId: id },
+        });
+
+        // Yeni etiketleri ekle
+        if (tagIds.length > 0) {
+          await prisma.customerTag.createMany({
+            data: tagIds.map((tagId) => ({
+              customerId: id,
+              tagId: tagId,
+            })),
+          });
+        }
+      }
+
+      // 3. Sonucu, güncellenmiş etiketlerle birlikte döndür
+      return prisma.customer.findUnique({
+        where: { id },
+        include: {
+          tags: {
+            include: {
+              tag: true,
             },
-          })),
-        },
-      },
-      include: {
-        tags: {
-          include: {
-            tag: true,
           },
+          branch: true,
         },
-      },
+      });
     });
   }
 

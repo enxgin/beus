@@ -142,7 +142,7 @@ export function EditCustomerDialog({ customer, open, onOpenChange }: EditCustome
     };
 
     try {
-      await api.put(`/customers/${customer.id}`, submissionData)
+      await api.patch(`/customers/${customer.id}`, submissionData)
       toast.success("Müşteri başarıyla güncellendi.")
       queryClient.invalidateQueries({ queryKey: ["customers"] })
       queryClient.invalidateQueries({ queryKey: ["customer", customer.id] })
