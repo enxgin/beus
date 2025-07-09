@@ -281,7 +281,16 @@ export default function CustomerProfilePage() {
                             <CardDescription>{new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(cp.package.price)}</CardDescription>
                           </CardHeader>
                           <CardContent>
-                            <p>Kalan Seans: <span className="font-bold">{cp.remainingSessions} / {cp.package.sessionCount}</span></p>
+                            <p>Kalan Seans: <span className="font-bold">
+                              {typeof cp.remainingSessions === 'object' ? 
+                                JSON.stringify(cp.remainingSessions) : 
+                                cp.remainingSessions
+                              } / 
+                              {typeof cp.package.sessionCount === 'object' ? 
+                                JSON.stringify(cp.package.sessionCount) : 
+                                cp.package.sessionCount
+                              }
+                            </span></p>
                           </CardContent>
                         </Card>
                       ))}

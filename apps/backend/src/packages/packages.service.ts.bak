@@ -583,7 +583,18 @@ export class PackagesService {
       
       const { customerId, packageId, salesCode, notes, startDate } = createCustomerPackageDto;
 
-      // Müşteri ve paket varlığını kontrol et
+      // Gerekli alanların kontrolü
+      if (!customerId) {
+        console.error('Müşteri ID eksik');
+        throw new BadRequestException('Müşteri ID gereklidir');
+      }
+
+      if (!packageId) {
+        console.error('Paket ID eksik');
+        throw new BadRequestException('Paket ID gereklidir');
+      }
+
+      // Müşterinin var olduğundan emin ol
       const customer = await this.prisma.customer.findUnique({
         where: { id: customerId },
       });
@@ -593,6 +604,7 @@ export class PackagesService {
         throw new NotFoundException(`Müşteri bulunamadı: ID ${customerId}`);
       }
 
+      // Paketin var olduğundan emin ol
       const packageItem = await this.prisma.package.findUnique({
         where: { id: packageId },
         include: {
@@ -609,7 +621,7 @@ export class PackagesService {
         throw new NotFoundException(`Paket bulunamadı: ID ${packageId}`);
       }
 
-      // Başlangıç tarihini kontrol et
+      // Paket başlangıç ve bitiş tarihini hesapla
       let purchaseDate;
       try {
         purchaseDate = startDate ? new Date(startDate) : new Date();
@@ -617,28 +629,29 @@ export class PackagesService {
           throw new Error('Geçersiz tarih formatı');
         }
       } catch (error) {
-        console.error('Tarih dönüştürme hatası:', error);
-        throw new BadRequestException('Geçersiz başlangıç tarihi formatı');
+        console.error('Tarih ayrıştırma hatası:', error);
+        throw new BadRequestException(`Geçersiz başlangıç tarihi formatı: ${startDate}`);
       }
-
-      // Bitiş tarihini hesapla
+      
       const expiryDate = new Date(purchaseDate);
       expiryDate.setDate(expiryDate.getDate() + packageItem.validityDays);
 
-      // Servis bazlı kalan seanslar için JSON objesi oluştur
+      // Servis bazlı kalan seanslar için JSON oluştur
       const remainingServiceSessions: Record<string, number> = {};
       
       if (packageItem.services && packageItem.services.length > 0) {
+        // Paket içindeki her servis için kalan seans sayısını ayarla
         packageItem.services.forEach(service => {
           remainingServiceSessions[service.serviceId] = service.quantity;
         });
       } else if (packageItem.type === 'SESSION' && packageItem.totalSessions) {
+        // Eğer servis yoksa ama seans bazlı bir paketse, default servis için toplam seans sayısını kullan
         remainingServiceSessions['default'] = packageItem.totalSessions;
       } else {
         // Hiçbir servis yoksa ve seans bazlı değilse, boş bir JSON objesi oluştur
         remainingServiceSessions['default'] = 0;
       }
-
+      
       console.log('Oluşturulacak müşteri paketi verileri:', {
         purchaseDate,
         expiryDate,
@@ -649,7 +662,7 @@ export class PackagesService {
         notes
       });
 
-      // Müşteri paketi oluştur
+      // Müşteri paketini oluştur
       return this.prisma.customerPackage.create({
         data: {
           purchaseDate,
@@ -660,37 +673,6 @@ export class PackagesService {
           ...(salesCode ? { salesCode } : {}), // Conditional spread operator ile ekle
           ...(notes ? { notes } : {}), // Conditional spread operator ile ekle
         },
-        include: {
-          customer: true,
-          package: {
-            include: {
-              services: {
-                include: {
-                  service: true,
-                },
-              },
-            },
-          },
-        },
-      });
-    } catch (error) {
-      console.error('Müşteri paketi oluşturulurken hata:', error);
-      
-      if (error instanceof PrismaClientKnownRequestError) {
-        if (error.code === 'P2002') {
-          throw new BadRequestException('Bu müşteri için aynı paket zaten satılmış.');
-        } else if (error.code === 'P2003') {
-          throw new BadRequestException('Geçersiz müşteri veya paket ID.');
-        }
-      }
-      
-      throw error;
-    }
-  }
-
-  async findAllCustomerPackages(params: {
-    skip?: number;
-    take?: number;
     customerId?: string;
     active?: boolean;
   }) {

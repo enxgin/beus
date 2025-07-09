@@ -28,6 +28,7 @@ import { useAuth } from "@/hooks/use-auth"
 import { Badge } from "@/components/ui/badge"
 import { X, Plus } from "lucide-react"
 import { useState } from "react"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 
 // Final, stable schema definition
 const newCustomerSchema = z.object({
@@ -48,19 +49,30 @@ type NewCustomerFormValues = z.infer<typeof newCustomerSchema>
 
 // Type for tags used in the frontend state
 interface Tag {
-  id?: string; 
+  id: string; 
   name: string;
   color: string;
 }
 
 export default function NewCustomerPage() {
   const router = useRouter()
-  const [tags, setTags] = useState<Tag[]>([])
+  const queryClient = useQueryClient()
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([])
   const [tagInput, setTagInput] = useState('')
   const [tagColor, setTagColor] = useState('#3b82f6')
   
   const { user } = useAuth()
   const userBranch = user?.branch
+  
+  // Tüm etiketleri API'den çek
+  const { data: allTags = [] } = useQuery<Tag[]>({
+    queryKey: ['tags'],
+    queryFn: async () => {
+      const response = await api.get('/tags')
+      return response.data
+    },
+    staleTime: 5 * 60 * 1000, // 5 dakika önbelleğe al
+  })
   
   const form = useForm<NewCustomerFormValues>({
     resolver: zodResolver(newCustomerSchema),
@@ -73,17 +85,35 @@ export default function NewCustomerPage() {
     },
   })
 
-  const handleAddTag = () => {
+  // Yeni etiket ekleme fonksiyonu
+  const handleAddTag = async () => {
     if (tagInput.trim() !== "") {
-      const newTags = [...tags, { name: tagInput.trim(), color: tagColor }]
-      setTags(newTags)
-      setTagInput('')
+      try {
+        // Yeni etiketi API'ye gönder
+        const response = await api.post('/tags', {
+          name: tagInput.trim(),
+          color: tagColor
+        })
+        
+        // Başarılı yanıt alındıysa
+        if (response.data && response.data.id) {
+          // Yeni etiketi seçili etiketlere ekle
+          setSelectedTagIds([...selectedTagIds, response.data.id])
+          // Etiketleri yeniden çek
+          queryClient.invalidateQueries({ queryKey: ['tags'] })
+          setTagInput('')
+          toast.success("Yeni etiket eklendi")
+        }
+      } catch (error) {
+        console.error("Etiket eklenirken hata oluştu:", error)
+        toast.error("Etiket eklenirken bir hata oluştu")
+      }
     }
   }
 
-  const handleRemoveTag = (index: number) => {
-    const newTags = tags.filter((_, i) => i !== index)
-    setTags(newTags)
+  // Etiket kaldırma fonksiyonu
+  const handleRemoveTag = (tagId: string) => {
+    setSelectedTagIds(selectedTagIds.filter(id => id !== tagId))
   }
 
   const onSubmit: SubmitHandler<NewCustomerFormValues> = async (data) => {
@@ -92,19 +122,25 @@ export default function NewCustomerPage() {
       return
     }
 
+    // Seçili etiket ID'lerini gönderilecek veriye ekle
     const dataToSend = { 
       ...data, 
       branchId: userBranch.id,
       phone: data.phone.replace(/\s/g, ""), // Clean phone number
       email: data.email === '' ? undefined : data.email,
       notes: data.notes === '' ? undefined : data.notes,
+      tagIds: selectedTagIds, // Seçili etiket ID'lerini gönder
     }
+
+    console.log("Gönderilecek veri:", dataToSend)
+    console.log("Seçili etiket ID'leri:", selectedTagIds)
 
     try {
       const response = await api.post("/customers", dataToSend)
       
       if (response.status === 201) {
         toast.success("Müşteri başarıyla oluşturuldu.")
+        queryClient.invalidateQueries({ queryKey: ["customers"] })
         router.push("/dashboard/customers")
       } else {
         toast.error("Müşteri oluşturulurken bir hata oluştu.")
@@ -174,32 +210,82 @@ export default function NewCustomerPage() {
               <FormItem>
                 <FormLabel>Etiketler</FormLabel>
                 <div className="flex flex-col gap-2">
-                  <div className="flex flex-wrap gap-2">
-                    {tags.map((tag, index) => (
-                      <Badge key={index} variant="outline" style={{ borderColor: tag.color, color: tag.color }}>
+                  {/* Seçili Etiketler */}
+                  <div className="flex flex-wrap gap-2 mb-2 min-h-[36px] p-2 border rounded-md">
+                    {allTags.filter(tag => selectedTagIds.includes(tag.id)).map((tag) => (
+                      <Badge 
+                        key={tag.id} 
+                        variant="outline" 
+                        style={{ 
+                          backgroundColor: tag.color || '#3b82f6', 
+                          color: '#fff', 
+                          borderColor: tag.color || '#3b82f6'
+                        }}
+                      >
                         {tag.name}
-                        <button type="button" className="ml-2" onClick={() => handleRemoveTag(index)}>
-                          <X className="h-3 w-3" />
+                        <button
+                          type="button"
+                          className="ml-2 rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                          onClick={() => handleRemoveTag(tag.id)}
+                        >
+                          <X className="h-3 w-3 text-white hover:text-gray-200" />
                         </button>
                       </Badge>
                     ))}
+                    {selectedTagIds.length === 0 && (
+                      <div className="text-sm text-muted-foreground">Etiket yok</div>
+                    )}
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      type="text"
-                      value={tagInput}
-                      onChange={(e) => setTagInput(e.target.value)}
-                      placeholder="Yeni etiket"
-                      className="flex-grow"
-                    />
-                    <Input
-                      type="color"
-                      value={tagColor}
-                      onChange={(e) => setTagColor(e.target.value)}
-                      className="w-10 h-10 p-1"
-                    />
-                    <Button type="button" variant="outline" onClick={handleAddTag}>
-                      <Plus className="mr-2 h-4 w-4" /> Ekle
+                  
+                  {/* Etiket Seçici */}
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium">Mevcut Etiketler</div>
+                    <div className="flex flex-wrap gap-2">
+                      {allTags
+                        .filter(tag => !selectedTagIds.includes(tag.id))
+                        .map((tag) => (
+                          <Badge 
+                            key={tag.id} 
+                            variant="outline" 
+                            className="cursor-pointer"
+                            style={{ 
+                              backgroundColor: tag.color || '#3b82f6', 
+                              color: '#fff', 
+                              borderColor: tag.color || '#3b82f6'
+                            }}
+                            onClick={() => setSelectedTagIds([...selectedTagIds, tag.id])}
+                          >
+                            {tag.name}
+                            <Plus className="ml-1 h-3 w-3 text-white hover:text-gray-200" />
+                          </Badge>
+                        ))}
+                    </div>
+                    
+                    {/* Yeni Etiket Ekleme */}
+                    <div className="text-sm font-medium mt-4">Yeni Etiket Ekle</div>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="text"
+                        placeholder="Yeni etiket adı..."
+                        value={tagInput}
+                        onChange={(e) => setTagInput(e.target.value)}
+                        className="flex-grow"
+                      />
+                      <Input
+                        type="color"
+                        value={tagColor}
+                        onChange={(e) => setTagColor(e.target.value)}
+                        className="w-10 h-10 p-1 border rounded"
+                      />
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                      onClick={handleAddTag}
+                    >
+                      <Plus className="mr-2 h-4 w-4" /> Etiket Ekle
                     </Button>
                   </div>
                 </div>
