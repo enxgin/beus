@@ -2,10 +2,6 @@
 // This file centralizes hardcoded enums to prevent runtime undefined errors
 import {
   User,
-  PaymentMethod,
-  CashLogType,
-  CommissionType,
-  CommissionRuleType,
   Prisma,
 } from '@prisma/client';
 
@@ -44,6 +40,34 @@ export enum CommissionStatus {
   CANCELED = 'CANCELED'
 }
 
+export enum PaymentMethod {
+  CASH = 'CASH',
+  CREDIT_CARD = 'CREDIT_CARD',
+  BANK_TRANSFER = 'BANK_TRANSFER',
+  CUSTOMER_CREDIT = 'CUSTOMER_CREDIT'
+}
+
+export enum CashLogType {
+  OPENING = 'OPENING',
+  CLOSING = 'CLOSING',
+  INCOME = 'INCOME',
+  OUTCOME = 'OUTCOME',
+  MANUAL_IN = 'MANUAL_IN',
+  MANUAL_OUT = 'MANUAL_OUT',
+  INVOICE_PAYMENT = 'INVOICE_PAYMENT'
+}
+
+export enum CommissionType {
+  PERCENTAGE = 'PERCENTAGE',
+  FIXED_AMOUNT = 'FIXED_AMOUNT'
+}
+
+export enum CommissionRuleType {
+  GENERAL = 'GENERAL',
+  SERVICE_SPECIFIC = 'SERVICE_SPECIFIC',
+  STAFF_SPECIFIC = 'STAFF_SPECIFIC'
+}
+
 // Uygulama içinde kullanılacak ek enum'lar
 export enum CashDayStatus {
   OPEN = 'OPEN',
@@ -53,9 +77,5 @@ export enum CashDayStatus {
 // Re-export types for centralized access throughout the application.
 export {
   User,
-  PaymentMethod,
-  CashLogType,
-  CommissionType,
-  CommissionRuleType,
   Prisma,
 };
