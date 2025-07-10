@@ -68,6 +68,17 @@ export enum CommissionRuleType {
   STAFF_SPECIFIC = 'STAFF_SPECIFIC'
 }
 
+export enum CashMovementCategory {
+  RENT = 'RENT',
+  UTILITIES = 'UTILITIES',
+  SUPPLIES = 'SUPPLIES',
+  STAFF_ADVANCE = 'STAFF_ADVANCE',
+  MAINTENANCE = 'MAINTENANCE',
+  MARKETING = 'MARKETING',
+  OTHER_EXPENSE = 'OTHER_EXPENSE',
+  OTHER_INCOME = 'OTHER_INCOME'
+}
+
 // Uygulama içinde kullanılacak ek enum'lar
 export enum CashDayStatus {
   OPEN = 'OPEN',

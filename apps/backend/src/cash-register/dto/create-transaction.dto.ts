@@ -1,7 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsNotEmpty, IsNumber, IsOptional, IsPositive, IsString } from 'class-validator';
-import { CashLogType } from '../../prisma/prisma-types';
-import { CashMovementCategory } from '@prisma/client';
+import { CashLogType, CashMovementCategory } from '../../prisma/prisma-types';
 
 export class CreateTransactionDto {
   @ApiProperty({
