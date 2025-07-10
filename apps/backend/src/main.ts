@@ -21,7 +21,8 @@ async function bootstrap() {
       'https://next-2ehl5ugsc-enxgins-projects.vercel.app', // Eski Vercel Preview URL'si
       'https://beus-frontend.vercel.app', // Tahmini Vercel Production URL'si
       'https://next-beu.vercel.app', // Yeni Vercel Production URL'si
-      'https://rezervgo.com' // Production frontend URL'si
+      'https://rezervgo.com', // Production frontend URL'si
+      'https://www.rezervgo.com' // Production frontend URL'si (www subdomain)
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
     credentials: true,
