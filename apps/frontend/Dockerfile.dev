@@ -6,7 +6,7 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 
 # Dependencies'leri yükle
-RUN npm ci
+RUN npm install
 
 # Uygulama kodunu kopyala
 COPY . .

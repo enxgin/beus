@@ -34,7 +34,7 @@ services:
       - postgres
     networks:
       - beu-network
-    command: npm run start:dev
+    command: npm run dev
 
   # Frontend Next.js
   frontend:

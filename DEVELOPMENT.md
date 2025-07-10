@@ -197,6 +197,8 @@ git commit -m "feat: new feature implementation"
 
 # Production branch'ine push et
 git push origin v1
+
 ```
 
-Artık Coolify'de deploy ettiğinizde hiçbir runtime hatası almayacaksınız! 🎉
+
+Artık Coolify'de deploy ettiğinizde hiçbir runtime hatası almayacaksınız
