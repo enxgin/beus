@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, HttpCode, HttpStatus, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, Req } from '@nestjs/common';
 import { CustomersService } from './customers.service';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
@@ -9,13 +9,6 @@ import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger'
 @Controller('customers')
 export class CustomersController {
   constructor(private readonly customersService: CustomersService) {}
-
-  @Get('seed')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Veritabanını rastgele müşterilerle doldurur (test için)' })
-  seedCustomers() {
-    return this.customersService.seedCustomers();
-  }
 
   @Post()
   @UseGuards(JwtAuthGuard)
@@ -32,7 +25,7 @@ export class CustomersController {
   @ApiQuery({ name: 'branchId', required: false, description: 'Şube IDsi ile filtrele (Sadece Admin ve Üst Düzey Yöneticiler için)' })
   findAll(@Req() req, @Query('branchId') branchId?: string) {
     const user = req.user as any; // JWT'den gelen kullanıcı bilgisi
-    return this.customersService.findAllForUser(user, branchId);
+    return this.customersService.findAll(user, branchId);
   }
 
   @Get('search')
@@ -51,14 +44,6 @@ export class CustomersController {
   @ApiOperation({ summary: 'Belirtilen ID ile tek bir müşteriyi getirir' })
   findOne(@Param('id') id: string) {
     return this.customersService.findOne(id);
-  }
-
-  @Get(':id/packages')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Bir müşterinin sahip olduğu paketleri getirir (henüz aktif değil)' })
-  getCustomerPackages(@Param('id') id: string) {
-    return this.customersService.getCustomerPackages(id);
   }
 
   @Patch(':id')
