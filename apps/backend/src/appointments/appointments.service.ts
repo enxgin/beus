@@ -207,13 +207,14 @@ export class AppointmentsService {
     return this.prisma.appointment.delete({ where: { id } });
   }
 
-  private getEventColor(status: AppointmentStatus): string {
+  private getEventColor(status: any): string {
     switch (status) {
-      case AppointmentStatus.CONFIRMED: return '#3498db';
-      case AppointmentStatus.COMPLETED: return '#2ecc71';
-      case AppointmentStatus.SCHEDULED: return '#f1c40f';
-      case AppointmentStatus.NO_SHOW: return '#e74c3c';
-      case AppointmentStatus.CANCELLED: return '#bdc3c7';
+      case 'CONFIRMED': return '#3498db';
+      case 'COMPLETED': return '#2ecc71';
+      case 'SCHEDULED': return '#f1c40f';
+      case 'NO_SHOW': return '#e74c3c';
+      case 'CANCELLED': return '#bdc3c7';
+      case 'CANCELED': return '#bdc3c7'; // Prisma schema'da CANCELED var
       default: return '#95a5a6';
     }
   }
