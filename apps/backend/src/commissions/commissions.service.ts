@@ -1,6 +1,7 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CommissionStatus, Prisma, StaffCommission } from '@prisma/client';
+import { Prisma, StaffCommission } from '@prisma/client';
+import { CommissionStatus } from '../prisma/prisma-types';
 import { UpdateCommissionStatusDto } from './dto/update-commission-status.dto';
 
 @Injectable()

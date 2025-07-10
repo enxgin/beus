@@ -8,7 +8,8 @@ import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { UpdateAppointmentDto } from './dto/update-appointment.dto';
 import { UpdateAppointmentStatusDto } from './dto/update-appointment-status.dto';
 import { RescheduleAppointmentDto } from './dto/reschedule-appointment.dto';
-import { Appointment, AppointmentStatus, Prisma, UserRole } from '@prisma/client'; // UserRole eklendi
+import { Appointment, Prisma } from '@prisma/client';
+import { AppointmentStatus, UserRole } from '../prisma/prisma-types';
 import { PackagesService } from '../packages/packages.service';
 
 @Injectable()

@@ -1,7 +1,7 @@
 import { ApiProperty, PartialType } from '@nestjs/swagger';
 import { CreateAppointmentDto } from './create-appointment.dto';
 import { IsEnum, IsOptional } from 'class-validator';
-import { AppointmentStatus } from '@prisma/client';
+import { AppointmentStatus } from '../../prisma/prisma-types';
 
 export class UpdateAppointmentDto extends PartialType(CreateAppointmentDto) {
   @ApiProperty({ enum: AppointmentStatus, required: false })
