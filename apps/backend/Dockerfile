@@ -26,14 +26,16 @@ COPY apps/backend/package.json ./apps/backend/
 RUN npm install
 
 # Copy source code and config files
-# Monorepo olduğu için, ilgili uygulamanın kaynak kodunu ve prisma şemasını kopyalıyoruz.
 COPY apps/backend/src ./apps/backend/src
 COPY apps/backend/prisma ./apps/backend/prisma
 COPY apps/backend/tsconfig.json ./apps/backend/
 COPY apps/backend/nest-cli.json ./apps/backend/
 
-# Generate Prisma Client (DÜZELTİLMİŞ SATIR)
-RUN ./node_modules/.bin/prisma generate --schema=./apps/backend/prisma/schema.prisma
+# Force install the correct prisma version to override any conflicts
+RUN npm install -g prisma@6.11.1
+
+# Generate Prisma Client (using the globally installed correct version)
+RUN prisma generate --schema=./apps/backend/prisma/schema.prisma
 
 # Build the application
 RUN npm run build --workspace=backend
@@ -57,8 +59,8 @@ COPY --from=builder /usr/src/app/apps/backend/dist ./dist
 # Copy Prisma client
 COPY --from=builder /usr/src/app/node_modules/.prisma ./node_modules/.prisma
 
-# Expose port
-EXPOSE 3000
+# Expose port (DÜZELTİLMİŞ SATIR)
+EXPOSE 3001
 
 # Command to run the application
 CMD ["node", "dist/src/main.js"]
