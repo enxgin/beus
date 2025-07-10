@@ -5,18 +5,21 @@ Bu proje, güzellik salonları için kapsamlı bir yönetim sistemi sağlayan mo
 ## 🚀 Hızlı Başlangıç (Docker - Önerilen)
 
 ### Gereksinimler
+
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 - Git
 
 ### Tek Komutla Başlat
+
 ```bash
 ./dev-setup.sh
 ```
 
 Bu komut:
+
 - PostgreSQL veritabanını başlatır
-- Backend API'yi başlatır (http://localhost:3001)
-- Frontend'i başlatır (http://localhost:3000)
+- Backend API'yi başlatır (<http://localhost:3001>)
+- Frontend'i başlatır (<http://localhost:3000>)
 - Veritabanı migration'larını çalıştırır
 
 **Detaylı bilgi için:** [DEVELOPMENT.md](./DEVELOPMENT.md) dosyasını inceleyin.
@@ -35,7 +38,8 @@ Bu komut:
 
 1. [Node.js resmi sitesinden](https://nodejs.org/) indirip kurun
 2. Kurulumun başarılı olduğunu doğrulayın:
-   ```
+
+   ```bash
    node -v
    npm -v
    ```
@@ -49,7 +53,8 @@ Bu komut:
 ### Adım 3: Projeyi Kurma
 
 1. Bağımlılıkları yükleyin:
-   ```
+
+   ```bash
    cd apps/backend
    npm install
    
@@ -58,7 +63,8 @@ Bu komut:
    ```
 
 2. `.env` dosyasını oluşturun:
-   ```
+
+   ```bash
    # apps/backend/.env dosyası
    DATABASE_URL="postgresql://username:password@localhost:5432/salonflow?schema=public"
    JWT_SECRET="super-secret-jwt-key-change-in-production"
@@ -66,20 +72,22 @@ Bu komut:
    ```
 
 3. Veritabanı şemasını oluşturun:
-   ```
+
+   ```bash
    cd apps/backend
    npx prisma migrate dev
    ```
 
 4. Geliştirme sunucusunu başlatın:
-   ```
+
+   ```bash
    # Root dizininde
    npm run dev
    ```
 
 ## Proje Yapısı
 
-```
+```text
 salonflow/
 ├── apps/
 │   ├── backend/         # NestJS backend
@@ -87,5 +95,3 @@ salonflow/
 ├── packages/
 │   └── common/          # Paylaşılan kod ve bileşenler
 └── package.json         # Root package.json
-```
-# beus

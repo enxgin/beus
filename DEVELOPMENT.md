@@ -17,6 +17,7 @@ Bu dokümantasyon, BEU projesini yerel geliştirme ortamında Docker ile nasıl 
 ```
 
 Bu script:
+
 - Eski container'ları temizler
 - Yeni ortamı başlatır
 - Veritabanı migration'larını çalıştırır
@@ -37,14 +38,15 @@ docker-compose -f docker-compose.dev.yml exec backend npx prisma db seed
 
 ## 🌐 Erişim URL'leri
 
-- **Frontend:** http://localhost:3000
-- **Backend API:** http://localhost:3001
-- **Swagger Docs:** http://localhost:3001/api
+- **Frontend:** <http://localhost:3000>
+- **Backend API:** <http://localhost:3001>
+- **Swagger Docs:** <http://localhost:3001/api>
 - **Database:** localhost:5432 (postgres/postgres123)
 
 ## 🔧 Geliştirme Komutları
 
 ### Container Yönetimi
+
 ```bash
 # Tüm servislerin loglarını görüntüle
 docker-compose -f docker-compose.dev.yml logs -f
@@ -66,6 +68,7 @@ docker-compose -f docker-compose.dev.yml restart backend
 ```
 
 ### Veritabanı İşlemleri
+
 ```bash
 # Yeni migration oluştur
 docker-compose -f docker-compose.dev.yml exec backend npx prisma migrate dev --name migration_name
@@ -78,6 +81,7 @@ docker-compose -f docker-compose.dev.yml exec backend npx prisma migrate reset
 ```
 
 ### Backend İşlemleri
+
 ```bash
 # Backend container'ına bağlan
 docker-compose -f docker-compose.dev.yml exec backend sh
@@ -97,20 +101,25 @@ Bu geliştirme ortamı, production'da yaşadığımız enum hatalarını anında
 
 1. **Hatalı kodu yazın** (örneğin `@prisma/client`'dan enum import edin)
 2. **Backend loglarını izleyin:**
+
    ```bash
    docker-compose -f docker-compose.dev.yml logs -f backend
    ```
+
 3. **Hatayı anında görün:**
-   ```
+
+   ```text
    TypeError: Cannot convert undefined or null to object
    at IsEnum (.../node_modules/class-validator/...)
    ```
+
 4. **Hatayı düzeltin** (enum'u `prisma-types.ts`'den import edin)
 5. **Otomatik yeniden başlatmayı bekleyin** ve hatanın kaybolduğunu görün
 
 ### Yaygın Sorunlar
 
 #### Docker Daemon Çalışmıyor
+
 ```bash
 # Hata: Cannot connect to the Docker daemon at unix:///Users/engin/.docker/run/docker.sock
 # Çözüm: Docker Desktop'ı başlatın
@@ -121,6 +130,7 @@ docker info
 ```
 
 #### Port Çakışması
+
 ```bash
 # Kullanılan portları kontrol et
 lsof -i :3000
@@ -131,6 +141,7 @@ lsof -i :5432
 ```
 
 #### Container Build Sorunları
+
 ```bash
 # Cache'i temizleyerek yeniden build et
 docker-compose -f docker-compose.dev.yml build --no-cache
@@ -140,6 +151,7 @@ docker system prune -a
 ```
 
 #### Veritabanı Bağlantı Sorunları
+
 ```bash
 # PostgreSQL container'ının çalıştığını kontrol et
 docker-compose -f docker-compose.dev.yml ps postgres
@@ -150,7 +162,7 @@ docker-compose -f docker-compose.dev.yml logs postgres
 
 ## 📁 Proje Yapısı
 
-```
+```text
 beu/
 ├── docker-compose.dev.yml      # Geliştirme ortamı tanımı
 ├── dev-setup.sh              # Otomatik kurulum scripti
