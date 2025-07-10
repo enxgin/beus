@@ -1,0 +1,24 @@
+FROM node:20-alpine
+
+WORKDIR /usr/src/app
+
+# Package files'ları kopyala
+COPY package*.json ./
+
+# Dependencies'leri yükle
+RUN npm ci
+
+# Prisma CLI'yi global olarak yükle
+RUN npm install -g prisma
+
+# Uygulama kodunu kopyala
+COPY . .
+
+# Prisma client'ı generate et
+RUN npx prisma generate
+
+# Port'u expose et
+EXPOSE 3001
+
+# Development modunda başlat
+CMD ["npm", "run", "start:dev"]

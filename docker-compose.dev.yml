@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: beu-postgres-dev
+    environment:
+      POSTGRES_DB: beu_dev
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./apps/backend/prisma/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - beu-network
+
+  # Backend API
+  backend:
+    build:
+      context: ./apps/backend
+      dockerfile: Dockerfile.dev
+    container_name: beu-backend-dev
+    environment:
+      DATABASE_URL: "postgresql://postgres:postgres123@postgres:5432/beu_dev?schema=public"
+      JWT_SECRET: "dev-jwt-secret-key"
+      NODE_ENV: development
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./apps/backend:/usr/src/app
+      - /usr/src/app/node_modules
+    depends_on:
+      - postgres
+    networks:
+      - beu-network
+    command: npm run start:dev
+
+  # Frontend Next.js
+  frontend:
+    build:
+      context: ./apps/frontend
+      dockerfile: Dockerfile.dev
+    container_name: beu-frontend-dev
+    environment:
+      NEXT_PUBLIC_API_URL: "http://localhost:3001"
+      NODE_ENV: development
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./apps/frontend:/usr/src/app
+      - /usr/src/app/node_modules
+    depends_on:
+      - backend
+    networks:
+      - beu-network
+    command: npm run dev
+
+volumes:
+  postgres_data:
+
+networks:
+  beu-network:
+    driver: bridge

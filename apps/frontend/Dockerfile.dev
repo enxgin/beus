@@ -1,0 +1,18 @@
+FROM node:20-alpine
+
+WORKDIR /usr/src/app
+
+# Package files'ları kopyala
+COPY package*.json ./
+
+# Dependencies'leri yükle
+RUN npm ci
+
+# Uygulama kodunu kopyala
+COPY . .
+
+# Port'u expose et
+EXPOSE 3000
+
+# Development modunda başlat
+CMD ["npm", "run", "dev"]

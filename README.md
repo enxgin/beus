@@ -1,14 +1,35 @@
-# SalonFlow - Güzellik Salonu Yönetim Sistemi
+# BEU - Güzellik Salonu Yönetim Sistemi
 
 Bu proje, güzellik salonları için kapsamlı bir yönetim sistemi sağlayan modern bir web uygulamasıdır.
 
-## Kurulum Adımları
+## 🚀 Hızlı Başlangıç (Docker - Önerilen)
+
+### Gereksinimler
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+- Git
+
+### Tek Komutla Başlat
+```bash
+./dev-setup.sh
+```
+
+Bu komut:
+- PostgreSQL veritabanını başlatır
+- Backend API'yi başlatır (http://localhost:3001)
+- Frontend'i başlatır (http://localhost:3000)
+- Veritabanı migration'larını çalıştırır
+
+**Detaylı bilgi için:** [DEVELOPMENT.md](./DEVELOPMENT.md) dosyasını inceleyin.
+
+---
+
+## 📋 Manuel Kurulum (Alternatif)
 
 ### Gereksinimler
 
-- Node.js (v16 veya üstü)
+- Node.js (v20 veya üstü)
 - PostgreSQL
-- Yarn (önerilen) veya NPM
+- NPM
 
 ### Adım 1: Node.js ve NPM'i Kurma
 
