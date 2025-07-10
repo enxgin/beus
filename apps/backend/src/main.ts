@@ -17,10 +17,7 @@ async function bootstrap() {
   app.enableCors({
     origin: [
       'http://localhost:3000', // Lokal Next.js frontend
-      'http://localhost:4200', // Lokal Angular/React frontend (varsa)
-      'https://next-2ehl5ugsc-enxgins-projects.vercel.app', // Eski Vercel Preview URL'si
-      'https://beus-frontend.vercel.app', // Tahmini Vercel Production URL'si
-      'https://next-beu.vercel.app' // Yeni Vercel Production URL'si
+      'https://rezervgo.com' // Production frontend URL'si
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
     credentials: true,

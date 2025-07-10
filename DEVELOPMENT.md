@@ -191,6 +191,8 @@ Bu iş akışı sayesinde, production'a deploy etmeden önce tüm hataları yaka
 Geliştirme ortamında her şey çalıştığından emin olduktan sonra:
 
 ```bash
+
+
 # Değişiklikleri commit et
 git add .
 git commit -m "feat: new feature implementation"
@@ -198,7 +200,5 @@ git commit -m "feat: new feature implementation"
 # Production branch'ine push et
 git push origin v1
 
+
 ```
-
-
-Artık Coolify'de deploy ettiğinizde hiçbir runtime hatası almayacaksınız
