@@ -17,7 +17,8 @@ export class CreateUserDto {
   @IsNotEmpty({ message: 'Ad alanı boş olamaz' })
   name: string;
 
-  @ApiProperty({ enum: UserRole, description: 'Kullanıcı rolü', default: UserRole.STAFF })
+  // --- DÜZELTİLMİŞ SATIR ---
+  @ApiProperty({ enum: UserRole, description: 'Kullanıcı rolü (varsayılan: STAFF)', required: false })
   @IsEnum(UserRole, { message: 'Geçerli bir rol giriniz' })
   @IsOptional()
   role?: UserRole;
@@ -32,4 +33,3 @@ export class CreateUserDto {
   @IsOptional()
   isActive?: boolean;
 }
-
