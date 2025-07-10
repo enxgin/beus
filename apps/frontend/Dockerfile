@@ -10,7 +10,7 @@ COPY package.json package-lock.json* ./
 COPY apps/frontend/package.json ./apps/frontend/
 COPY apps/frontend/next.config.js ./apps/frontend/
 
-# Install all dependencies (including dev dependencies for build)
+# Install dependencies based on the monorepo structure
 RUN npm install
 
 # 2. Builder Image
