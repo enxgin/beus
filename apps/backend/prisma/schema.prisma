@@ -229,7 +229,7 @@ model Appointment {
 
 model Invoice {
   id            String           @id @default(cuid())
-  invoiceNumber String?         @unique
+  invoiceNumber String?          @unique
   totalAmount   Float
   amountPaid    Float            @default(0)
   debt          Float
@@ -294,24 +294,24 @@ model StaffCommission {
 }
 
 model CashRegisterLog {
-  id            String      @id @default(cuid())
-  type          CashLogType
-  amount        Float
-  description   String?
-  branchId      String
-  userId        String
-  createdAt     DateTime    @default(now())
+  id          String      @id @default(cuid())
+  type        CashLogType
+  amount      Float
+  description String?
+  branchId    String
+  userId      String
+  createdAt   DateTime    @default(now())
   // referenceId   String? // Fatura, randevu vb. referans ID'si - DB senkronizasyon sorunu için geçici olarak kapatıldı
   // referenceType String? // 'INVOICE', 'APPOINTMENT' vb. - DB senkronizasyon sorunu için geçici olarak kapatıldı
 
-  Branch   Branch    @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  User     User      @relation(fields: [userId], references: [id])
+  Branch   Branch                @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  User     User                  @relation(fields: [userId], references: [id])
   payments Payment[] // Bu satır geri eklendi
-
-  @@index([branchId, createdAt])
-  category      CashMovementCategory? // Manuel hareketler için kategori
+  category CashMovementCategory? // Manuel hareketler için kategori
 
   // @@index([referenceId, referenceType]) // DB senkronizasyon sorunu için geçici olarak kapatıldı
+
+  @@index([branchId, createdAt])
 }
 
 enum CommissionType {
