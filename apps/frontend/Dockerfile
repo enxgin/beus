@@ -4,7 +4,7 @@ FROM node:20-alpine AS deps
 WORKDIR /usr/src/app
 
 # Copy root package files
-COPY package.json package-lock.json* ./
+COPY package.json ./
 
 # Copy frontend package.json and next.config.js
 COPY apps/frontend/package.json ./apps/frontend/
