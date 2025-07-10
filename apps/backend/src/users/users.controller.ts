@@ -8,6 +8,7 @@ import {
   Delete,
   UseGuards,
   Req,
+  Query,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -32,6 +33,28 @@ export class UsersController {
   @ApiResponse({ status: 403, description: 'Erişim reddedildi.' })
   create(@Body() createUserDto: CreateUserDto, @Req() req) {
     return this.usersService.create(createUserDto, req.user);
+  }
+
+  @Get('statistics')
+  @Roles(UserRole.ADMIN, UserRole.SUPER_BRANCH_MANAGER, UserRole.BRANCH_MANAGER)
+  @ApiOperation({ summary: 'Kullanıcı istatistiklerini getir' })
+  @ApiResponse({ status: 200, description: 'İstatistikler başarıyla getirildi.' })
+  getStatistics(@Req() req, @Query() query: any) {
+    return this.usersService.getStatistics(req.user, query);
+  }
+
+  @Get('with-performance')
+  @Roles(
+    UserRole.ADMIN,
+    UserRole.SUPER_BRANCH_MANAGER,
+    UserRole.BRANCH_MANAGER,
+    UserRole.RECEPTION,
+    UserRole.STAFF
+  )
+  @ApiOperation({ summary: 'Performans verileri ile kullanıcıları listele' })
+  @ApiResponse({ status: 200, description: 'Kullanıcılar performans verileri ile listelendi.' })
+  findAllWithPerformance(@Req() req, @Query() query: any) {
+    return this.usersService.findAllWithPerformance(req.user, query);
   }
 
   @Get()
@@ -74,6 +97,48 @@ export class UsersController {
     @Req() req
   ) {
     return this.usersService.update(id, updateUserDto, req.user);
+  }
+
+  @Get(':id/performance')
+  @Roles(
+    UserRole.ADMIN,
+    UserRole.SUPER_BRANCH_MANAGER,
+    UserRole.BRANCH_MANAGER,
+    UserRole.RECEPTION,
+    UserRole.STAFF
+  )
+  @ApiOperation({ summary: 'Kullanıcının performans verilerini getir' })
+  @ApiResponse({ status: 200, description: 'Performans verileri başarıyla getirildi.' })
+  getUserPerformance(@Param('id') id: string, @Req() req, @Query() query: any) {
+    return this.usersService.getUserPerformance(id, req.user, query);
+  }
+
+  @Get(':id/activities')
+  @Roles(
+    UserRole.ADMIN,
+    UserRole.SUPER_BRANCH_MANAGER,
+    UserRole.BRANCH_MANAGER,
+    UserRole.RECEPTION,
+    UserRole.STAFF
+  )
+  @ApiOperation({ summary: 'Kullanıcının aktivite geçmişini getir' })
+  @ApiResponse({ status: 200, description: 'Aktivite geçmişi başarıyla getirildi.' })
+  getUserActivities(@Param('id') id: string, @Req() req, @Query('limit') limit?: string) {
+    return this.usersService.getUserActivities(id, req.user, limit ? parseInt(limit) : 20);
+  }
+
+  @Get(':id/financial')
+  @Roles(
+    UserRole.ADMIN,
+    UserRole.SUPER_BRANCH_MANAGER,
+    UserRole.BRANCH_MANAGER,
+    UserRole.RECEPTION,
+    UserRole.STAFF
+  )
+  @ApiOperation({ summary: 'Kullanıcının mali bilgilerini getir' })
+  @ApiResponse({ status: 200, description: 'Mali bilgiler başarıyla getirildi.' })
+  getUserFinancial(@Param('id') id: string, @Req() req, @Query() query: any) {
+    return this.usersService.getUserFinancial(id, req.user, query);
   }
 
   @Delete(':id')

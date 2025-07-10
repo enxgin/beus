@@ -9,6 +9,7 @@ import {
   Query,
   UseGuards,
   Patch,
+  Request,
 } from '@nestjs/common';
 import { AppointmentsService } from './appointments.service';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
@@ -38,10 +39,20 @@ export class AppointmentsController {
 
   @Get()
   @ApiOperation({ summary: 'Bir şubedeki tüm randevuları listeler' })
-  @ApiQuery({ name: 'branchId', required: true, type: String })
-  findAll(@Query('branchId') branchId: string) {
-    // Servis metoduyla uyumlu hale getirildi.
-    return this.appointmentsService.findAll(branchId);
+  @ApiQuery({ name: 'branchId', required: false, type: String })
+  @ApiQuery({ name: 'skip', required: false, type: Number })
+  @ApiQuery({ name: 'take', required: false, type: Number })
+  @ApiQuery({ name: 'search', required: false, type: String })
+  findAll(
+    @Query('branchId') branchId?: string,
+    @Query('skip') skip?: string,
+    @Query('take') take?: string,
+    @Query('search') search?: string,
+    @Request() req?: any,
+  ) {
+    const skipNum = skip ? parseInt(skip, 10) : 0;
+    const takeNum = take ? parseInt(take, 10) : 10;
+    return this.appointmentsService.findAll(branchId, skipNum, takeNum, search, req?.user);
   }
 
   @Get('calendar')
@@ -56,6 +67,21 @@ export class AppointmentsController {
   ) {
     // Servis metoduyla uyumlu hale getirildi.
     return this.appointmentsService.getCalendarData(branchId, start, end);
+  }
+
+  @Get('available-slots')
+  @ApiOperation({ summary: 'Belirtilen personel, hizmet ve tarih için müsait saatleri getirir' })
+  @ApiQuery({ name: 'staffId', required: true, type: String })
+  @ApiQuery({ name: 'serviceId', required: true, type: String })
+  @ApiQuery({ name: 'date', required: true, type: String, description: 'YYYY-MM-DD formatında tarih' })
+  @ApiQuery({ name: 'branchId', required: true, type: String })
+  getAvailableSlots(
+    @Query('staffId') staffId: string,
+    @Query('serviceId') serviceId: string,
+    @Query('date') date: string,
+    @Query('branchId') branchId: string,
+  ) {
+    return this.appointmentsService.getAvailableSlots(staffId, serviceId, date, branchId);
   }
 
   @Get(':id')

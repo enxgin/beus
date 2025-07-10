@@ -87,11 +87,53 @@ export class PackagesController {
   @Roles(UserRole.ADMIN, UserRole.SUPER_BRANCH_MANAGER, UserRole.BRANCH_MANAGER, UserRole.RECEPTION, UserRole.STAFF)
   @Get('customer-package')
   findAllCustomerPackages(@Query() query: any) {
-    const { skip, take, ...where } = query;
+    const { skip, take, branchId, ...where } = query;
+    
+    // branchId varsa customer ilişkisi üzerinden filtrele
+    if (branchId) {
+      where.customer = {
+        branchId: branchId,
+      };
+    }
+    
     return this.packagesService.findAllCustomerPackages({
       skip: skip ? parseInt(skip, 10) : undefined,
       take: take ? parseInt(take, 10) : undefined,
       where,
+    });
+  }
+
+  @ApiOperation({ summary: 'Müşteriye ait paketleri listele' })
+  @ApiResponse({ status: 200, description: 'Müşteri paketleri başarıyla listelendi' })
+  @ApiQuery({ name: 'customerId', required: true, description: 'Müşteri ID' })
+  @ApiQuery({ name: 'active', required: false, description: 'Sadece aktif paketleri getir' })
+  @Roles(UserRole.ADMIN, UserRole.SUPER_BRANCH_MANAGER, UserRole.BRANCH_MANAGER, UserRole.RECEPTION, UserRole.STAFF)
+  @Get('customer')
+  findCustomerPackages(@Query() query: any) {
+    const { customerId, active, skip, take, ...where } = query;
+    
+    // Müşteri ID kontrolü
+    if (!customerId) {
+      throw new BadRequestException('customerId parametresi gereklidir');
+    }
+
+    // Where koşullarını oluştur
+    const whereConditions: any = {
+      customerId,
+      ...where,
+    };
+
+    // Eğer active=true ise, sadece aktif paketleri getir
+    if (active === 'true') {
+      whereConditions.expiryDate = {
+        gte: new Date(),
+      };
+    }
+
+    return this.packagesService.findAllCustomerPackages({
+      skip: skip ? parseInt(skip, 10) : undefined,
+      take: take ? parseInt(take, 10) : undefined,
+      where: whereConditions,
     });
   }
 

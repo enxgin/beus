@@ -24,7 +24,7 @@ export class ServicesService {
         },
         staff: {
           create: staffIds.map((staffId) => ({
-            staff: {
+            user: {
               connect: { id: staffId },
             },
           })),
@@ -35,7 +35,7 @@ export class ServicesService {
         branch: true,
         staff: {
           include: {
-            staff: true,
+            user: true,
           },
         },
       },
@@ -98,7 +98,7 @@ export class ServicesService {
         branch: true,
         staff: {
           include: {
-            staff: true,
+            user: true,
           },
         },
         _count: {
@@ -123,7 +123,7 @@ export class ServicesService {
         branch: true,
         staff: {
           include: {
-            staff: true,
+            user: true,
           },
         },
       },
@@ -150,9 +150,9 @@ export class ServicesService {
       if (staffIds) {
         const existingStaff = await prisma.staffService.findMany({
           where: { serviceId: id },
-          select: { staffId: true },
+          select: { userId: true },
         });
-        const existingStaffIds = existingStaff.map((s) => s.staffId);
+        const existingStaffIds = existingStaff.map((s) => s.userId);
 
         const staffToConnect = staffIds.filter((sid) => !existingStaffIds.includes(sid));
         const staffToDisconnect = existingStaffIds.filter((sid) => !staffIds.includes(sid));
@@ -161,7 +161,7 @@ export class ServicesService {
           await prisma.staffService.deleteMany({
             where: {
               serviceId: id,
-              staffId: { in: staffToDisconnect },
+              userId: { in: staffToDisconnect },
             },
           });
         }
@@ -170,7 +170,7 @@ export class ServicesService {
           await prisma.staffService.createMany({
             data: staffToConnect.map((staffId) => ({
               serviceId: id,
-              staffId: staffId,
+              userId: staffId,
             })),
           });
         }
@@ -183,7 +183,7 @@ export class ServicesService {
           branch: true,
           staff: {
             include: {
-              staff: true,
+              user: true,
             },
           },
         },

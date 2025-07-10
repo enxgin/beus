@@ -203,7 +203,7 @@ export class CashRegisterService {
           createdAt: 'asc',
         },
         include: {
-          User: {
+          user: {
             select: {
               id: true,
               name: true,
@@ -243,7 +243,7 @@ export class CashRegisterService {
         expectedBalance,
         openingBalance,
         closedAt: closingLog?.createdAt || null,
-        closedBy: closingLog?.User || null,
+        closedBy: closingLog?.user || null,
         actualBalance: closingLog?.amount || null,
       };
     } catch (error) {
@@ -307,8 +307,8 @@ export class CashRegisterService {
         createdAt: 'desc',
       },
       include: {
-        Branch: true,
-        User: true,
+        branch: true,
+        user: true,
       },
     });
 
@@ -330,8 +330,8 @@ export class CashRegisterService {
           branchId: log.branchId,
           openedAt: log.createdAt,
           closedAt: details.closedAt || null,
-          branch: log.Branch || { id: log.branchId, name: 'Bilinmeyen Şube' },
-          openedByUser: log.User || { id: log.userId, name: 'Bilinmeyen Kullanıcı' },
+          branch: log.branch || { id: log.branchId, name: 'Bilinmeyen Şube' },
+          openedByUser: log.user || { id: log.userId, name: 'Bilinmeyen Kullanıcı' },
           closedByUser: details.closedBy || null,
         };
       })

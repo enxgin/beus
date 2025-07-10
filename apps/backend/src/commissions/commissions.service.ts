@@ -1,6 +1,6 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CommissionStatus, Prisma, StaffCommission } from '@prisma/client'; // Doğru import
+import { CommissionStatus, Prisma, StaffCommission } from '@prisma/client';
 import { UpdateCommissionStatusDto } from './dto/update-commission-status.dto';
 
 @Injectable()
@@ -9,8 +9,7 @@ export class CommissionsService {
 
   constructor(private prisma: PrismaService) {}
 
-  // NOT: Bu fonksiyon, build hatalarını çözmek için basitleştirilmiştir.
-  // Komisyon hesaplama mantığının (CommissionRule) şema ile uyumlu hale getirilmesi gerekir.
+  // Yeni hiyerarşik prim sistemi ile prim hesaplama
   async calculateCommissionForInvoice(invoiceId: string): Promise<StaffCommission | null> {
     const invoice = await this.prisma.invoice.findUnique({
       where: { id: invoiceId },
@@ -40,13 +39,109 @@ export class CommissionsService {
 
     const { appointment } = invoice;
     const { service, staff } = appointment;
-    const commissionAmount = invoice.totalAmount * 0.1; // Geçici olarak %10'luk basit bir hesaplama
 
-    this.logger.log(`Geçici prim hesaplanıyor: Fatura #${invoiceId}, Tutar: ${commissionAmount}`);
+    // Hiyerarşik prim kuralını bul (en yüksek öncelikten başlayarak)
+    let applicableRule = null;
 
-    // Şema uyumsuzluğu nedeniyle commissionItem zorunlu; bu nedenle
-    // şimdilik prim kaydı oluşturmayı pas geçiyoruz.
-    return null;
+    // 1. Personel özel kural (en yüksek öncelik)
+    applicableRule = await this.prisma.commissionRule.findFirst({
+      where: {
+        ruleType: 'STAFF_SPECIFIC',
+        staffId: staff.id,
+        isActive: true,
+        branchId: invoice.branchId,
+        OR: [
+          { endDate: null },
+          { endDate: { gte: new Date() } }
+        ]
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    // 2. Hizmet özel kural (orta öncelik)
+    if (!applicableRule) {
+      applicableRule = await this.prisma.commissionRule.findFirst({
+        where: {
+          ruleType: 'SERVICE_SPECIFIC',
+          serviceId: service.id,
+          isActive: true,
+          branchId: invoice.branchId,
+          OR: [
+            { endDate: null },
+            { endDate: { gte: new Date() } }
+          ]
+        },
+        orderBy: { createdAt: 'desc' }
+      });
+    }
+
+    // 3. Genel kural (en düşük öncelik)
+    if (!applicableRule) {
+      applicableRule = await this.prisma.commissionRule.findFirst({
+        where: {
+          ruleType: 'GENERAL',
+          isActive: true,
+          branchId: invoice.branchId,
+          OR: [
+            { endDate: null },
+            { endDate: { gte: new Date() } }
+          ]
+        },
+        orderBy: { createdAt: 'desc' }
+      });
+    }
+
+    if (!applicableRule) {
+      this.logger.log(`Bu fatura için geçerli prim kuralı bulunamadı: ${invoiceId}`);
+      return null;
+    }
+
+    // Prim tutarını hesapla
+    let commissionAmount = 0;
+    if (applicableRule.type === 'PERCENTAGE') {
+      commissionAmount = invoice.totalAmount * (applicableRule.rate / 100);
+    } else if (applicableRule.type === 'FIXED_AMOUNT') {
+      commissionAmount = applicableRule.fixedAmount;
+    }
+
+    this.logger.log(`Prim hesaplandı: Fatura #${invoiceId}, Kural: ${applicableRule.name}, Tutar: ${commissionAmount}`);
+
+    // Önce CommissionItem oluştur
+    const commissionItem = await this.prisma.commissionItem.create({
+      data: {
+        invoiceId: invoice.id,
+        serviceId: service.id,
+        amount: commissionAmount,
+        status: 'PENDING',
+        appliedRuleId: applicableRule.id
+      }
+    });
+
+    // Prim kaydını oluştur
+    const commission = await this.prisma.staffCommission.create({
+      data: {
+        amount: commissionAmount,
+        status: 'PENDING',
+        staffId: staff.id,
+        serviceId: service.id,
+        invoiceId: invoice.id,
+        appliedRuleId: applicableRule.id,
+        commissionItemId: commissionItem.id
+      },
+      include: {
+        staff: { select: { id: true, name: true, email: true } },
+        service: true,
+        invoice: true,
+        commissionItem: {
+          include: {
+            appliedRule: true
+          }
+        }
+      }
+    });
+
+    this.logger.log(`Prim kaydı oluşturuldu: ${commission.id}`);
+    return commission;
   }
 
   async updateStatus(id: string, dto: UpdateCommissionStatusDto): Promise<StaffCommission> {

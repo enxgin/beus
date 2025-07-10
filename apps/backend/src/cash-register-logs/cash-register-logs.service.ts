@@ -42,8 +42,8 @@ export class CashRegisterLogsService {
         description,
       },
       include: {
-        Branch: true,
-        User: { select: { id: true, name: true, email: true, role: true } },
+        branch: true,
+        user: { select: { id: true, name: true, email: true, role: true } },
       },
     });
   }
@@ -69,8 +69,8 @@ export class CashRegisterLogsService {
         take: limit,
         orderBy: { createdAt: 'desc' },
         include: {
-          Branch: true,
-          User: { select: { id: true, name: true, email: true, role: true } },
+          branch: true,
+          user: { select: { id: true, name: true, email: true, role: true } },
         },
       }),
       this.prisma.cashRegisterLog.count({ where }),
@@ -91,8 +91,8 @@ export class CashRegisterLogsService {
     const log = await this.prisma.cashRegisterLog.findUnique({
       where: { id },
       include: {
-        Branch: true,
-        User: { select: { id: true, name: true, email: true, role: true } },
+        branch: true,
+        user: { select: { id: true, name: true, email: true, role: true } },
       },
     });
 
@@ -163,8 +163,8 @@ export class CashRegisterLogsService {
       },
       orderBy: { createdAt: 'asc' },
       include: {
-        Branch: true,
-        User: { select: { id: true, name: true } },
+        branch: true,
+        user: { select: { id: true, name: true } },
       },
     });
 
@@ -220,8 +220,8 @@ export class CashRegisterLogsService {
         description: description || 'Günlük kasa açılışı',
       },
       include: {
-        Branch: true,
-        User: { select: { id: true, name: true, email: true, role: true } },
+        branch: true,
+        user: { select: { id: true, name: true, email: true, role: true } },
       },
     });
   }
@@ -274,8 +274,8 @@ export class CashRegisterLogsService {
         description: (description || '') + (differenceDescription ? ` (${differenceDescription})` : ''),
       },
       include: {
-        Branch: true,
-        User: { select: { id: true, name: true, email: true, role: true } },
+        branch: true,
+        user: { select: { id: true, name: true, email: true, role: true } },
       },
     });
   }

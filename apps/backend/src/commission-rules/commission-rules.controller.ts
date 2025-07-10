@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, Request } from '@nestjs/common';
 import { CommissionRulesService } from './commission-rules.service';
 import { CreateCommissionRuleDto } from './dto/create-commission-rule.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -12,19 +12,29 @@ import { UserRole } from '@prisma/client';
 export class CommissionRulesController {
   constructor(private readonly commissionRulesService: CommissionRulesService) {}
 
+  @Post()
+  createRule(@Body() createCommissionRuleDto: CreateCommissionRuleDto, @Request() req) {
+    return this.commissionRulesService.createRule(createCommissionRuleDto, req.user.branchId);
+  }
+
+  // Geriye dönük uyumluluk için eski endpoint'ler
   @Post('/global')
-  createGlobalRule(@Body() createCommissionRuleDto: CreateCommissionRuleDto) {
-    return this.commissionRulesService.createGlobalRule(createCommissionRuleDto);
+  createGlobalRule(@Body() createCommissionRuleDto: CreateCommissionRuleDto, @Request() req) {
+    createCommissionRuleDto.ruleType = 'GENERAL';
+    return this.commissionRulesService.createRule(createCommissionRuleDto, req.user.branchId);
   }
 
   @Post('/service')
-  createServiceRule(@Body() createCommissionRuleDto: CreateCommissionRuleDto) {
-    return this.commissionRulesService.createServiceRule(createCommissionRuleDto);
+  createServiceRule(@Body() createCommissionRuleDto: CreateCommissionRuleDto, @Request() req) {
+    createCommissionRuleDto.ruleType = 'SERVICE_SPECIFIC';
+    return this.commissionRulesService.createRule(createCommissionRuleDto, req.user.branchId);
   }
 
   @Post('/user')
-  createUserRule(@Body() createCommissionRuleDto: CreateCommissionRuleDto) {
-    return this.commissionRulesService.createUserRule(createCommissionRuleDto);
+  createUserRule(@Body() createCommissionRuleDto: CreateCommissionRuleDto, @Request() req) {
+    createCommissionRuleDto.ruleType = 'STAFF_SPECIFIC';
+    createCommissionRuleDto.staffId = createCommissionRuleDto.userId; // userId -> staffId dönüşümü
+    return this.commissionRulesService.createRule(createCommissionRuleDto, req.user.branchId);
   }
 
   @Get()
@@ -35,6 +45,7 @@ export class CommissionRulesController {
     @Query('page') page?: string,
     @Query('limit') limit?: string,
   ) {
+    console.log('🔍 Commission Rules GET endpoint çağrıldı:', { userId, serviceId, isGlobal, page, limit });
     const params: any = {};
     
     if (userId) params.userId = userId;

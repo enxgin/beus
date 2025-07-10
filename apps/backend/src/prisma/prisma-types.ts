@@ -9,6 +9,7 @@ import {
   PaymentStatus,
   CommissionType,
   CommissionStatus,
+  CommissionRuleType,
   Prisma,
 } from '@prisma/client';
 
@@ -28,5 +29,6 @@ export {
   PaymentStatus,
   CommissionType,
   CommissionStatus,
+  CommissionRuleType,
   Prisma,
 };

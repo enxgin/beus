@@ -7,6 +7,10 @@ export class StaffService {
   constructor(private prisma: PrismaService) {}
 
   async findAvailableStaff(branchId: string, serviceId?: string) {
+    console.log('🔍 StaffService.findAvailableStaff() çağrıldı');
+    console.log('📍 branchId:', branchId);
+    console.log('🔧 serviceId:', serviceId);
+    
     const whereClause: any = {
       branchId: branchId,
       role: {
@@ -23,8 +27,22 @@ export class StaffService {
       };
     }
 
-    return this.prisma.user.findMany({
+    console.log('🔍 Where clause:', whereClause);
+
+    const result = await this.prisma.user.findMany({
       where: whereClause,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        branchId: true,
+      },
     });
+    
+    console.log('👥 Bulunan personel sayısı:', result.length);
+    console.log('👥 Personel listesi:', result);
+    
+    return result;
   }
 }

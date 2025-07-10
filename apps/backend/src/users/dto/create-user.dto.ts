@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsString, IsEnum, MinLength, IsNotEmpty, IsOptional } from 'class-validator';
+import { IsEmail, IsString, IsEnum, MinLength, IsNotEmpty, IsOptional, IsBoolean } from 'class-validator';
 import { UserRole } from '../../prisma/prisma-types';
 
 export class CreateUserDto {
@@ -26,5 +26,10 @@ export class CreateUserDto {
   @IsString()
   @IsOptional()
   branchId?: string;
+
+  @ApiProperty({ example: true, description: 'Kullanıcının aktif/pasif durumu', default: true })
+  @IsBoolean()
+  @IsOptional()
+  isActive?: boolean;
 }
 

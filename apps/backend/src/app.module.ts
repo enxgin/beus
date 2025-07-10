@@ -15,6 +15,9 @@ import { ServiceCategoriesModule } from './service-categories/service-categories
 import { StaffModule } from './staff/staff.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { FinanceModule } from './finance/finance.module';
+import { TagsModule } from './tags/tags.module';
+import { CommissionRulesModule } from './commission-rules/commission-rules.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
@@ -39,6 +42,9 @@ import { FinanceModule } from './finance/finance.module';
     StaffModule,
     DashboardModule,
     FinanceModule,
+    TagsModule,
+    CommissionRulesModule,
+    NotificationsModule,
   ],
   controllers: [],
   providers: [],

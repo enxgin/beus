@@ -15,21 +15,22 @@ datasource db {
 }
 
 model User {
-  id              String            @id @default(cuid())
-  email           String            @unique
-  password        String
-  name            String
-  role            UserRole
-  branchId        String?
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
-  appointments    Appointment[]     @relation("StaffAppointments")
-  CashRegisterLog CashRegisterLog[]
-  commissionRules CommissionRule[]
-  commissions     StaffCommission[]
-  services        StaffService[]
-  branch          Branch?           @relation(fields: [branchId], references: [id], onDelete: Restrict)
-  workHours       WorkHour[]
+  id                    String            @id @default(cuid())
+  email                 String            @unique
+  password              String
+  name                  String
+  role                  UserRole
+  branchId              String?
+  isActive              Boolean           @default(true)
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+  appointments          Appointment[]     @relation("StaffAppointments")
+  CashRegisterLog       CashRegisterLog[]
+  staffCommissionRules  CommissionRule[]  @relation("StaffCommissionRules")
+  commissions           StaffCommission[]
+  services              StaffService[]
+  branch                Branch?           @relation(fields: [branchId], references: [id], onDelete: Restrict)
+  workHours             WorkHour[]
 }
 
 model WorkHour {
@@ -49,50 +50,81 @@ model WorkHour {
 }
 
 model Branch {
-  id              String            @id @default(cuid())
-  name            String
-  address         String?
-  phone           String?
-  description     String?
-  parentBranchId  String?
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
-  appointments    Appointment[]
-  parentBranch    Branch?           @relation("SubBranches", fields: [parentBranchId], references: [id], onDelete: Restrict)
-  subBranches     Branch[]          @relation("SubBranches")
-  users           User[]
-  services        Service[]
-  packages        Package[]
-  invoices        Invoice[]
-  customers       Customer[]
-  workHours       WorkHour[]
-  CashRegisterLog CashRegisterLog[]
-  commissionRules CommissionRule[]
+  id                    String                  @id @default(cuid())
+  name                  String
+  address               String?
+  phone                 String?
+  description           String?
+  parentBranchId        String?
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+  appointments          Appointment[]
+  parentBranch          Branch?                 @relation("SubBranches", fields: [parentBranchId], references: [id], onDelete: Restrict)
+  subBranches           Branch[]                @relation("SubBranches")
+  users                 User[]
+  services              Service[]
+  packages              Package[]
+  invoices              Invoice[]
+  customers             Customer[]
+  workHours             WorkHour[]
+  CashRegisterLog       CashRegisterLog[]
+  commissionRules       CommissionRule[]
+  serviceCategories     ServiceCategory[]
+  notificationProviders NotificationProvider[]
+  notificationTemplates NotificationTemplate[]
+  notificationTriggers  NotificationTrigger[]
+  notificationQueue     NotificationQueue[]
+  notificationHistory   NotificationHistory[]
+  notificationSettings  NotificationSettings?
 }
 
 model Customer {
-  id            String            @id @default(cuid())
-  name          String
-  phone         String?           @unique
-  email         String?           @unique
-  notes         String?
-  branchId      String
-  discountRate  Float             @default(0)
-  creditBalance Float             @default(0)
-  createdAt     DateTime          @default(now())
-  updatedAt     DateTime          @updatedAt
-  branch        Branch            @relation(fields: [branchId], references: [id])
-  appointments  Appointment[]
-  packages      CustomerPackage[]
-  invoices      Invoice[]
+  id                  String                @id @default(cuid())
+  name                String
+  phone               String?               @unique
+  email               String?               @unique
+  notes               String?
+  branchId            String
+  discountRate        Float                 @default(0)
+  creditBalance       Float                 @default(0)
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  branch              Branch                @relation(fields: [branchId], references: [id])
+  appointments        Appointment[]
+  packages            CustomerPackage[]
+  invoices            Invoice[]
+  tags                CustomerTag[]
+  notificationQueue   NotificationQueue[]
+  notificationHistory NotificationHistory[]
+}
+
+model Tag {
+  id        String        @id @default(cuid())
+  name      String
+  color     String        @default("#3b82f6")
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  customers CustomerTag[]
+}
+
+model CustomerTag {
+  customerId String
+  tagId      String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  tag        Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([customerId, tagId])
 }
 
 model ServiceCategory {
   id          String    @id @default(cuid())
   name        String
   description String?
+  branchId    String?
+  isActive    Boolean   @default(true)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+  branch      Branch?   @relation(fields: [branchId], references: [id], onDelete: Restrict)
   services    Service[]
 }
 
@@ -104,6 +136,7 @@ model Service {
   description     String?
   categoryId      String
   branchId        String
+  isActive        Boolean           @default(true)
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
   category        ServiceCategory   @relation(fields: [categoryId], references: [id])
@@ -113,15 +146,16 @@ model Service {
   packages        PackageService[]
   commissionItems CommissionItem[]
   StaffCommission StaffCommission[]
+  commissionRules CommissionRule[]
 }
 
 model StaffService {
-  staffId   String
+  userId    String
   serviceId String
-  staff     User    @relation(fields: [staffId], references: [id])
+  user      User    @relation(fields: [userId], references: [id])
   service   Service @relation(fields: [serviceId], references: [id])
 
-  @@id([staffId, serviceId])
+  @@id([userId, serviceId])
 }
 
 model Appointment {
@@ -210,36 +244,44 @@ model Invoice {
 }
 
 model Payment {
-  id            String           @id @default(cuid())
-  invoiceNumber String?          @unique
-  totalAmount   Float
-  amountPaid    Float            @default(0)
-  debt          Float
-  status        PaymentStatus    @default(UNPAID)
-  customerId    String
-  branchId      String
-  appointmentId String?          @unique
-  createdAt     DateTime         @default(now())
-  updatedAt     DateTime         @updatedAt
-  invoice       Invoice          @relation(fields: [invoiceId], references: [id])
-  cashLog       CashRegisterLog? @relation(fields: [cashLogId], references: [id])
+  id                String           @id @default(cuid())
+  amount            Float
+  method            PaymentMethod
+  paymentDate       DateTime         @default(now())
+  invoiceId         String
+  cashRegisterLogId String?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  invoice           Invoice          @relation(fields: [invoiceId], references: [id])
+  cashLog           CashRegisterLog? @relation(fields: [cashRegisterLogId], references: [id])
 }
 
 model CommissionRule {
-  id              String           @id @default(cuid())
+  id              String              @id @default(cuid())
   name            String
   description     String?
-  type            CommissionType
-  rate            Float
-  fixedAmount     Float
-  startDate       DateTime
+  ruleType        CommissionRuleType  @default(GENERAL) // GENERAL, SERVICE_SPECIFIC, STAFF_SPECIFIC
+  type            CommissionType      // PERCENTAGE, FIXED_AMOUNT
+  rate            Float               @default(0)
+  fixedAmount     Float               @default(0)
+  startDate       DateTime            @default(now())
   endDate         DateTime?
   branchId        String
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  branch          Branch           @relation(fields: [branchId], references: [id])
+  // Hizmete özel kurallar için
+  serviceId       String?
+  // Personele özel kurallar için
+  staffId         String?
+  isActive        Boolean             @default(true)
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  branch          Branch              @relation(fields: [branchId], references: [id])
+  service         Service?            @relation(fields: [serviceId], references: [id])
+  staff           User?               @relation("StaffCommissionRules", fields: [staffId], references: [id])
   commissionItems CommissionItem[]
-  staff           User[]
+
+  @@index([ruleType, branchId, isActive])
+  @@index([serviceId, isActive])
+  @@index([staffId, isActive])
 }
 
 model CommissionItem {
@@ -277,36 +319,29 @@ model StaffCommission {
 }
 
 model CashRegisterLog {
-  id          String      @id @default(cuid())
+  id          String                @id @default(cuid())
   type        CashLogType
   amount      Float
   description String?
   branchId    String
   userId      String
-  createdAt   DateTime    @default(now())
-  id          String      @id @default(cuid())
-  type        CashLogType
-  amount      Float
-  description String?
-  branchId    String
-  userId      String
-  createdAt   DateTime    @default(now())
+  createdAt   DateTime              @default(now())
   // referenceId   String? // Fatura, randevu vb. referans ID'si - DB senkronizasyon sorunu için geçici olarak kapatıldı
   // referenceType String? // 'INVOICE', 'APPOINTMENT' vb. - DB senkronizasyon sorunu için geçici olarak kapatıldı
 
-  Branch   Branch                @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  User     User                  @relation(fields: [userId], references: [id])
-  Branch   Branch                @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  User     User                  @relation(fields: [userId], references: [id])
-  payments Payment[] // Bu satır geri eklendi
-  category CashMovementCategory? // Manuel hareketler için kategori
+  branch   Branch                @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  user     User                  @relation(fields: [userId], references: [id])
+  payments Payment[]             // Bu satır geri eklendi
   category CashMovementCategory? // Manuel hareketler için kategori
 
   // @@index([referenceId, referenceType]) // DB senkronizasyon sorunu için geçici olarak kapatıldı
-
   @@index([branchId, createdAt])
+}
 
-  @@index([branchId, createdAt])
+enum CommissionRuleType {
+  GENERAL
+  SERVICE_SPECIFIC
+  STAFF_SPECIFIC
 }
 
 enum CommissionType {
@@ -379,4 +414,149 @@ enum CashMovementCategory {
   MARKETING
   OTHER_EXPENSE
   OTHER_INCOME
+}
+
+// Bildirim Sistemi Modelleri
+model NotificationProvider {
+  id        String   @id @default(cuid())
+  name      String
+  type      NotificationType
+  config    Json     // API anahtarları, endpoint'ler vb.
+  branchId  String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  branch    Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  @@index([branchId, type, isActive])
+}
+
+model NotificationTemplate {
+  id          String   @id @default(cuid())
+  name        String
+  type        NotificationType
+  subject     String?  // Email için konu
+  content     String   // Mesaj içeriği
+  variables   Json     // Kullanılabilir değişkenler
+  language    String   @default("tr")
+  branchId    String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  branch      Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  triggers    NotificationTrigger[]
+  queue       NotificationQueue[]
+  history     NotificationHistory[]
+
+  @@index([branchId, type, isActive])
+}
+
+model NotificationTrigger {
+  id          String   @id @default(cuid())
+  name        String
+  eventType   NotificationEventType
+  conditions  Json     // Tetiklenme koşulları
+  templateId  String
+  branchId    String
+  isActive    Boolean  @default(true)
+  priority    Int      @default(1)
+  schedule    String?  // Cron expression
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  template    NotificationTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  branch      Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  queue       NotificationQueue[]
+  history     NotificationHistory[]
+
+  @@index([branchId, eventType, isActive])
+}
+
+model NotificationQueue {
+  id          String   @id @default(cuid())
+  customerId  String
+  templateId  String
+  triggerId   String?
+  branchId    String
+  status      NotificationStatus @default(PENDING)
+  data        Json     // Kişiselleştirme verileri
+  scheduledAt DateTime
+  sentAt      DateTime?
+  errorMessage String?
+  retryCount  Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  customer    Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  template    NotificationTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  trigger     NotificationTrigger? @relation(fields: [triggerId], references: [id], onDelete: SetNull)
+  branch      Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  @@index([status, scheduledAt])
+  @@index([branchId, status])
+}
+
+model NotificationHistory {
+  id          String   @id @default(cuid())
+  customerId  String
+  templateId  String
+  triggerId   String?
+  branchId    String
+  type        NotificationType
+  status      NotificationDeliveryStatus
+  content     String
+  metadata    Json?    // Delivery ID, cost vb.
+  cost        Float?
+  sentAt      DateTime
+  deliveredAt DateTime?
+  readAt      DateTime?
+  createdAt   DateTime @default(now())
+  customer    Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  template    NotificationTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  trigger     NotificationTrigger? @relation(fields: [triggerId], references: [id], onDelete: SetNull)
+  branch      Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  @@index([branchId, sentAt])
+  @@index([customerId, sentAt])
+}
+
+model NotificationSettings {
+  id              String   @id @default(cuid())
+  branchId        String   @unique
+  smsConfig       Json?    // SMS sağlayıcı ayarları
+  whatsappConfig  Json?    // WhatsApp API ayarları
+  emailConfig     Json?    // Email SMTP ayarları
+  generalSettings Json?    // Genel ayarlar
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  branch          Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+}
+
+enum NotificationType {
+  SMS
+  WHATSAPP
+  EMAIL
+}
+
+enum NotificationEventType {
+  APPOINTMENT_REMINDER
+  APPOINTMENT_CONFIRMATION
+  BIRTHDAY
+  PACKAGE_EXPIRY
+  PAYMENT_REMINDER
+  WELCOME_MESSAGE
+  CUSTOM
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  FAILED
+  CANCELLED
+}
+
+enum NotificationDeliveryStatus {
+  SENT
+  DELIVERED
+  FAILED
+  READ
 }

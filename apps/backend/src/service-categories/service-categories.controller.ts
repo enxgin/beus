@@ -13,17 +13,25 @@ export class ServiceCategoriesController {
   
   constructor(private readonly serviceCategoriesService: ServiceCategoriesService) {}
 
-    @Post()
+  @Post()
   @Roles(UserRole.ADMIN, UserRole.SUPER_BRANCH_MANAGER, UserRole.BRANCH_MANAGER)
-  create(@Body() createServiceCategoryDto: CreateServiceCategoryDto) {
-    return this.serviceCategoriesService.create(createServiceCategoryDto);
+  create(@Body() createServiceCategoryDto: CreateServiceCategoryDto, @Req() req: any) {
+    const user = req.user;
+    return this.serviceCategoriesService.create(
+      createServiceCategoryDto,
+      user?.role,
+      user?.branchId
+    );
   }
 
   @Roles(UserRole.ADMIN, UserRole.SUPER_BRANCH_MANAGER, UserRole.BRANCH_MANAGER, UserRole.RECEPTION, UserRole.STAFF)
   @Get()
-  async findAll() {
-    // The service method no longer accepts parameters.
-    return await this.serviceCategoriesService.findAll();
+  async findAll(@Req() req: any) {
+    const user = req.user;
+    return await this.serviceCategoriesService.findAll(
+      user?.role,
+      user?.branchId
+    );
   }
 
   @Get(':id')

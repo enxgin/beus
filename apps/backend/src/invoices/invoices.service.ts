@@ -275,7 +275,11 @@ export class InvoicesService {
     if (updatedStatus === PaymentStatus.PAID && previousStatus !== PaymentStatus.PAID) {
       try {
         this.logger.log(`Fatura ödendi, prim hesaplanıyor: ${id}`);
-        await this.commissionsService.calculateCommissionForInvoice(id);
+        const commission = await this.commissionsService.calculateCommissionForInvoice(id);
+        if (commission) {
+          // Prim hesaplandı, bildirim için log ekle
+          this.logger.log(`✅ Prim hesaplandı: ${commission.amount} TL - Fatura: ${id}`);
+        }
       } catch (error) {
         this.logger.error(`Prim hesaplama hatası: ${error.message}`);
       }
@@ -409,7 +413,7 @@ export class InvoicesService {
     // Ödemeyi oluştur
     const paymentData: any = {
       amount,
-      paymentMethod: method,
+      method: method,
       invoiceId,
     };
 
@@ -419,7 +423,6 @@ export class InvoicesService {
     
     const payment = await this.prisma.payment.create({
       data: paymentData,
-      
     });
 
     // Faturanın ödenen tutarını ve durumunu güncelle
@@ -451,7 +454,11 @@ export class InvoicesService {
     if (newStatus === PaymentStatus.PAID && invoice.status !== PaymentStatus.PAID) {
       try {
         this.logger.log(`Fatura ödendi, prim hesaplanıyor: ${invoiceId}`);
-        await this.commissionsService.calculateCommissionForInvoice(invoiceId);
+        const commission = await this.commissionsService.calculateCommissionForInvoice(invoiceId);
+        if (commission) {
+          // Prim hesaplandı, bildirim için log ekle
+          this.logger.log(`✅ Prim hesaplandı: ${commission.amount} TL - Fatura: ${invoiceId}`);
+        }
       } catch (error) {
         this.logger.error(`Prim hesaplama hatası: ${error.message}`);
       }
@@ -500,7 +507,7 @@ export class InvoicesService {
     }
     
     // İade işlemi için kasa kaydı oluştur (nakit ödeme yapıldıysa)
-    if (payment.paymentMethod === 'CASH') {
+    if (payment.method === 'CASH') {
       const refundDescription = `Fatura #${invoice.id} için iade - ${reason} - ${invoice.customer?.name || 'Müşteri'}`;
       
       try {
@@ -617,7 +624,7 @@ export class InvoicesService {
 
       // Ödeme yöntemlerine göre sayı
       invoice.payments.forEach(payment => {
-        stats.paymentMethods[payment.paymentMethod as keyof typeof stats.paymentMethods]++;
+        stats.paymentMethods[payment.method as keyof typeof stats.paymentMethods]++;
       });
     });
 

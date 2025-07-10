@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req } from '@nestjs/common';
 import { ServiceCategoriesService } from './service-categories.service';
 import { CreateServiceCategoryDto } from './dto/create-service-category.dto';
 import { UpdateServiceCategoryDto } from './dto/update-service-category.dto';
@@ -18,15 +18,23 @@ export class ServiceCategoriesCompatController {
 
   @Post()
   @Roles(UserRole.ADMIN, UserRole.SUPER_BRANCH_MANAGER, UserRole.BRANCH_MANAGER)
-  create(@Body() createServiceCategoryDto: CreateServiceCategoryDto) {
-    return this.serviceCategoriesService.create(createServiceCategoryDto);
+  create(@Body() createServiceCategoryDto: CreateServiceCategoryDto, @Req() req: any) {
+    const user = req.user;
+    return this.serviceCategoriesService.create(
+      createServiceCategoryDto,
+      user?.role,
+      user?.branchId
+    );
   }
 
   @Roles(UserRole.ADMIN, UserRole.SUPER_BRANCH_MANAGER, UserRole.BRANCH_MANAGER, UserRole.RECEPTION, UserRole.STAFF)
   @Get()
-  async findAll() {
-    // The service method no longer accepts parameters.
-    return await this.serviceCategoriesService.findAll();
+  async findAll(@Req() req: any) {
+    const user = req.user;
+    return await this.serviceCategoriesService.findAll(
+      user?.role,
+      user?.branchId
+    );
   }
 
   @Get(':id')
