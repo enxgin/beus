@@ -10,8 +10,8 @@ COPY package.json package-lock.json* ./
 COPY apps/frontend/package.json ./apps/frontend/
 COPY apps/frontend/next.config.js ./apps/frontend/
 
-# Install all dependencies (including dev dependencies for build)
-RUN npm install
+# Install dependencies based on the monorepo structure
+RUN npm install --only=production
 
 # 2. Builder Image
 FROM node:20-alpine AS builder
@@ -27,7 +27,8 @@ COPY --from=deps /usr/src/app/apps/frontend/package.json ./apps/frontend/
 COPY . .
 
 # Build the frontend application
-RUN cd apps/frontend && npm run build
+# The --output=standalone flag creates a smaller, production-optimized build
+RUN npm run build --workspace=frontend
 
 # 3. Production Image
 FROM node:20-alpine AS production
