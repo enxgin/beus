@@ -212,15 +212,15 @@ export class CashRegisterService {
         },
       });
 
-      const closingLog = logs.find((log) => log.type === CashLogType.CLOSING);
+      const closingLog = logs.find((log) => log.type === 'CLOSING');
 
       let dailyIncome = 0;
       let dailyOutcome = 0;
 
-      const incomeTypes: CashLogType[] = [CashLogType.INCOME, CashLogType.MANUAL_IN, CashLogType.INVOICE_PAYMENT];
+      const incomeTypes = ['INCOME', 'MANUAL_IN', 'INVOICE_PAYMENT'];
 
       logs.forEach((log) => {
-        if (log.type === CashLogType.OPENING || log.type === CashLogType.CLOSING) return;
+        if (log.type === 'OPENING' || log.type === 'CLOSING') return;
 
         if (incomeTypes.includes(log.type)) {
           dailyIncome += log.amount;

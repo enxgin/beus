@@ -10,12 +10,12 @@ export class CommissionRulesService {
   // Akıllı prim kuralı oluşturma - Hiyerarşik sistem
   async createRule(data: CreateCommissionRuleDto, userBranchId: string) {
     // Kural tipini belirle
-    let ruleType: CommissionRuleType = 'GENERAL';
+    let ruleType: CommissionRuleType = CommissionRuleType.GENERAL;
     let serviceId: string | null = null;
     let staffId: string | null = null;
     let ruleName = data.name;
 
-    if (data.ruleType === 'STAFF_SPECIFIC' && data.staffId) {
+    if (data.ruleType === CommissionRuleType.STAFF_SPECIFIC && data.staffId) {
       // Personele özel kural
       const staff = await this.prisma.user.findUnique({
         where: { id: data.staffId },
@@ -23,12 +23,12 @@ export class CommissionRulesService {
       if (!staff) {
         throw new BadRequestException('Personel bulunamadı');
       }
-      ruleType = 'STAFF_SPECIFIC';
+      ruleType = CommissionRuleType.STAFF_SPECIFIC;
       staffId = data.staffId;
       if (!ruleName) {
         ruleName = `${staff.name} - Personele Özel Prim`;
       }
-    } else if (data.ruleType === 'SERVICE_SPECIFIC' && data.serviceId) {
+    } else if (data.ruleType === CommissionRuleType.SERVICE_SPECIFIC && data.serviceId) {
       // Hizmete özel kural
       const service = await this.prisma.service.findUnique({
         where: { id: data.serviceId },
@@ -36,14 +36,14 @@ export class CommissionRulesService {
       if (!service) {
         throw new BadRequestException('Hizmet bulunamadı');
       }
-      ruleType = 'SERVICE_SPECIFIC';
+      ruleType = CommissionRuleType.SERVICE_SPECIFIC;
       serviceId = data.serviceId;
       if (!ruleName) {
         ruleName = `${service.name} - Hizmete Özel Prim`;
       }
     } else {
       // Genel kural
-      ruleType = 'GENERAL';
+      ruleType = CommissionRuleType.GENERAL;
       if (!ruleName) {
         ruleName = 'Genel Prim Kuralı';
       }
@@ -82,7 +82,7 @@ export class CommissionRulesService {
     // Seviye 1: Personele özel kural (En yüksek öncelik)
     const staffRule = await this.prisma.commissionRule.findFirst({
       where: {
-        ruleType: 'STAFF_SPECIFIC',
+        ruleType: CommissionRuleType.STAFF_SPECIFIC,
         staffId: staffId,
         branchId: branchId,
         isActive: true,
@@ -113,7 +113,7 @@ export class CommissionRulesService {
     // Seviye 2: Hizmete özel kural (Orta öncelik)
     const serviceRule = await this.prisma.commissionRule.findFirst({
       where: {
-        ruleType: 'SERVICE_SPECIFIC',
+        ruleType: CommissionRuleType.SERVICE_SPECIFIC,
         serviceId: serviceId,
         branchId: branchId,
         isActive: true,
@@ -144,7 +144,7 @@ export class CommissionRulesService {
     // Seviye 3: Genel kural (En düşük öncelik - Varsayılan)
     const generalRule = await this.prisma.commissionRule.findFirst({
       where: {
-        ruleType: 'GENERAL',
+        ruleType: CommissionRuleType.GENERAL,
         branchId: branchId,
         isActive: true,
         startDate: { lte: new Date() },
@@ -202,7 +202,7 @@ export class CommissionRulesService {
       where.serviceId = filters.serviceId;
     }
     if (filters.isGlobal === true) {
-      where.ruleType = 'GENERAL';
+      where.ruleType = CommissionRuleType.GENERAL;
     }
 
     const [rules, total] = await Promise.all([

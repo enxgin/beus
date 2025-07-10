@@ -123,8 +123,8 @@ export class CashRegisterLogsService {
   }
 
   async getCashBalance(branchId: string): Promise<CashBalance> {
-    const incomeTypes: CashLogType[] = [CashLogType.INCOME, CashLogType.MANUAL_IN, CashLogType.OPENING];
-    const expenseTypes: CashLogType[] = [CashLogType.OUTCOME, CashLogType.MANUAL_OUT];
+    const incomeTypes = ['INCOME', 'MANUAL_IN', 'OPENING'];
+    const expenseTypes = ['OUTCOME', 'MANUAL_OUT'];
 
     const aggregations = await this.prisma.cashRegisterLog.groupBy({
       by: ['type'],
@@ -168,11 +168,11 @@ export class CashRegisterLogsService {
       },
     });
 
-    const openingLog = transactions.find(t => t.type === CashLogType.OPENING);
-    const closingLog = transactions.find(t => t.type === CashLogType.CLOSING);
+    const openingLog = transactions.find(t => t.type === 'OPENING');
+    const closingLog = transactions.find(t => t.type === 'CLOSING');
 
-    const incomeTypes: CashLogType[] = [CashLogType.INCOME, CashLogType.MANUAL_IN];
-    const expenseTypes: CashLogType[] = [CashLogType.OUTCOME, CashLogType.MANUAL_OUT];
+    const incomeTypes = ['INCOME', 'MANUAL_IN'];
+    const expenseTypes = ['OUTCOME', 'MANUAL_OUT'];
 
     const dailyIncome = transactions
       .filter(t => incomeTypes.includes(t.type))

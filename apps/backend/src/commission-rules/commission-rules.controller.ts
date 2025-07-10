@@ -4,7 +4,7 @@ import { CreateCommissionRuleDto } from './dto/create-commission-rule.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
-import { UserRole } from '@prisma/client';
+import { UserRole, CommissionRuleType } from '../prisma/prisma-types';
 
 @Controller('commission-rules')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -20,19 +20,19 @@ export class CommissionRulesController {
   // Geriye dönük uyumluluk için eski endpoint'ler
   @Post('/global')
   createGlobalRule(@Body() createCommissionRuleDto: CreateCommissionRuleDto, @Request() req) {
-    createCommissionRuleDto.ruleType = 'GENERAL';
+    createCommissionRuleDto.ruleType = CommissionRuleType.GENERAL;
     return this.commissionRulesService.createRule(createCommissionRuleDto, req.user.branchId);
   }
 
   @Post('/service')
   createServiceRule(@Body() createCommissionRuleDto: CreateCommissionRuleDto, @Request() req) {
-    createCommissionRuleDto.ruleType = 'SERVICE_SPECIFIC';
+    createCommissionRuleDto.ruleType = CommissionRuleType.SERVICE_SPECIFIC;
     return this.commissionRulesService.createRule(createCommissionRuleDto, req.user.branchId);
   }
 
   @Post('/user')
   createUserRule(@Body() createCommissionRuleDto: CreateCommissionRuleDto, @Request() req) {
-    createCommissionRuleDto.ruleType = 'STAFF_SPECIFIC';
+    createCommissionRuleDto.ruleType = CommissionRuleType.STAFF_SPECIFIC;
     createCommissionRuleDto.staffId = createCommissionRuleDto.userId; // userId -> staffId dönüşümü
     return this.commissionRulesService.createRule(createCommissionRuleDto, req.user.branchId);
   }
