@@ -60,5 +60,5 @@ COPY --from=builder /usr/src/app/node_modules/.prisma ./node_modules/.prisma
 # Expose port
 EXPOSE 3000
 
-# Command to run the application
-CMD ["node", "dist/main.js"]
+# Command to run the application (DÜZELTİLMİŞ SATIR)
+CMD ["node", "dist/src/main.js"]
