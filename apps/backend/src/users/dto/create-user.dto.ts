@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEmail, IsString, IsEnum, MinLength, IsNotEmpty, IsOptional, IsBoolean } from 'class-validator';
-import { UserRole } from '../../prisma/prisma-types';
+import { UserRole } from '@prisma/client'; // <-- DEĞİŞEN EN ÖNEMLİ SATIR
 
 export class CreateUserDto {
   @ApiProperty({ example: 'staff@example.com', description: 'Kullanıcı e-posta adresi' })
@@ -17,8 +17,8 @@ export class CreateUserDto {
   @IsNotEmpty({ message: 'Ad alanı boş olamaz' })
   name: string;
 
-  // --- DÜZELTİLMİŞ SATIR ---
-  @ApiProperty({ enum: UserRole, description: 'Kullanıcı rolü (varsayılan: STAFF)', required: false })
+  // Orijinal haline geri döndü, çünkü doğru import ile artık çalışacak
+  @ApiProperty({ enum: UserRole, description: 'Kullanıcı rolü', default: UserRole.STAFF })
   @IsEnum(UserRole, { message: 'Geçerli bir rol giriniz' })
   @IsOptional()
   role?: UserRole;
