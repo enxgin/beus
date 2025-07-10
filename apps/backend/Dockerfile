@@ -10,8 +10,8 @@ COPY package.json package-lock.json* ./
 # Copy backend package.json
 COPY apps/backend/package.json ./apps/backend/
 
-# Install dependencies based on the monorepo structure
-RUN npm install --only=production
+# Install dependencies (including Prisma for production)
+RUN npm install --only=production && npm install prisma @prisma/client
 
 # 2. Builder Image
 FROM node:20-alpine AS builder
@@ -56,8 +56,14 @@ COPY --from=deps /usr/src/app/apps/backend/package.json ./apps/backend/
 # Copy built application from builder stage
 COPY --from=builder /usr/src/app/apps/backend/dist ./dist
 
-# Copy Prisma client
+# Copy Prisma schema for generation
+COPY --from=builder /usr/src/app/apps/backend/prisma ./apps/backend/prisma
+
+# Copy Prisma client from builder
 COPY --from=builder /usr/src/app/node_modules/.prisma ./node_modules/.prisma
+
+# Generate Prisma client in production (fallback)
+RUN npx prisma generate --schema=./apps/backend/prisma/schema.prisma || echo "Prisma client already exists"
 
 # Expose port (DÜZELTİLMİŞ SATIR)
 EXPOSE 3001
