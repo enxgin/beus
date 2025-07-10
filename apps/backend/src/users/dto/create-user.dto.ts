@@ -1,5 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
 import { IsEmail, IsString, IsEnum, MinLength, IsNotEmpty, IsOptional, IsBoolean } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
 import { UserRole } from '@prisma/client'; // <-- DEĞİŞEN EN ÖNEMLİ SATIR
 
 export class CreateUserDto {
@@ -12,7 +12,7 @@ export class CreateUserDto {
   @MinLength(6, { message: 'Şifre en az 6 karakter olmalıdır' })
   password: string;
 
-  @ApiProperty({ example: 'Ahmet Yılmaz', description: 'Kullanıcının tam adı' })
+  @ApiProperty({ example: 'Selin Yılmaz', description: 'Kullanıcının tam adı' })
   @IsString()
   @IsNotEmpty({ message: 'Ad alanı boş olamaz' })
   name: string;
