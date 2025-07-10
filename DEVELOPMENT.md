@@ -110,6 +110,16 @@ Bu geliştirme ortamı, production'da yaşadığımız enum hatalarını anında
 
 ### Yaygın Sorunlar
 
+#### Docker Daemon Çalışmıyor
+```bash
+# Hata: Cannot connect to the Docker daemon at unix:///Users/engin/.docker/run/docker.sock
+# Çözüm: Docker Desktop'ı başlatın
+open -a Docker
+
+# Docker'ın başladığını kontrol edin
+docker info
+```
+
 #### Port Çakışması
 ```bash
 # Kullanılan portları kontrol et

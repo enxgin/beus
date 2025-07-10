@@ -8,12 +8,19 @@ if ! command -v docker &> /dev/null; then
     exit 1
 fi
 
+# Docker daemon'ın çalışıp çalışmadığını kontrol et
+if ! docker info &> /dev/null; then
+    echo "❌ Docker daemon çalışmıyor. Lütfen Docker Desktop'ı başlatın."
+    echo "💡 Docker Desktop uygulamasını açın ve başlamasını bekleyin."
+    exit 1
+fi
+
 if ! command -v docker-compose &> /dev/null; then
     echo "❌ Docker Compose bulunamadı. Lütfen Docker Desktop'ı yükleyin."
     exit 1
 fi
 
-echo "✅ Docker ve Docker Compose bulundu."
+echo "✅ Docker ve Docker Compose çalışıyor."
 
 # Eski container'ları temizle
 echo "🧹 Eski container'ları temizleniyor..."
