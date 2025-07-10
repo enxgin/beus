@@ -43,6 +43,9 @@ RUN npm run build --workspace=backend
 # 3. Production Image
 FROM node:20-alpine AS production
 
+# Install OpenSSL for Prisma native engine
+RUN apk add --no-cache openssl
+
 # Set environment variables
 ENV NODE_ENV=production
 
