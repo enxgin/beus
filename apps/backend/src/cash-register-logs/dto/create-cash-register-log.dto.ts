@@ -3,10 +3,10 @@ import { IsEnum, IsNotEmpty, IsNumber, IsOptional, IsPositive, IsString, IsUUID 
 import { CashLogType } from '../../prisma/prisma-types';
 
 export class CreateCashRegisterLogDto {
-  @ApiProperty({ 
-    description: 'İşlem türü', 
+  @ApiProperty({
+    description: 'İşlem türü',
     enum: CashLogType,
-    example: CashLogType.INCOME 
+    example: 'INCOME'
   })
   @IsEnum(CashLogType, { message: 'Geçerli bir işlem türü giriniz' })
   @IsNotEmpty({ message: 'İşlem türü boş olamaz' })

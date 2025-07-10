@@ -1,15 +1,6 @@
 import { IsEmail, IsString, IsEnum, MinLength, IsNotEmpty, IsOptional, IsBoolean } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-
-// UserRole enum'unu doğrudan tanımlayalım (Prisma client runtime sorununu çözmek için)
-export enum UserRole {
-  STAFF = 'STAFF',
-  BRANCH_MANAGER = 'BRANCH_MANAGER',
-  RECEPTION = 'RECEPTION',
-  ADMIN = 'ADMIN',
-  SUPER_BRANCH_MANAGER = 'SUPER_BRANCH_MANAGER',
-  CUSTOMER = 'CUSTOMER'
-}
+import { UserRole } from '../../prisma/prisma-types';
 
 export class CreateUserDto {
   @ApiProperty({ example: 'staff@example.com', description: 'Kullanıcı e-posta adresi' })
@@ -27,7 +18,7 @@ export class CreateUserDto {
   name: string;
 
   // Orijinal haline geri döndü, çünkü doğru import ile artık çalışacak
-  @ApiProperty({ enum: UserRole, description: 'Kullanıcı rolü', default: UserRole.STAFF })
+  @ApiProperty({ enum: UserRole, description: 'Kullanıcı rolü', default: 'STAFF' })
   @IsEnum(UserRole, { message: 'Geçerli bir rol giriniz' })
   @IsOptional()
   role?: UserRole;

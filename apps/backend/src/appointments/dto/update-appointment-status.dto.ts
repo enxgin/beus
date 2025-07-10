@@ -6,7 +6,7 @@ export class UpdateAppointmentStatusDto {
   @ApiProperty({
     description: 'Randevu durumu',
     enum: AppointmentStatus,
-    example: AppointmentStatus.COMPLETED,
+    example: 'COMPLETED',
   })
   @IsEnum(AppointmentStatus, { message: 'Geçerli bir randevu durumu giriniz' })
   @IsNotEmpty({ message: 'Randevu durumu boş olamaz' })

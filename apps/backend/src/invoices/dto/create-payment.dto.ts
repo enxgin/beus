@@ -8,10 +8,10 @@ export class CreatePaymentDto {
   @IsPositive({ message: 'Ödeme tutarı pozitif bir değer olmalıdır' })
   amount: number;
 
-  @ApiProperty({ 
-    description: 'Ödeme yöntemi', 
+  @ApiProperty({
+    description: 'Ödeme yöntemi',
     enum: PaymentMethod,
-    example: PaymentMethod.CASH
+    example: 'CASH'
   })
   @IsEnum(PaymentMethod, { message: 'Geçerli bir ödeme yöntemi giriniz' })
   @IsNotEmpty({ message: 'Ödeme yöntemi boş olamaz' })
