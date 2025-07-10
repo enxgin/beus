@@ -2,7 +2,6 @@
 // This file centralizes imports for Prisma-generated types and enums.
 import {
   User,
-  UserRole,
   PaymentMethod,
   CashLogType,
   AppointmentStatus,
@@ -13,6 +12,16 @@ import {
   Prisma,
 } from '@prisma/client';
 
+// UserRole enum'unu hardcoded olarak tanımlayalım (runtime sorununu çözmek için)
+export enum UserRole {
+  STAFF = 'STAFF',
+  BRANCH_MANAGER = 'BRANCH_MANAGER',
+  RECEPTION = 'RECEPTION',
+  ADMIN = 'ADMIN',
+  SUPER_BRANCH_MANAGER = 'SUPER_BRANCH_MANAGER',
+  CUSTOMER = 'CUSTOMER'
+}
+
 // Uygulama içinde kullanılacak ek enum'lar
 export enum CashDayStatus {
   OPEN = 'OPEN',
@@ -22,7 +31,6 @@ export enum CashDayStatus {
 // Re-export enums and types for centralized access throughout the application.
 export {
   User,
-  UserRole,
   PaymentMethod,
   CashLogType,
   AppointmentStatus,
