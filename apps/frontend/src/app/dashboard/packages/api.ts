@@ -38,7 +38,7 @@ export const getPackagesByBranch = async (branchId: string): Promise<Package[]> 
 
 // Create a customer package (sell a package to a customer)
 export const createCustomerPackage = async (data: CreateCustomerPackageDto): Promise<CustomerPackage> => {
-  const response = await api.post<CustomerPackage>('/packages/customer', data);
+  const response = await api.post<CustomerPackage>('/packages/customer-package', data);
   return response.data;
 };
 
@@ -61,10 +61,10 @@ export const getCustomerPackages = async (params: {
     queryParams.append('customerId', 'all');
   }
   
-  console.log('getCustomerPackages API çağrısı yapılıyor:', `/packages/customer?${queryParams.toString()}`);
+  console.log('getCustomerPackages API çağrısı yapılıyor:', `/packages/customer-package?${queryParams.toString()}`);
   
   try {
-    const response = await api.get<CustomerPackage[]>(`/packages/customer?${queryParams.toString()}`);
+    const response = await api.get<CustomerPackage[]>(`/packages/customer-package?${queryParams.toString()}`);
     return { 
       data: response.data, 
       total: response.data.length // Backend total dönmüyorsa uzunluğu kullan
@@ -80,11 +80,11 @@ export const getCustomerPackages = async (params: {
 
 // Get a customer package by ID
 export const getCustomerPackage = async (id: string): Promise<CustomerPackage> => {
-  const response = await api.get<CustomerPackage>(`/packages/customer/${id}`);
+  const response = await api.get<CustomerPackage>(`/packages/customer-package/${id}`);
   return response.data;
 };
 
 // Delete a customer package
 export const deleteCustomerPackage = async (id: string): Promise<void> => {
-  await api.delete(`/packages/customer/${id}`);
+  await api.delete(`/packages/customer-package/${id}`);
 };

@@ -169,17 +169,12 @@ async function fetchSoldPackages(params: SoldPackageParams): Promise<CustomerPac
     queryParams.append('branchId', params.branchId);
   }
   
-  // CustomerId parametresi
-  if (params.customerId) {
-    queryParams.append('customerId', params.customerId);
-  } else {
-    // Tüm müşterilerin paketlerini getirmek için 'all' parametresi gönder
-    queryParams.append('customerId', 'all'); // Backend bu özel değeri tanıyor
-  }
+  // CustomerId parametresi - customer-package endpoint'i için gerekli değil
+  // Bu endpoint tüm customer package'ları döndürür, backend'de branchId ile filtrelenir
   
   try {
     // Backend API'sine istek gönder
-    console.log('API isteği yapılıyor:', `/packages/customer?${queryParams.toString()}`);
+    console.log('API isteği yapılıyor:', `/packages/customer-package?${queryParams.toString()}`);
     
     // Token'dan emin olalım
     if (!token) {
@@ -190,7 +185,7 @@ async function fetchSoldPackages(params: SoldPackageParams): Promise<CustomerPac
     console.log('Token durumu: Token var, uzunluk:', token.length);
     
     // API isteğini doğrudan api instance ile yap (interceptor token ekleyecek)
-    const response = await api.get<CustomerPackage[]>(`/packages/customer?${queryParams.toString()}`);
+    const response = await api.get<CustomerPackage[]>(`/packages/customer-package?${queryParams.toString()}`);
     console.log('API yanıtı:', response.status, response.statusText);
     console.log('Veri sayısı:', response.data?.length || 0);
     let apiData = response.data;

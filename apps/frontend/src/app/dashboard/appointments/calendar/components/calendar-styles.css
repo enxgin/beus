@@ -126,10 +126,31 @@
 .shadcn-calendar-container .fc-theme-standard th,
 .shadcn-calendar-container .fc-theme-standard td {
   border-color: hsl(var(--border));
+  border-width: 1px;
 }
 
 .shadcn-calendar-container .fc-theme-standard .fc-scrollgrid {
   border-color: hsl(var(--border));
+  border-width: 1px;
+}
+
+/* Sütun çizgilerini daha belirgin hale getir */
+.shadcn-calendar-container .fc-timegrid-col {
+  border-right: 1px solid hsl(var(--border)) !important;
+}
+
+.shadcn-calendar-container .fc-timegrid-axis {
+  border-right: 1px solid hsl(var(--border)) !important;
+}
+
+/* Resource (personel) sütunları için çizgiler */
+.shadcn-calendar-container .fc-resource-timeline .fc-resource-cell {
+  border-right: 1px solid hsl(var(--border)) !important;
+}
+
+/* Gün ve hafta görünümünde sütun ayırıcıları */
+.shadcn-calendar-container .fc-col-header-cell {
+  border-right: 1px solid hsl(var(--border)) !important;
 }
 
 /* Tablo başlıkları */

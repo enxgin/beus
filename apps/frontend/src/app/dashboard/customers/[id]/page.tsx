@@ -9,26 +9,35 @@ import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Skeleton } from "@/components/ui/skeleton"
-import { 
-  ArrowLeft, 
-  Building, 
-  Calendar, 
-  CreditCard, 
-  Edit, 
-  Eye, 
-  Mail, 
-  MoreHorizontal, 
-  Package, 
-  Phone, 
-  Receipt, 
-  RefreshCcw, 
-  Tag, 
-  User 
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb"
+import {
+  ArrowLeft,
+  Building,
+  Calendar,
+  CreditCard,
+  Edit,
+  Eye,
+  HomeIcon,
+  Mail,
+  MoreHorizontal,
+  Package,
+  Phone,
+  Receipt,
+  RefreshCcw,
+  Tag,
+  User
 } from "lucide-react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import api from "@/lib/api"
 import { Customer } from "../data/schema"
 import { EditCustomerDialog } from "../components/edit-customer-dialog"
+import { AnalyticsCards } from "./components/analytics-cards"
+import { useCustomerAnalytics } from "./hooks/use-customer-analytics"
 
 export default function CustomerProfilePage() {
   const params = useParams()
@@ -47,6 +56,8 @@ export default function CustomerProfilePage() {
     },
     enabled: !!customerId,
   })
+
+  const { data: analytics, isLoading: isAnalyticsLoading } = useCustomerAnalytics(customerId)
 
   useEffect(() => {
     if (!isEditDialogOpen) {
@@ -86,30 +97,56 @@ export default function CustomerProfilePage() {
   }
 
   return (
-    <div className="p-4 md:p-8">
-      <header className="flex items-center justify-between mb-6">
-        <Button variant="outline" size="icon" onClick={() => router.back()}>
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon">
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => setIsEditDialogOpen(true)}>
-              <Edit className="mr-2 h-4 w-4" />
-              <span>Müşteriyi Düzenle</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </header>
+    <div className="space-y-6">
+      <div>
+        <Breadcrumb>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/dashboard">
+              <HomeIcon className="h-4 w-4" />
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/dashboard/customers">Müşteriler</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem isCurrentPage>
+            <BreadcrumbLink>{customer.name}</BreadcrumbLink>
+          </BreadcrumbItem>
+        </Breadcrumb>
+        <div className="flex items-center justify-between mt-2">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Müşteri Profili</h1>
+            <p className="text-muted-foreground mt-1">
+              {customer.name} müşterisinin detaylı bilgileri ve geçmişi.
+            </p>
+          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setIsEditDialogOpen(true)}>
+                <Edit className="mr-2 h-4 w-4" />
+                <span>Müşteriyi Düzenle</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
 
       <EditCustomerDialog
         open={isEditDialogOpen}
         onOpenChange={setIsEditDialogOpen}
         customer={customer}
+      />
+
+      {/* Analytics Kartları */}
+      <AnalyticsCards
+        analytics={analytics}
+        isLoading={isAnalyticsLoading}
       />
 
       <div className="grid gap-6 lg:grid-cols-3">

@@ -140,14 +140,15 @@ export function CategoryForm({ category, isEdit = false }: CategoryFormProps) {
       
       if (isEdit && category) {
         // Kategori güncelleme
-        // Şu anda backend branchId güncellemesini desteklemediğinden
-        // sadece temel alanları gönderiyoruz
-        const updateData = {
+        const updateData: any = {
           name: formData.name,
           description: formData.description,
           isActive: formData.isActive
-          // Şimdilik branchId güncellemesini devre dışı bırakıyoruz
-          // Backend'de Prisma unique constraint sorunu oluşabiliyor
+        }
+        
+        // branchId güncellemesi
+        if (formData.branchId !== undefined) {
+          updateData.branchId = formData.branchId;
         }
         
         console.log("Güncelleme verisi:", JSON.stringify(updateData, null, 2))
@@ -167,7 +168,7 @@ export function CategoryForm({ category, isEdit = false }: CategoryFormProps) {
           name: string;
           description: string;
           isActive: boolean;
-          branchId?: string | null;
+          branchId?: string;
         }
         
         const createData: CreateData = {
@@ -176,7 +177,7 @@ export function CategoryForm({ category, isEdit = false }: CategoryFormProps) {
           isActive: formData.isActive
         }
         
-        // branchId oluşturma için ekleme
+        // branchId atamasını kontrol et
         if (formData.branchId !== undefined) {
           createData.branchId = formData.branchId;
         }

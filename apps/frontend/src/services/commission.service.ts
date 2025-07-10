@@ -4,15 +4,30 @@ import { CommissionRuleFormValues } from '@/lib/schemas/commission-rule.schema';
 // Define types based on backend Prisma models
 export interface CommissionRule {
   id: string;
+  name: string;
   type: 'PERCENTAGE' | 'FIXED_AMOUNT';
-  value: number;
+  rate: number;
+  fixedAmount: number;
   description?: string;
-  isGlobal: boolean;
-  serviceId?: string;
-  userId?: string;
-  service?: { id: string; name: string };
-  user?: { id: string; name: string };
+  startDate: string;
+  endDate?: string;
+  branchId: string;
+  branch?: { id: string; name: string };
+  staff?: { id: string; name: string; email: string }[];
   createdAt: string;
+  updatedAt: string;
+  // Yeni hiyerarşik sistem alanları
+  ruleType: 'GENERAL' | 'SERVICE_SPECIFIC' | 'STAFF_SPECIFIC';
+  serviceId?: string;
+  staffId?: string;
+  isActive: boolean;
+  service?: { id: string; name: string };
+  staffMember?: { id: string; name: string; email: string };
+  // Eski alanlar - geriye uyumluluk için
+  value?: number;
+  isGlobal?: boolean;
+  userId?: string;
+  user?: { id: string; name: string };
 }
 
 export interface PaginatedResponse<T> {
@@ -61,17 +76,24 @@ export const updateCommissionStatus = async ({ id, status }: { id: string; statu
 };
 
 export const createCommissionRule = async (data: CommissionRuleFormValues): Promise<CommissionRule> => {
-  let endpoint = '/commission-rules';
-  
-  if (data.isGlobal) {
-    endpoint = '/commission-rules/global';
-  } else if (data.serviceId) {
-    endpoint = '/commission-rules/service';
-  } else if (data.userId) {
-    endpoint = '/commission-rules/user';
-  }
-  
-  const response = await api.post(endpoint, data);
+  // Yeni hiyerarşik sistem için ana endpoint kullan
+  const response = await api.post('/commission-rules', data);
+  return response.data;
+};
+
+// Geriye uyumluluk için eski endpoint'ler
+export const createGlobalCommissionRule = async (data: CommissionRuleFormValues): Promise<CommissionRule> => {
+  const response = await api.post('/commission-rules/global', data);
+  return response.data;
+};
+
+export const createServiceCommissionRule = async (data: CommissionRuleFormValues): Promise<CommissionRule> => {
+  const response = await api.post('/commission-rules/service', data);
+  return response.data;
+};
+
+export const createUserCommissionRule = async (data: CommissionRuleFormValues): Promise<CommissionRule> => {
+  const response = await api.post('/commission-rules/user', data);
   return response.data;
 };
 

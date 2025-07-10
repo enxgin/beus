@@ -1,120 +1,158 @@
 "use client";
 
-import { useMemo, useEffect } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus } from 'lucide-react';
-import { useAuthStore } from '@/stores/auth.store'; // Düzeltilmiş import path
+import { Plus, HomeIcon } from 'lucide-react';
+import { useAuthStore } from '@/stores/auth.store';
 
 import { DataTable } from '@/components/ui/data-table';
-import { Heading } from '@/components/ui/heading';
-import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
-import { columns, UserColumn } from './columns';
-import { useUsers } from '../hooks/use-users';
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { extendedColumns, ExtendedUserColumn } from './columns';
+import { useUsersWithPerformance } from '../hooks/use-users';
+import { StatisticsCards } from './statistics-cards';
+import { AdvancedFilters } from './advanced-filters';
+import { UserRole } from '@/types/user';
+
+interface FilterState {
+  dateFrom: string;
+  dateTo: string;
+  roles: UserRole[];
+  performance: 'high' | 'medium' | 'low' | 'all';
+  branchId?: string;
+}
 
 export const UsersClient = () => {
   const router = useRouter();
-  const { data: usersResponse, isLoading, isError, error, refetch } = useUsers();
   const { user: currentUser, token, logout } = useAuthStore();
+
+  // Varsayılan filtre durumu
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+  const [filters, setFilters] = useState<FilterState>({
+    dateFrom: startOfMonth.toISOString().split('T')[0],
+    dateTo: endOfMonth.toISOString().split('T')[0],
+    roles: [],
+    performance: 'all',
+  });
+
+  const { data: usersResponse, isLoading, isError, error, refetch } = useUsersWithPerformance(filters);
 
   // Token yoksa ve kullanıcı varsa - tutarsızlık durumunu tespit et ve oturumu sıfırla
   useEffect(() => {
     if (currentUser && !token) {
       console.warn('Oturum tutarsız durumda: Kullanıcı bilgileri var ama token yok. Oturum sıfırlanıyor...');
-      logout(); // Auth state'i temizle
+      logout();
       setTimeout(() => {
-        router.push('/login'); // Login sayfasına yönlendir
+        router.push('/login');
       }, 100);
     }
   }, [currentUser, token, logout, router]);
 
-  // Kapsamlı debug logları
-  useEffect(() => {
-    console.log('AUTH STATE:', { 
-      token, 
-      currentUser, 
-      isLoggedIn: !!token,
-      userRole: currentUser?.role,
-      userBranch: currentUser?.branchId,
-    });
-    
-    console.log('USERS API STATE:', { 
-      isLoading, 
-      isError, 
-      error, 
-      hasData: !!usersResponse,
-      dataFormat: usersResponse ? typeof usersResponse : 'none',
-      responseData: usersResponse,
-    });
-
-    // 3 saniye sonra otomatik yeniden denemek için
-    const timer = setTimeout(() => {
-      if (!usersResponse && !isLoading) {
-        console.log('Veri çekme başarısız. Yeniden deneniyor...');
-        refetch();
-      }
-    }, 3000);
-    
-    return () => clearTimeout(timer);
-  }, [usersResponse, isLoading, isError, token, currentUser, refetch]);
-
-  const formattedUsers: UserColumn[] = useMemo(() => {
-    console.log('FORMATTING USERS, RAW DATA:', usersResponse);
-    
-    if (!usersResponse) {
-      console.log('usersResponse yok, boş dizi döndürülüyor');
-      return [];
-    }
-    
-    if (!usersResponse.data && Array.isArray(usersResponse)) {
-      console.log('usersResponse bir dizi, doğrudan kullanılıyor:', usersResponse);
-      return usersResponse.map((item) => ({
-        id: item.id,
-        name: item.name,
-        email: item.email,
-        branch: item.branch?.name || 'Atanmamış',
-        role: item.role,
-      }));
-    }
-    
-    if (!usersResponse.data) {
-      console.log('usersResponse.data yok, boş dizi döndürülüyor');
+  const formattedUsers: ExtendedUserColumn[] = useMemo(() => {
+    if (!usersResponse?.data) {
       return [];
     }
 
-    console.log('usersResponse.data mevcut, dönüştürülüyor:', usersResponse.data);
-    return usersResponse.data.map((item) => ({
+    return usersResponse.data.map((item: any) => ({
       id: item.id,
       name: item.name,
       email: item.email,
       branch: item.branch?.name || 'Atanmamış',
       role: item.role,
+      monthlyAppointments: item.monthlyAppointments || 0,
+      totalRevenue: item.totalRevenue || 0,
+      totalCommissions: item.totalCommissions || 0,
+      lastActivity: item.lastActivity,
+      performanceScore: item.performanceScore || 0,
+      status: item.status || 'inactive',
+      isActive: item.isActive ?? true,
     }));
   }, [usersResponse]);
 
+  const handleFiltersChange = (newFilters: FilterState) => {
+    setFilters(newFilters);
+  };
+
   if (isError) {
     console.error('USER API HATA DETAYI:', error);
-    return <div>
-      <div>Personel verileri yüklenirken bir hata oluştu. Detaylar konsolda.</div>
-      <Button onClick={() => refetch()} className="mt-4">
-        Yeniden Dene
-      </Button>
-    </div>;
+    return (
+      <div className="space-y-6">
+        <div>
+          <Breadcrumb>
+            <BreadcrumbItem>
+              <BreadcrumbLink href="/dashboard">
+                <HomeIcon className="h-4 w-4" />
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem isCurrentPage>
+              <BreadcrumbLink>Personeller</BreadcrumbLink>
+            </BreadcrumbItem>
+          </Breadcrumb>
+        </div>
+        <div className="text-center py-12">
+          <div className="text-lg font-medium mb-2">Personel verileri yüklenirken bir hata oluştu</div>
+          <p className="text-muted-foreground mb-4">Lütfen tekrar deneyin veya sistem yöneticisi ile iletişime geçin.</p>
+          <Button onClick={() => refetch()}>
+            Yeniden Dene
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <>
-      <div className="flex items-center justify-between">
-        <Heading
-          title={`Personeller (${formattedUsers.length})`}
-          description="Sistemdeki personelleri yönetin"
-        />
-        <Button onClick={() => router.push(`/dashboard/users/new`)}>
-          <Plus className="mr-2 h-4 w-4" /> Personel Ekle
-        </Button>
+    <div className="space-y-6">
+      {/* Breadcrumb ve Header */}
+      <div>
+        <Breadcrumb>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/dashboard">
+              <HomeIcon className="h-4 w-4" />
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem isCurrentPage>
+            <BreadcrumbLink>Personeller</BreadcrumbLink>
+          </BreadcrumbItem>
+        </Breadcrumb>
+        <div className="flex items-center justify-between mt-2">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Personel Yönetimi</h1>
+            <p className="text-muted-foreground mt-1">
+              Sistemdeki personelleri görüntüleyin ve yönetin. ({formattedUsers.length} personel)
+            </p>
+          </div>
+          <Button onClick={() => router.push(`/dashboard/users/new`)}>
+            <Plus className="mr-2 h-4 w-4" /> Personel Ekle
+          </Button>
+        </div>
       </div>
-      <Separator />
-      <DataTable searchKey="name" columns={columns} data={formattedUsers} isLoading={isLoading} />
-    </>
+
+      {/* İstatistik Kartları */}
+      <StatisticsCards filters={filters} />
+
+      {/* Gelişmiş Filtreler */}
+      <AdvancedFilters
+        onFiltersChange={handleFiltersChange}
+        initialFilters={filters}
+      />
+
+      {/* Veri Tablosu */}
+      <DataTable
+        searchKey="name"
+        columns={extendedColumns}
+        data={formattedUsers}
+        isLoading={isLoading}
+      />
+    </div>
   );
 };

@@ -9,11 +9,12 @@ import { useState, useEffect } from 'react'
 export function useBranches() {
   const token = useAuthStore((state) => state.token)
 
-  return useQuery<any, Error>({
+  return useQuery<Branch[], Error>({
     queryKey: ['branches', token],
     queryFn: async () => {
       const response = await api.get('/branches')
-      return response.data
+      // API response: {data: [...], total: number} formatında
+      return response.data.data || []
     },
     enabled: !!token,
   })

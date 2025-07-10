@@ -3,13 +3,19 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useDebounce } from "use-debounce";
-import { PlusCircle, Search } from "lucide-react";
+import { PlusCircle, Search, HomeIcon } from "lucide-react";
 
 import { getColumns } from "./components/columns";
 import { DataTable } from "./components/data-table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 import { useAuthStore } from "@/stores/auth.store";
 import { useServices } from "./hooks/use-services";
 import { useBranches } from "@/hooks/use-branches";
@@ -66,18 +72,36 @@ const ServicesPage = () => {
   }
 
   return (
-    <div className="container mx-auto py-10">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Hizmetler</h1>
-        <Button asChild>
-          <Link href="/dashboard/services/create">
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Yeni Hizmet Ekle
-          </Link>
-        </Button>
+    <div className="space-y-6">
+      <div>
+        <Breadcrumb>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/dashboard">
+              <HomeIcon className="h-4 w-4" />
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem isCurrentPage>
+            <BreadcrumbLink>Hizmetler</BreadcrumbLink>
+          </BreadcrumbItem>
+        </Breadcrumb>
+        <div className="flex items-center justify-between mt-2">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Hizmet Yönetimi</h1>
+            <p className="text-muted-foreground mt-1">
+              Hizmetlerinizi görüntüleyin ve yönetin.
+            </p>
+          </div>
+          <Button asChild>
+            <Link href="/dashboard/services/create">
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Yeni Hizmet Ekle
+            </Link>
+          </Button>
+        </div>
       </div>
 
-      <div className="flex items-center space-x-2 mb-6">
+      <div className="flex items-center space-x-2">
         <div className="relative flex-1">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input

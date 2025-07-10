@@ -7,6 +7,13 @@ import { columns } from "@/components/commissions/rules-columns";
 import { RulesDataTable } from "@/components/commissions/rules-data-table";
 import { useSearchParams } from "next/navigation";
 import { z } from "zod";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { HomeIcon } from "lucide-react";
 
 const schema = z.object({
   page: z.coerce.number().default(1),
@@ -47,8 +54,30 @@ export default function CommissionRulesPage() {
   const pageCount = data ? Math.ceil(data.total / limit) : 0;
 
   return (
-    <div className="container mx-auto py-10">
-            <RulesDataTable
+    <div className="space-y-6">
+      <div>
+        <Breadcrumb>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/dashboard">
+              <HomeIcon className="h-4 w-4" />
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/dashboard/commissions">Primler</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem isCurrentPage>
+            <BreadcrumbLink>Kurallar</BreadcrumbLink>
+          </BreadcrumbItem>
+        </Breadcrumb>
+        <h1 className="text-3xl font-bold tracking-tight mt-2">Prim Kuralları</h1>
+        <p className="text-muted-foreground mt-1">
+          Prim hesaplama kurallarını yönetin ve düzenleyin
+        </p>
+      </div>
+
+      <RulesDataTable
         data={data?.data ?? []}
         pageCount={pageCount}
       />

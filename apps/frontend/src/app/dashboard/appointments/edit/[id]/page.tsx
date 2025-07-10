@@ -5,7 +5,13 @@ import { useRouter, useParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb"
+import { ArrowLeft, HomeIcon } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/components/ui/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -55,37 +61,46 @@ export default function EditAppointmentPage() {
   };
 
   return (
-    <div className="container px-4 md:px-6 py-4 md:py-6">
-      <div className="flex flex-col space-y-6">
-        <div className="flex items-center justify-between">
+    <div className="space-y-6">
+      <div>
+        <Breadcrumb>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/dashboard">
+              <HomeIcon className="h-4 w-4" />
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/dashboard/appointments/list">Randevular</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem isCurrentPage>
+            <BreadcrumbLink>Randevu Düzenle</BreadcrumbLink>
+          </BreadcrumbItem>
+        </Breadcrumb>
+        <div className="flex items-center justify-between mt-2">
           <div>
-            <Button variant="ghost" onClick={handleGoBack} className="mb-2 pl-0">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Takvime Dön
-            </Button>
-            <h1 className="text-2xl font-bold">Randevu Düzenle</h1>
-            <p className="text-muted-foreground">Mevcut randevu bilgilerini güncelleyin.</p>
+            <h1 className="text-3xl font-bold tracking-tight">Randevu Düzenle</h1>
+            <p className="text-muted-foreground mt-1">
+              Mevcut randevu bilgilerini güncelleyin.
+            </p>
           </div>
         </div>
-        
-        <Separator />
-        
-        <div className="py-4">
-          {isLoading && (
-            <div className="space-y-4">
-              <Skeleton className="h-8 w-1/4" />
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-8 w-1/4" />
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-8 w-1/4" />
-              <Skeleton className="h-20 w-full" />
-            </div>
-          )}
-          {appointment && (
-            <EditAppointmentForm appointment={appointment} />
-          )}
-        </div>
       </div>
+
+      {isLoading && (
+        <div className="space-y-4">
+          <Skeleton className="h-8 w-1/4" />
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-8 w-1/4" />
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-8 w-1/4" />
+          <Skeleton className="h-20 w-full" />
+        </div>
+      )}
+      {appointment && (
+        <EditAppointmentForm appointment={appointment} />
+      )}
     </div>
   );
 }

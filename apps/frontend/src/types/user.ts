@@ -12,6 +12,7 @@ export interface User {
   name: string;
   email: string;
   role: UserRole;
+  isActive: boolean;
   branch: {
     id: string;
     name: string;

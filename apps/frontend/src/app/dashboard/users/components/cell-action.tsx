@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Copy, Edit, MoreHorizontal, Trash } from "lucide-react";
-import { toast } from "react-hot-toast";
+import { toast } from "sonner";
 import { useParams, useRouter } from "next/navigation";
 import api from "@/lib/api"; // Cache-busting comment
 

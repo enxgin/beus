@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { columns } from "./components/columns";
 import { DataTable } from "./components/data-table";
-import { useCustomers } from "./hooks/use-customers";
+import { useCustomers, useCustomerStats, useTagStats } from "./hooks/use-customers";
 import { useBranches } from "@/hooks/use-branches"; // Şubeleri çekmek için hook
 import { Skeleton } from "@/components/ui/skeleton";
 import { Search, HomeIcon } from "lucide-react";
@@ -25,6 +25,8 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { Customer } from "./data/schema";
+import { StatsCards } from "./components/stats-cards";
+import { TagFilter } from "./components/tag-filter";
 
 // Sadece gerekli hook'u import ediyoruz
 import { useAuth } from "@/hooks/use-auth";
@@ -35,6 +37,7 @@ export default function CustomersPage() {
   const [selectedBranch, setSelectedBranch] = useState<string | undefined>(
     undefined
   );
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
   // Rol bazlı filtreleme yetkisi
   const canFilterBranches = user?.role === UserRole.ADMIN || user?.role === UserRole.SUPER_BRANCH_MANAGER;
@@ -42,9 +45,16 @@ export default function CustomersPage() {
   // Şube filtresi için şubeleri çek
   const { data: branches, isLoading: isLoadingBranches } = useBranches(user);
 
-  // Müşterileri, seçilen şubeye göre çek
+  // İstatistik kartları için veri çek
+  const { data: stats, isLoading: isLoadingStats } = useCustomerStats(selectedBranch);
+
+  // Tag istatistikleri için veri çek
+  const { data: tagStats, isLoading: isLoadingTags } = useTagStats(selectedBranch);
+
+  // Müşterileri, seçilen şube ve tag'lere göre çek
   const { data: customers, isLoading, isError, error } = useCustomers(
-    selectedBranch
+    selectedBranch,
+    selectedTags
   );
 
   const [filteredData, setFilteredData] = useState(customers || []);
@@ -54,14 +64,14 @@ export default function CustomersPage() {
 
     let filtered = customers;
     
-    // Sadece arama sorgusuna göre filtrele
-    // Şube filtrelemesi useCustomers hook'unda yapılıyor
+    // Gelişmiş arama: isim, telefon ve email ile arama
     if (searchQuery) {
       const query = searchQuery.toLowerCase().trim();
       filtered = filtered.filter((customer: Customer) => {
         return (
           customer.name.toLowerCase().includes(query) ||
-          (customer.phone && customer.phone.toLowerCase().includes(query))
+          (customer.phone && customer.phone.toLowerCase().includes(query)) ||
+          (customer.email && customer.email.toLowerCase().includes(query))
         );
       });
     }
@@ -89,18 +99,30 @@ export default function CustomersPage() {
         </p>
       </div>
 
+      {/* İstatistik Kartları */}
+      <StatsCards stats={stats} isLoading={isLoadingStats} />
+
       <div className="flex items-center justify-between gap-4">
-        <div className="flex flex-1 items-center gap-4">
+        <div className="flex flex-1 items-center gap-4 flex-wrap">
           <div className="relative flex-1 md:grow-0">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               type="search"
-              placeholder="İsim veya telefon ile ara..."
+              placeholder="İsim, telefon veya email ile ara..."
               className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[320px]"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
+          
+          {/* Tag Filtreleme */}
+          <TagFilter
+            tags={tagStats || []}
+            selectedTags={selectedTags}
+            onTagsChange={setSelectedTags}
+            isLoading={isLoadingTags}
+          />
+          
           {/* Sadece yetkili roller için şube filtresini göster */}
           {canFilterBranches && (
             <Select

@@ -2,6 +2,13 @@
 
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb"
+import { HomeIcon } from "lucide-react"
 import { DataTable } from "./components/data-table"
 import { getColumns } from "./components/columns"
 import { useServiceCategories } from "./hooks/use-service-categories"
@@ -41,7 +48,29 @@ export default function ServiceCategoriesPage() {
   const columns = getColumns()
 
   return (
-    <div className="container mx-auto py-10">
+    <div className="space-y-6">
+      <div>
+        <Breadcrumb>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/dashboard">
+              <HomeIcon className="h-4 w-4" />
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem isCurrentPage>
+            <BreadcrumbLink>Hizmet Kategorileri</BreadcrumbLink>
+          </BreadcrumbItem>
+        </Breadcrumb>
+        <div className="flex items-center justify-between mt-2">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Hizmet Kategorileri</h1>
+            <p className="text-muted-foreground mt-1">
+              Hizmet kategorilerinizi görüntüleyin ve yönetin.
+            </p>
+          </div>
+        </div>
+      </div>
+
       <DataTable
         columns={columns}
         data={categories || []}

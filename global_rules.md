@@ -1,4 +1,15 @@
 
+## Tüm sayfalarda bu rol yet ki sistemi ve mantiği geçerlidir.
+
+STAFF,BRANCH_MANAGER,RECEPTION : Sadece Üyenin bağlı olduğu şubeye ait verileri görebilir ve işlem yapabilir.
+
+ADMIN : Admin tüm şubelere ait verileri görebilir ve işlem yapabilir.
+
+SUPER_BRANCH_MANAGER : Sadece bağlantılı olduğu şubelere ait verileri görebilir ve işlem yapabilir.
+
+## Backend başlat
+
+npm run dev
 
 ## Projede Kullanılan Teknoloji Yığını
 

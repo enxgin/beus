@@ -6,7 +6,13 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, Download, FilterIcon } from "lucide-react";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { FileText, Download, FilterIcon, HomeIcon } from "lucide-react";
 import api from "@/lib/api";
 import { PaymentList } from "./components/payment-list";
 import { PaymentFlow } from "./components/payment-flow";
@@ -158,33 +164,55 @@ export default function PaymentsPage() {
   });
 
   return (
-    <div className="container mx-auto py-4 sm:py-6 px-4 sm:px-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold">Ödemeler</h1>
-        <div className="flex gap-2">
-          <Button 
-            variant={showFilters ? "secondary" : "outline"} 
-            size="sm" 
-            className="text-xs sm:text-sm"
-            onClick={() => setShowFilters(!showFilters)}
-          >
-            <FilterIcon className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-            Filtrele
-          </Button>
-          <Button variant="outline" size="sm" className="text-xs sm:text-sm">
-            <Download className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-            Dışa Aktar
-          </Button>
+    <div className="space-y-6">
+      <div>
+        <Breadcrumb>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/dashboard">
+              <HomeIcon className="h-4 w-4" />
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/dashboard/finance">Finans</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem isCurrentPage>
+            <BreadcrumbLink>Ödemeler</BreadcrumbLink>
+          </BreadcrumbItem>
+        </Breadcrumb>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mt-2">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Ödeme Yönetimi</h1>
+            <p className="text-muted-foreground mt-1">
+              Ödemeleri takip edin ve yönetin.
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant={showFilters ? "secondary" : "outline"}
+              size="sm"
+              className="text-xs sm:text-sm"
+              onClick={() => setShowFilters(!showFilters)}
+            >
+              <FilterIcon className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+              Filtrele
+            </Button>
+            <Button variant="outline" size="sm" className="text-xs sm:text-sm">
+              <Download className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+              Dışa Aktar
+            </Button>
+          </div>
         </div>
       </div>
       
       {showFilters && (
-        <Card className="mb-4 sm:mb-6">
+        <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-lg">Ödeme Filtreleri</CardTitle>
           </CardHeader>
           <CardContent>
-            <PaymentFilters 
+            <PaymentFilters
               customers={customers}
               filters={filters}
               onFilterChange={setFilters}
@@ -195,7 +223,7 @@ export default function PaymentsPage() {
       )}
 
       <Tabs defaultValue="pending" value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="mb-4 w-full overflow-x-auto flex flex-nowrap">
+        <TabsList className="w-full overflow-x-auto flex flex-nowrap">
           <TabsTrigger value="pending" className="text-xs sm:text-sm flex-1">Bekleyen Ödemeler</TabsTrigger>
           <TabsTrigger value="completed" className="text-xs sm:text-sm flex-1">Tamamlanan Ödemeler</TabsTrigger>
           <TabsTrigger value="all" className="text-xs sm:text-sm flex-1">Tüm Ödemeler</TabsTrigger>
@@ -210,27 +238,27 @@ export default function PaymentsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <PaymentFlow 
-                pendingInvoices={pendingInvoices} 
-                isLoading={isLoadingInvoices} 
+              <PaymentFlow
+                pendingInvoices={pendingInvoices}
+                isLoading={isLoadingInvoices}
               />
             </CardContent>
           </Card>
         </TabsContent>
         
         <TabsContent value="completed" className="space-y-4">
-          <PaymentList 
-            payments={payments} 
-            isLoading={isLoading} 
+          <PaymentList
+            payments={payments}
+            isLoading={isLoading}
             status="completed"
             filters={filters}
           />
         </TabsContent>
         
         <TabsContent value="all" className="space-y-4">
-          <PaymentList 
-            payments={payments} 
-            isLoading={isLoading} 
+          <PaymentList
+            payments={payments}
+            isLoading={isLoading}
             status="all"
             filters={filters}
           />

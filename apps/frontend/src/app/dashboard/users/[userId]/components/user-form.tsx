@@ -3,7 +3,7 @@
 import * as z from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { toast } from "react-hot-toast";
+import { toast } from "sonner";
 import { useParams, useRouter } from "next/navigation";
 import { isAxiosError } from "axios";
 
@@ -15,6 +15,7 @@ import { Separator } from "@/components/ui/separator";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { UserRole, User } from "@/types/user";
 
 // Merkezi tiplerden bağımsız lokal tipler
@@ -32,6 +33,7 @@ const formSchema = z.object({
     message: "Lütfen geçerli bir rol seçiniz."
   }),
   branchId: z.string().optional(),
+  isActive: z.boolean(),
 });
 
 type UserFormValues = z.infer<typeof formSchema>;
@@ -64,12 +66,14 @@ export const UserForm: React.FC<UserFormProps> = ({ initialData, branches, roles
     password: "", // Düzenleme durumunda şifre boş bırakılabilir
     role: initialData.role,
     branchId: initialData.branchId || undefined,
+    isActive: initialData.isActive ?? true,
   } : {
     name: "",
     email: "",
     password: "",
     role: "" as UserRole,
     branchId: "",
+    isActive: true,
   };
   
   const form = useForm<UserFormValues>({
@@ -85,7 +89,8 @@ export const UserForm: React.FC<UserFormProps> = ({ initialData, branches, roles
         email: data.email,
         role: data.role,
         // branchId seçilmişse kullan, aksi halde null gönder
-        branchId: data.branchId || null
+        branchId: data.branchId || null,
+        isActive: data.isActive
       };
       
       // Şifre kontrolü
@@ -246,6 +251,30 @@ export const UserForm: React.FC<UserFormProps> = ({ initialData, branches, roles
                     </SelectContent>
                   </Select>
                   <FormMessage />
+                </FormItem>
+              )}
+            />
+            {/* Aktif/Pasif Durumu */}
+            <FormField
+              control={form.control}
+              name="isActive"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base">
+                      Durum
+                    </FormLabel>
+                    <div className="text-sm text-muted-foreground">
+                      Personelin aktif/pasif durumunu belirler
+                    </div>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                      disabled={isPending}
+                    />
+                  </FormControl>
                 </FormItem>
               )}
             />

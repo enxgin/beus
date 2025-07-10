@@ -20,12 +20,12 @@ exports.Prisma = Prisma
 exports.$Enums = {}
 
 /**
- * Prisma Client JS version: 6.11.0
- * Query Engine version: 9c30299f5a0ea26a96790e13f796dc6094db3173
+ * Prisma Client JS version: 6.11.1
+ * Query Engine version: f40f79ec31188888a2e33acda0ecc8fd10a853a9
  */
 Prisma.prismaVersion = {
-  client: "6.11.0",
-  engine: "9c30299f5a0ea26a96790e13f796dc6094db3173"
+  client: "6.11.1",
+  engine: "f40f79ec31188888a2e33acda0ecc8fd10a853a9"
 }
 
 Prisma.PrismaClientKnownRequestError = () => {
@@ -127,6 +127,7 @@ exports.Prisma.UserScalarFieldEnum = {
   name: 'name',
   role: 'role',
   branchId: 'branchId',
+  isActive: 'isActive',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -167,10 +168,25 @@ exports.Prisma.CustomerScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.TagScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  color: 'color',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.CustomerTagScalarFieldEnum = {
+  customerId: 'customerId',
+  tagId: 'tagId'
+};
+
 exports.Prisma.ServiceCategoryScalarFieldEnum = {
   id: 'id',
   name: 'name',
   description: 'description',
+  branchId: 'branchId',
+  isActive: 'isActive',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -183,12 +199,13 @@ exports.Prisma.ServiceScalarFieldEnum = {
   description: 'description',
   categoryId: 'categoryId',
   branchId: 'branchId',
+  isActive: 'isActive',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
 
 exports.Prisma.StaffServiceScalarFieldEnum = {
-  staffId: 'staffId',
+  userId: 'userId',
   serviceId: 'serviceId'
 };
 
@@ -258,11 +275,10 @@ exports.Prisma.InvoiceScalarFieldEnum = {
 exports.Prisma.PaymentScalarFieldEnum = {
   id: 'id',
   amount: 'amount',
-  paymentMethod: 'paymentMethod',
+  method: 'method',
   paymentDate: 'paymentDate',
-  notes: 'notes',
   invoiceId: 'invoiceId',
-  cashLogId: 'cashLogId',
+  cashRegisterLogId: 'cashRegisterLogId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -271,12 +287,16 @@ exports.Prisma.CommissionRuleScalarFieldEnum = {
   id: 'id',
   name: 'name',
   description: 'description',
+  ruleType: 'ruleType',
   type: 'type',
   rate: 'rate',
   fixedAmount: 'fixedAmount',
   startDate: 'startDate',
   endDate: 'endDate',
   branchId: 'branchId',
+  serviceId: 'serviceId',
+  staffId: 'staffId',
+  isActive: 'isActive',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -316,6 +336,90 @@ exports.Prisma.CashRegisterLogScalarFieldEnum = {
   category: 'category'
 };
 
+exports.Prisma.NotificationProviderScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  type: 'type',
+  config: 'config',
+  branchId: 'branchId',
+  isActive: 'isActive',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.NotificationTemplateScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  type: 'type',
+  subject: 'subject',
+  content: 'content',
+  variables: 'variables',
+  language: 'language',
+  branchId: 'branchId',
+  isActive: 'isActive',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.NotificationTriggerScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  eventType: 'eventType',
+  conditions: 'conditions',
+  templateId: 'templateId',
+  branchId: 'branchId',
+  isActive: 'isActive',
+  priority: 'priority',
+  schedule: 'schedule',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.NotificationQueueScalarFieldEnum = {
+  id: 'id',
+  customerId: 'customerId',
+  templateId: 'templateId',
+  triggerId: 'triggerId',
+  branchId: 'branchId',
+  status: 'status',
+  data: 'data',
+  scheduledAt: 'scheduledAt',
+  sentAt: 'sentAt',
+  errorMessage: 'errorMessage',
+  retryCount: 'retryCount',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.NotificationHistoryScalarFieldEnum = {
+  id: 'id',
+  customerId: 'customerId',
+  templateId: 'templateId',
+  triggerId: 'triggerId',
+  branchId: 'branchId',
+  type: 'type',
+  status: 'status',
+  content: 'content',
+  metadata: 'metadata',
+  cost: 'cost',
+  sentAt: 'sentAt',
+  deliveredAt: 'deliveredAt',
+  readAt: 'readAt',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.NotificationSettingsScalarFieldEnum = {
+  id: 'id',
+  branchId: 'branchId',
+  smsConfig: 'smsConfig',
+  whatsappConfig: 'whatsappConfig',
+  emailConfig: 'emailConfig',
+  generalSettings: 'generalSettings',
+  isActive: 'isActive',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -323,6 +427,10 @@ exports.Prisma.SortOrder = {
 
 exports.Prisma.NullableJsonNullValueInput = {
   DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull
+};
+
+exports.Prisma.JsonNullValueInput = {
   JsonNull: Prisma.JsonNull
 };
 
@@ -380,6 +488,12 @@ exports.PaymentMethod = exports.$Enums.PaymentMethod = {
   CUSTOMER_CREDIT: 'CUSTOMER_CREDIT'
 };
 
+exports.CommissionRuleType = exports.$Enums.CommissionRuleType = {
+  GENERAL: 'GENERAL',
+  SERVICE_SPECIFIC: 'SERVICE_SPECIFIC',
+  STAFF_SPECIFIC: 'STAFF_SPECIFIC'
+};
+
 exports.CommissionType = exports.$Enums.CommissionType = {
   PERCENTAGE: 'PERCENTAGE',
   FIXED_AMOUNT: 'FIXED_AMOUNT'
@@ -413,11 +527,43 @@ exports.CashMovementCategory = exports.$Enums.CashMovementCategory = {
   OTHER_INCOME: 'OTHER_INCOME'
 };
 
+exports.NotificationType = exports.$Enums.NotificationType = {
+  SMS: 'SMS',
+  WHATSAPP: 'WHATSAPP',
+  EMAIL: 'EMAIL'
+};
+
+exports.NotificationEventType = exports.$Enums.NotificationEventType = {
+  APPOINTMENT_REMINDER: 'APPOINTMENT_REMINDER',
+  APPOINTMENT_CONFIRMATION: 'APPOINTMENT_CONFIRMATION',
+  BIRTHDAY: 'BIRTHDAY',
+  PACKAGE_EXPIRY: 'PACKAGE_EXPIRY',
+  PAYMENT_REMINDER: 'PAYMENT_REMINDER',
+  WELCOME_MESSAGE: 'WELCOME_MESSAGE',
+  CUSTOM: 'CUSTOM'
+};
+
+exports.NotificationStatus = exports.$Enums.NotificationStatus = {
+  PENDING: 'PENDING',
+  SENT: 'SENT',
+  FAILED: 'FAILED',
+  CANCELLED: 'CANCELLED'
+};
+
+exports.NotificationDeliveryStatus = exports.$Enums.NotificationDeliveryStatus = {
+  SENT: 'SENT',
+  DELIVERED: 'DELIVERED',
+  FAILED: 'FAILED',
+  READ: 'READ'
+};
+
 exports.Prisma.ModelName = {
   User: 'User',
   WorkHour: 'WorkHour',
   Branch: 'Branch',
   Customer: 'Customer',
+  Tag: 'Tag',
+  CustomerTag: 'CustomerTag',
   ServiceCategory: 'ServiceCategory',
   Service: 'Service',
   StaffService: 'StaffService',
@@ -430,7 +576,13 @@ exports.Prisma.ModelName = {
   CommissionRule: 'CommissionRule',
   CommissionItem: 'CommissionItem',
   StaffCommission: 'StaffCommission',
-  CashRegisterLog: 'CashRegisterLog'
+  CashRegisterLog: 'CashRegisterLog',
+  NotificationProvider: 'NotificationProvider',
+  NotificationTemplate: 'NotificationTemplate',
+  NotificationTrigger: 'NotificationTrigger',
+  NotificationQueue: 'NotificationQueue',
+  NotificationHistory: 'NotificationHistory',
+  NotificationSettings: 'NotificationSettings'
 };
 
 /**

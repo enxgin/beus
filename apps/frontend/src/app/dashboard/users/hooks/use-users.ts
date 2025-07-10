@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
-import { User } from '@/types/user';
+import { User, UserRole } from '@/types/user';
 import { useAuthStore } from '@/stores/auth.store';
 import { useState, useEffect } from 'react';
 
@@ -80,10 +80,13 @@ export function useUser(userId: string) {
 // Yeni kullanıcı oluşturan mutation hook'u
 export function useCreateUser() {
   const queryClient = useQueryClient();
-  return useMutation({ 
+  return useMutation({
     mutationFn: (newUserData: Omit<User, 'id'>) => api.post('/users', newUserData),
     onSuccess: () => {
+      // Tüm kullanıcı ile ilgili cache'leri invalidate et
       queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: ['users-with-performance'] });
+      queryClient.invalidateQueries({ queryKey: ['users-statistics'] });
     },
   });
 }
@@ -94,8 +97,120 @@ export function useUpdateUser(userId: string) {
   return useMutation({
     mutationFn: (updatedUserData: Partial<User>) => api.patch(`/users/${userId}`, updatedUserData),
     onSuccess: () => {
+      // Tüm kullanıcı ile ilgili cache'leri invalidate et
       queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: ['users-with-performance'] });
+      queryClient.invalidateQueries({ queryKey: ['users-statistics'] });
       queryClient.invalidateQueries({ queryKey: ['user', userId] });
+      queryClient.invalidateQueries({ queryKey: ['user-performance', userId] });
+      queryClient.invalidateQueries({ queryKey: ['user-activities', userId] });
+      queryClient.invalidateQueries({ queryKey: ['user-financial', userId] });
     },
+  });
+}
+
+// İstatistik verilerini çeken hook
+export function useUsersStatistics(filters?: {
+  dateFrom?: string;
+  dateTo?: string;
+  branchId?: string;
+}) {
+  const token = useAuthStore((state) => state.token);
+
+  return useQuery({
+    queryKey: ['users-statistics', filters, token],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (filters?.dateFrom) params.append('dateFrom', filters.dateFrom);
+      if (filters?.dateTo) params.append('dateTo', filters.dateTo);
+      if (filters?.branchId) params.append('branchId', filters.branchId);
+      
+      const response = await api.get(`/users/statistics?${params.toString()}`);
+      return response.data;
+    },
+    enabled: !!token,
+  });
+}
+
+// Performans verileri ile kullanıcıları çeken hook
+export function useUsersWithPerformance(filters?: {
+  dateFrom?: string;
+  dateTo?: string;
+  roles?: UserRole[];
+  performance?: 'high' | 'medium' | 'low' | 'all';
+  branchId?: string;
+}) {
+  const token = useAuthStore((state) => state.token);
+
+  return useQuery({
+    queryKey: ['users-with-performance', filters, token],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (filters?.dateFrom) params.append('dateFrom', filters.dateFrom);
+      if (filters?.dateTo) params.append('dateTo', filters.dateTo);
+      if (filters?.roles) filters.roles.forEach(role => params.append('roles', role));
+      if (filters?.performance) params.append('performance', filters.performance);
+      if (filters?.branchId) params.append('branchId', filters.branchId);
+      
+      const response = await api.get(`/users/with-performance?${params.toString()}`);
+      return response.data;
+    },
+    enabled: !!token,
+  });
+}
+
+// Kullanıcı performans verilerini çeken hook
+export function useUserPerformance(userId: string, filters?: {
+  dateFrom?: string;
+  dateTo?: string;
+}) {
+  const token = useAuthStore((state) => state.token);
+
+  return useQuery({
+    queryKey: ['user-performance', userId, filters, token],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (filters?.dateFrom) params.append('dateFrom', filters.dateFrom);
+      if (filters?.dateTo) params.append('dateTo', filters.dateTo);
+      
+      const response = await api.get(`/users/${userId}/performance?${params.toString()}`);
+      return response.data;
+    },
+    enabled: !!token && userId !== 'new',
+  });
+}
+
+// Kullanıcı aktivite geçmişini çeken hook
+export function useUserActivities(userId: string, limit: number = 20) {
+  const token = useAuthStore((state) => state.token);
+
+  return useQuery({
+    queryKey: ['user-activities', userId, limit, token],
+    queryFn: async () => {
+      const response = await api.get(`/users/${userId}/activities?limit=${limit}`);
+      return response.data;
+    },
+    enabled: !!token && userId !== 'new',
+  });
+}
+
+// Kullanıcı mali bilgilerini çeken hook
+export function useUserFinancial(userId: string, filters?: {
+  dateFrom?: string;
+  dateTo?: string;
+}) {
+  const token = useAuthStore((state) => state.token);
+
+  return useQuery({
+    queryKey: ['user-financial', userId, filters, token],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (filters?.dateFrom) params.append('dateFrom', filters.dateFrom);
+      if (filters?.dateTo) params.append('dateTo', filters.dateTo);
+      
+      const response = await api.get(`/users/${userId}/financial?${params.toString()}`);
+      return response.data;
+    },
+    enabled: !!token && userId !== 'new',
   });
 }

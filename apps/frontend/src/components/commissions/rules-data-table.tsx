@@ -91,7 +91,7 @@ export function RulesDataTable<TData extends { id: string }, TValue>({
             <Button onClick={() => handleOpenDialog()}>Yeni Kural Ekle</Button>
           </DialogTrigger>
         </div>
-        <DialogContent className="sm:max-w-[625px]">
+        <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {selectedRule ? "Kuralı Düzenle" : "Yeni Kural Oluştur"}

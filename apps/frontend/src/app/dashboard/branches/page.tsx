@@ -2,6 +2,13 @@
 
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb"
+import { HomeIcon } from "lucide-react"
 import { DataTable } from "./components/data-table"
 import { UserRole } from "@/types/user"
 import { columns } from "./components/columns"
@@ -41,19 +48,30 @@ export default function BranchesPage() {
         initialData={branchModal.initialData}
         branches={branches || []}
       />
-      <div className="space-y-8 p-4 sm:p-8">
-        <div className="flex items-center justify-between space-y-2">
-          <div>
-            <h2 className="text-2xl font-bold tracking-tight">Şubeler</h2>
-            <p className="text-muted-foreground">
-              İşletmenize ait şubeleri buradan yönetebilirsiniz.
-            </p>
-          </div>
-          {user?.role === UserRole.ADMIN && (
-            <div className="flex items-center space-x-2">
-              <Button onClick={() => branchModal.onOpen()}>Yeni Şube Ekle</Button>
+      <div className="space-y-6">
+        <div>
+          <Breadcrumb>
+            <BreadcrumbItem>
+              <BreadcrumbLink href="/dashboard">
+                <HomeIcon className="h-4 w-4" />
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem isCurrentPage>
+              <BreadcrumbLink>Şubeler</BreadcrumbLink>
+            </BreadcrumbItem>
+          </Breadcrumb>
+          <div className="flex items-center justify-between mt-2">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">Şube Yönetimi</h1>
+              <p className="text-muted-foreground mt-1">
+                İşletmenize ait şubeleri buradan yönetebilirsiniz.
+              </p>
             </div>
-          )}
+            {user?.role === UserRole.ADMIN && (
+              <Button onClick={() => branchModal.onOpen()}>Yeni Şube Ekle</Button>
+            )}
+          </div>
         </div>
         <DataTable columns={columns} data={branches || []} />
       </div>

@@ -58,18 +58,28 @@ api.interceptors.response.use(
     return response;
   },
   (error) => {
-    // Hata detaylarını görüntüleyelim
-    console.error('API Hatası:', { 
-      status: error.response?.status, 
-      url: error.config?.url,
-      method: error.config?.method,
-      data: error.response?.data,
-      headers: error.config?.headers ? {
-        ...error.config.headers,
-        // Token bilgisini gizleme (güvenlik için)
-        Authorization: error.config.headers.Authorization ? 'Bearer [FILTERED]' : undefined
-      } : undefined
-    });
+    // Sadece gerçek hatalar için log'lama yap
+    if (error.response?.status >= 400 || error.code || error.message) {
+      console.error('API Hatası:', {
+        status: error.response?.status,
+        url: error.config?.url,
+        method: error.config?.method,
+        data: error.response?.data,
+        message: error.message,
+        code: error.code,
+        name: error.name,
+        headers: error.config?.headers ? {
+          ...error.config.headers,
+          // Token bilgisini gizleme (güvenlik için)
+          Authorization: error.config.headers.Authorization ? 'Bearer [FILTERED]' : undefined
+        } : undefined
+      });
+    }
+    
+    // Eğer error objesi tamamen boşsa, raw error'u da log'la
+    if (!error.response && !error.message && !error.code && !error.name) {
+      console.warn('Boş error objesi yakalandı:', error);
+    }
     
     // 401 Unauthorized hatası aldığımızda
     if (error.response && error.response.status === 401) {

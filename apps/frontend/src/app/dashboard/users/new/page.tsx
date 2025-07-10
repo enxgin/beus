@@ -30,7 +30,7 @@ export default function NewUserPage() {
   }
 
   // Şubeleri `useBranches`'dan gelen formata göre ayarla
-  const branches = branchesData?.data || [];
+  const branches = branchesData || [];
 
   return (
     <div className="flex-col">

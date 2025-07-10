@@ -8,6 +8,13 @@ import { getCommissions } from "@/services/commission.service";
 import { columns } from "@/components/commissions/reports-columns";
 import { ReportsDataTable } from "@/components/commissions/reports-data-table";
 import { ReportsFilters } from "@/components/commissions/reports-filters";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { HomeIcon } from "lucide-react";
 
 const schema = z.object({
   page: z.coerce.number().default(1),
@@ -58,11 +65,31 @@ export default function CommissionReportsPage() {
   const pageCount = data ? Math.ceil(data.total / limit) : 0;
 
   return (
-    <div className="container mx-auto py-10">
-            <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold tracking-tight">Prim Raporları</h2>
+    <div className="space-y-6">
+      <div>
+        <Breadcrumb>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/dashboard">
+              <HomeIcon className="h-4 w-4" />
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/dashboard/commissions">Primler</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem isCurrentPage>
+            <BreadcrumbLink>Raporlar</BreadcrumbLink>
+          </BreadcrumbItem>
+        </Breadcrumb>
+        <h1 className="text-3xl font-bold tracking-tight mt-2">Prim Raporları</h1>
+        <p className="text-muted-foreground mt-1">
+          Personel prim raporlarını görüntüleyin ve analiz edin
+        </p>
       </div>
+
       <ReportsFilters />
+      
       <ReportsDataTable
         columns={columns}
         data={data?.data ?? []}

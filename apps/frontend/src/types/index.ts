@@ -67,13 +67,14 @@ export interface CreateCustomerPackageDto {
 // Müşteri ile ilgili tipler
 export interface Customer {
   id: string;
-  firstName: string;
-  lastName: string;
+  name: string;
   email?: string;
   phone?: string;
   branchId: string;
   branch?: Branch;
   discountRate?: number;
+  creditBalance?: number;
+  notes?: string;
   createdAt: string;
   updatedAt: string;
 }

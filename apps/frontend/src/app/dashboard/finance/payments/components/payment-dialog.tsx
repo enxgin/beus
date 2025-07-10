@@ -95,10 +95,22 @@ export function PaymentDialog({
     },
     onSuccess: (response) => {
       console.log("Ödeme başarılı:", response.data);
+      
+      // Önce temel ödeme başarı mesajını göster
       toast({
         title: "Ödeme başarılı",
         description: "Fatura ödemesi başarıyla kaydedildi.",
       });
+      
+      // Prim hesaplandıysa ek bildirim göster
+      // Backend log'larını kontrol ederek prim hesaplanıp hesaplanmadığını anlayabiliriz
+      // Şimdilik basit bir yaklaşım kullanıyoruz
+      setTimeout(() => {
+        // Bu bildirim backend log'larında prim hesaplandığını gördüğümüzde gösterilecek
+        // Gerçek implementasyonda backend'ten prim bilgisi dönmeli
+        console.log("Ödeme tamamlandı, prim kontrolü yapılıyor...");
+      }, 1000);
+      
       form.reset();
       onOpenChange(false); // Modalı kapat
       onSuccess();

@@ -7,6 +7,12 @@ import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/api";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -15,7 +21,7 @@ import { useAuthStore } from "@/stores/auth.store";
 import { useRouter, useParams } from "next/navigation";
 import { toast } from "sonner";
 import { useEffect, useMemo } from "react";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2, HomeIcon } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { UserRole } from "@/types/user";
@@ -46,7 +52,17 @@ interface Service {
   price: number;
   categoryId: string;
   branchId: string;
-  staff: { id: string }[];
+  staff: {
+    serviceId: string;
+    userId: string;
+    user?: {
+      id: string;
+      name: string;
+      email: string;
+      role: string;
+      branchId: string;
+    };
+  }[];
   isActive: boolean;
   category?: { id: string; name: string };
 }
@@ -60,18 +76,25 @@ const EditServicePage = () => {
   const { data: apiData, isLoading, error } = useQuery<ApiData>({
     queryKey: ['service', id],
     queryFn: async () => {
-      const [serviceData, categoriesData, staffData, branchesData] = await Promise.all([
+      const [serviceData, categoriesData, branchesData] = await Promise.all([
         api.get(`/services/${id}`, { headers: { Authorization: `Bearer ${token}` } }).then(res => res.data),
         api.get('/categories', { headers: { Authorization: `Bearer ${token}` } }).then(res => res.data),
-        api.get('/staff', { headers: { Authorization: `Bearer ${token}` } }).then(res => res.data),
-        (user?.role === UserRole.ADMIN || user?.role === UserRole.SUPER_BRANCH_MANAGER) ? 
-          api.get('/branches', { headers: { Authorization: `Bearer ${token}` } }).then(res => res.data) : 
+        (user?.role === UserRole.ADMIN || user?.role === UserRole.SUPER_BRANCH_MANAGER) ?
+          api.get('/branches', { headers: { Authorization: `Bearer ${token}` } }).then(res => res.data) :
           Promise.resolve(null)
       ]);
+      
+      // Service yüklendikten sonra staff verilerini al
+      const staffData = await api.get('/staff', {
+        headers: { Authorization: `Bearer ${token}` },
+        params: { branchId: serviceData.branchId }
+      }).then(res => res.data);
       
       // Debug: API'den dönen verileri kontrol edelim
       console.log('Service from API:', serviceData);
       console.log('Categories from API:', categoriesData);
+      console.log('Staff from API:', staffData);
+      console.log('Service staff field:', serviceData.staff);
       
       return { service: serviceData, categories: categoriesData, staff: staffData, branches: branchesData };
     }
@@ -115,7 +138,7 @@ const EditServicePage = () => {
         price: apiData.service.price,
         categoryId: categoryId,
         branchId: apiData.service.branchId,
-        staffIds: apiData.service.staff.map(s => s.id),
+        staffIds: apiData.service.staff?.map(s => s.user?.id || s.userId).filter(id => id) || [],
         isActive: apiData.service.isActive,
       };
       
@@ -225,12 +248,31 @@ const EditServicePage = () => {
   }
 
   return (
-    <div className="container mx-auto py-6">
-      <div className="flex items-center mb-6">
-        <Button variant="ghost" size="icon" onClick={() => router.back()}>
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <h1 className="text-2xl font-bold ml-2">Hizmet Düzenle</h1>
+    <div className="space-y-6">
+      <div>
+        <Breadcrumb>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/dashboard">
+              <HomeIcon className="h-4 w-4" />
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/dashboard/services">Hizmetler</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem isCurrentPage>
+            <BreadcrumbLink>Hizmet Düzenle</BreadcrumbLink>
+          </BreadcrumbItem>
+        </Breadcrumb>
+        <div className="flex items-center justify-between mt-2">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Hizmet Düzenle</h1>
+            <p className="text-muted-foreground mt-1">
+              Hizmet bilgilerini güncelleyin.
+            </p>
+          </div>
+        </div>
       </div>
 
       <Card>

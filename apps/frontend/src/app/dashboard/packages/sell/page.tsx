@@ -196,7 +196,7 @@ const CustomerTableRow = ({
         <div className="flex items-center gap-2">
           <User className="h-4 w-4 text-muted-foreground" />
           <span className="font-medium">
-            {customer.firstName} {customer.lastName}
+            {customer.name}
           </span>
           {isSelected && (
             <Badge variant="outline" className="ml-2 bg-primary/10 text-primary border-primary/20">
@@ -536,7 +536,7 @@ export default function SellPackagePage() {
               <div className="flex items-center gap-2">
                 {selectedCustomer && (
                   <Badge className="bg-primary/10 text-primary border-primary/20">
-                    Seçili Müşteri: {selectedCustomer.firstName} {selectedCustomer.lastName}
+                    Seçili Müşteri: {selectedCustomer.name}
                   </Badge>
                 )}
               </div>
@@ -556,7 +556,7 @@ export default function SellPackagePage() {
             <CardHeader>
               <CardTitle>Paket Seçimi</CardTitle>
               <CardDescription>
-                {selectedCustomer ? `${selectedCustomer.firstName} ${selectedCustomer.lastName} için paket seçin` : ""}
+                {selectedCustomer ? `${selectedCustomer.name} için paket seçin` : ""}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -615,7 +615,7 @@ export default function SellPackagePage() {
             </CardHeader>
             <CardContent>
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6" id="package-sale-form">
                   {selectedCustomer && selectedPackage && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       {/* Seçilen müşteri ve paket bilgileri */}
@@ -628,7 +628,7 @@ export default function SellPackagePage() {
                         </CardHeader>
                         <CardContent className="p-4 text-sm">
                           <div className="space-y-1">
-                            <div className="font-medium">{selectedCustomer.firstName} {selectedCustomer.lastName}</div>
+                            <div className="font-medium">{selectedCustomer.name}</div>
                             {selectedCustomer.phone && (
                               <div className="flex items-center gap-1 text-muted-foreground">
                                 <Phone className="h-3 w-3" /> {selectedCustomer.phone}
@@ -775,8 +775,9 @@ export default function SellPackagePage() {
                 <Button variant="outline" onClick={() => router.push("/dashboard/packages")}>
                   İptal
                 </Button>
-                <Button 
-                onClick={() => form.handleSubmit(onSubmit)()} 
+                <Button
+                type="submit"
+                form="package-sale-form"
                 disabled={isSubmitting || !isValid}
                 >
                   {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

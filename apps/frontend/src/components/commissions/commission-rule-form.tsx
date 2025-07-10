@@ -1,10 +1,9 @@
 "use client";
 
 import * as z from "zod";
-
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/components/ui/use-toast";
 import {
   commissionRuleSchema,
@@ -15,7 +14,6 @@ import {
   updateCommissionRule,
   CommissionRule,
 } from "@/services/commission.service";
-import { getStaffForSelect, getServicesForSelect } from "@/services/select.service";
 import {
   Form,
   FormControl,
@@ -27,7 +25,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -36,6 +33,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { useServices } from "@/app/dashboard/services/hooks/use-services";
+import { useUsers } from "@/app/dashboard/users/hooks/use-users";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 interface CommissionRuleFormProps {
   initialData?: CommissionRule | null;
@@ -46,27 +48,51 @@ export function CommissionRuleForm({ initialData, onSuccess }: CommissionRuleFor
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const form = useForm<z.input<typeof commissionRuleSchema>>({
-    resolver: zodResolver(commissionRuleSchema),
-    defaultValues: initialData || {
+  // Services ve users için data çek
+  const { data: servicesData } = useServices({ page: 1, limit: 100 });
+  const { data: usersData } = useUsers();
+
+  const form = useForm<CommissionRuleFormValues>({
+    resolver: zodResolver(commissionRuleSchema) as any,
+    defaultValues: initialData ? {
+      name: initialData.name || '',
+      type: initialData.type || "PERCENTAGE",
+      rate: initialData.rate || 0,
+      fixedAmount: initialData.fixedAmount || 0,
+      description: initialData.description || "",
+      startDate: initialData.startDate ? initialData.startDate.split('T')[0] : '',
+      endDate: initialData.endDate ? initialData.endDate.split('T')[0] : '',
+      branchId: initialData.branchId || '',
+      ruleType: initialData.ruleType || 'GENERAL',
+      serviceId: initialData.serviceId || null,
+      staffId: initialData.staffId || null,
+      isActive: initialData.isActive ?? true,
+      // Geriye uyumluluk için eski alanlar
+      value: initialData.value || initialData.rate || initialData.fixedAmount || 0,
+      isGlobal: initialData.isGlobal || false,
+      userId: initialData.userId || null,
+    } : {
+      name: '',
       type: "PERCENTAGE",
-      value: 0,
+      rate: 0,
+      fixedAmount: 0,
       description: "",
-      isGlobal: false,
+      startDate: '',
+      endDate: '',
+      branchId: '',
+      ruleType: 'GENERAL',
       serviceId: null,
+      staffId: null,
+      isActive: true,
+      // Geriye uyumluluk için eski alanlar
+      value: 0,
+      isGlobal: false,
       userId: null,
     },
   });
 
-  const { data: staffOptions, isLoading: isLoadingStaff } = useQuery({
-    queryKey: ["staff-select"],
-    queryFn: getStaffForSelect,
-  });
-
-  const { data: serviceOptions, isLoading: isLoadingServices } = useQuery({
-    queryKey: ["services-select"],
-    queryFn: getServicesForSelect,
-  });
+  const watchedRuleType = form.watch("ruleType");
+  const watchedType = form.watch("type");
 
   const mutation = useMutation({
     mutationFn: (data: CommissionRuleFormValues) =>
@@ -91,161 +117,325 @@ export function CommissionRuleForm({ initialData, onSuccess }: CommissionRuleFor
   });
 
   const onSubmit = (data: CommissionRuleFormValues) => {
-    mutation.mutate(data);
+    // Backend'in beklediği formata dönüştür
+    const transformedData = {
+      ...data,
+      // Tip kontrolü yaparak doğru alanı ayarla
+      rate: data.type === 'PERCENTAGE' ? (data.rate || data.value || 0) : 0,
+      fixedAmount: data.type === 'FIXED_AMOUNT' ? (data.fixedAmount || data.value || 0) : 0,
+      // Geriye uyumluluk için value alanını da gönder
+      value: data.value || data.rate || data.fixedAmount || 0,
+      // Rule type'a göre gereksiz alanları temizle
+      serviceId: data.ruleType === 'SERVICE_SPECIFIC' ? data.serviceId : null,
+      staffId: data.ruleType === 'STAFF_SPECIFIC' ? data.staffId : null,
+    };
+    
+    mutation.mutate(transformedData);
   };
 
-  const isGlobal = form.watch("isGlobal");
-  const serviceId = form.watch("serviceId");
-  const userId = form.watch("userId");
+  const getRuleTypeDescription = (ruleType: string) => {
+    switch (ruleType) {
+      case 'GENERAL':
+        return 'Bu kural tüm personel için geçerli olacak. En düşük önceliğe sahiptir.';
+      case 'SERVICE_SPECIFIC':
+        return 'Bu kural sadece belirli bir hizmet için geçerli olacak. Orta önceliğe sahiptir.';
+      case 'STAFF_SPECIFIC':
+        return 'Bu kural sadece belirli bir personel için geçerli olacak. En yüksek önceliğe sahiptir.';
+      default:
+        return '';
+    }
+  };
+
+  const getRuleTypeBadge = (ruleType: string) => {
+    switch (ruleType) {
+      case 'GENERAL':
+        return <Badge variant="secondary">Düşük Öncelik</Badge>;
+      case 'SERVICE_SPECIFIC':
+        return <Badge variant="default">Orta Öncelik</Badge>;
+      case 'STAFF_SPECIFIC':
+        return <Badge variant="destructive">Yüksek Öncelik</Badge>;
+      default:
+        return null;
+    }
+  };
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <FormField
-            control={form.control}
-            name="type"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Prim Tipi</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+        {/* Kural Tipi Seçimi */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              Kural Tipi
+              {getRuleTypeBadge(watchedRuleType || 'GENERAL')}
+            </CardTitle>
+            <CardDescription>
+              {getRuleTypeDescription(watchedRuleType || 'GENERAL')}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <FormField
+              control={form.control}
+              name="ruleType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Kural Tipi Seçin</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Kural tipini seçin" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="GENERAL">
+                        <div className="flex flex-col">
+                          <span>Genel Kural</span>
+                          <span className="text-xs text-muted-foreground">Tüm personel için geçerli</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="SERVICE_SPECIFIC">
+                        <div className="flex flex-col">
+                          <span>Hizmet Özel Kural</span>
+                          <span className="text-xs text-muted-foreground">Belirli hizmet için geçerli</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="STAFF_SPECIFIC">
+                        <div className="flex flex-col">
+                          <span>Personel Özel Kural</span>
+                          <span className="text-xs text-muted-foreground">Belirli personel için geçerli</span>
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Hizmet Seçimi - SERVICE_SPECIFIC için */}
+            {watchedRuleType === 'SERVICE_SPECIFIC' && (
+              <FormField
+                control={form.control}
+                name="serviceId"
+                render={({ field }) => (
+                  <FormItem className="mt-4">
+                    <FormLabel>Hizmet Seçin</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value || undefined}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Hizmet seçin" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {servicesData?.data?.map((service) => (
+                          <SelectItem key={service.id} value={service.id}>
+                            {service.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
+            {/* Personel Seçimi - STAFF_SPECIFIC için */}
+            {watchedRuleType === 'STAFF_SPECIFIC' && (
+              <FormField
+                control={form.control}
+                name="staffId"
+                render={({ field }) => (
+                  <FormItem className="mt-4">
+                    <FormLabel>Personel Seçin</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value || undefined}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Personel seçin" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {usersData?.data?.map((user) => (
+                          <SelectItem key={user.id} value={user.id}>
+                            {user.name} ({user.email})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Temel Bilgiler */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Temel Bilgiler</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Kural Adı</FormLabel>
                   <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Prim tipini seçin" />
-                    </SelectTrigger>
+                    <Input placeholder="Örn: Genel Prim Kuralı" {...field} />
                   </FormControl>
-                  <SelectContent>
-                    <SelectItem value="PERCENTAGE">Yüzdelik (%)</SelectItem>
-                    <SelectItem value="FIXED_AMOUNT">Sabit Tutar (TL)</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="value"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Değer</FormLabel>
-                <FormControl>
-                  <Input type="number" placeholder="Örn: 10 veya 50" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        <FormField
-          control={form.control}
-          name="isGlobal"
-          render={({ field }) => (
-            <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-              <FormControl>
-                <Checkbox
-                  checked={field.value ?? false}
-                  onCheckedChange={(checked) => {
-                    field.onChange(checked);
-                    if(checked) {
-                      form.setValue('serviceId', null);
-                      form.setValue('userId', null);
-                    }
-                  }}
-                />
-              </FormControl>
-              <div className="space-y-1 leading-none">
-                <FormLabel>Genel Kural</FormLabel>
-                <FormDescription>
-                  Bu kural herhangi bir hizmet veya personele atanmamış tüm işlemler için geçerlidir.
-                </FormDescription>
-              </div>
-            </FormItem>
-          )}
-        />
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Açıklama</FormLabel>
+                  <FormControl>
+                    <Textarea placeholder="Kural hakkında kısa bir açıklama..." {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        <FormField
-          control={form.control}
-          name="serviceId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Hizmete Özel</FormLabel>
-              <Select
-                onValueChange={(value) => {
-                  field.onChange(value);
-                  form.setValue('isGlobal', false);
-                  form.setValue('userId', null);
-                }}
-                defaultValue={field.value || ""}
-                disabled={isGlobal || isLoadingServices}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Bir hizmet seçin" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {serviceOptions?.map(option => (
-                    <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormDescription>Bu kural sadece seçilen hizmet için geçerlidir.</FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+            <FormField
+              control={form.control}
+              name="isActive"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base">Aktif Durum</FormLabel>
+                    <FormDescription>
+                      Bu kural aktif olarak kullanılsın mı?
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+          </CardContent>
+        </Card>
 
-        <FormField
-          control={form.control}
-          name="userId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Personele Özel</FormLabel>
-              <Select
-                onValueChange={(value) => {
-                  field.onChange(value);
-                  form.setValue('isGlobal', false);
-                  form.setValue('serviceId', null);
-                }}
-                defaultValue={field.value || ""}
-                disabled={isGlobal || isLoadingStaff}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Bir personel seçin" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {staffOptions?.map(option => (
-                    <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormDescription>Bu kural sadece seçilen personel için geçerlidir.</FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {/* Prim Hesaplama */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Prim Hesaplama</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <FormField
+              control={form.control}
+              name="type"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Prim Tipi</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Prim tipini seçin" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="PERCENTAGE">Yüzdelik (%)</SelectItem>
+                      <SelectItem value="FIXED_AMOUNT">Sabit Tutar (TL)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        <FormField
-          control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Açıklama</FormLabel>
-              <FormControl>
-                <Textarea placeholder="Kural hakkında kısa bir açıklama..." {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="rate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Yüzde Oranı (%)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        placeholder="Örn: 10"
+                        {...field}
+                        disabled={watchedType !== "PERCENTAGE"}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="fixedAmount"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Sabit Tutar (TL)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        placeholder="Örn: 50"
+                        {...field}
+                        disabled={watchedType !== "FIXED_AMOUNT"}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Tarih Aralığı */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Geçerlilik Tarihleri</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="startDate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Başlangıç Tarihi</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} value={field.value || ''} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="endDate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Bitiş Tarihi (Opsiyonel)</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} value={field.value || ''} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </CardContent>
+        </Card>
 
         <div className="flex justify-end">
           <Button type="submit" disabled={mutation.isPending}>
-            {initialData ? 'Güncelle' : 'Oluştur'}
+            {mutation.isPending ? 'İşleniyor...' : (initialData ? 'Güncelle' : 'Oluştur')}
           </Button>
         </div>
       </form>

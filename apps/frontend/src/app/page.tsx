@@ -47,7 +47,9 @@ export default function LoginPage() {
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
+      console.log('Submitting login form:', values);
       const response = await api.post('/auth/login', values);
+      console.log('Login response:', response);
       if (response.data && response.data.user && response.data.accessToken) {
         const { user, accessToken: token } = response.data;
         // Backend'den accessToken olarak gelse de store'a token olarak kaydet
@@ -57,8 +59,8 @@ export default function LoginPage() {
         console.error('Invalid login response:', response.data);
         // Optionally, show an error message to the user
       }
-    } catch (error) {
-      console.error('Giriş başarısız:', error);
+    } catch (error: any) {
+      console.error("Login failed:", error.message, error.code, error.response);
       // TODO: Kullanıcıya hata mesajı göster
     }
   }

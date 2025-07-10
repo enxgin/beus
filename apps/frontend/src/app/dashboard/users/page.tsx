@@ -3,12 +3,10 @@ import HydrationWrapper from "@/components/hydration-wrapper";
 
 const UsersPage = () => {
   return (
-    <div className="flex-col">
-      <div className="flex-1 space-y-4 p-8 pt-6">
-        <HydrationWrapper>
-          <UsersClient />
-        </HydrationWrapper>
-      </div>
+    <div className="space-y-6">
+      <HydrationWrapper>
+        <UsersClient />
+      </HydrationWrapper>
     </div>
   );
 };

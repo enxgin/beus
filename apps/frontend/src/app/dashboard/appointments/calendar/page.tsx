@@ -1,7 +1,5 @@
 'use client';
 
-'use client';
-
 import { useState, useEffect } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import { Card } from '@/components/ui/card';
@@ -18,6 +16,13 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { useBranches } from '@/hooks/use-branches';
 import { UserRole } from '@/types/user';
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
+import { HomeIcon } from 'lucide-react';
 
 export default function CalendarPage() {
   const { toast } = useToast();
@@ -52,42 +57,55 @@ export default function CalendarPage() {
   const canSelectBranch = user?.role === UserRole.ADMIN || user?.role === UserRole.SUPER_BRANCH_MANAGER;
 
   return (
-    <div className="container px-4 md:px-6">
-      <div className="flex flex-col space-y-4 md:space-y-6">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div>
-            <h1 className="text-2xl font-bold">Randevu Takvimi</h1>
-            <p className="text-muted-foreground">Tüm randevuları görüntüle ve yönet</p>
-          </div>
-
-          {canSelectBranch && branches && branches.length > 0 && (
-            <div className="w-full md:w-64">
-              <Select
-                value={selectedBranchId}
-                onValueChange={handleBranchChange}
-                disabled={isLoading}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Şube Seç" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    {branches.map((branch) => (
-                      <SelectItem key={branch.id} value={branch.id}>
-                        {branch.name}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-        </div>
-
-        <Separator />
-
-        <CalendarView branchId={selectedBranchId} />
+    <div className="space-y-6">
+      <div>
+        <Breadcrumb>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/dashboard">
+              <HomeIcon className="h-4 w-4" />
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/dashboard/appointments">Randevular</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem isCurrentPage>
+            <BreadcrumbLink>Takvim</BreadcrumbLink>
+          </BreadcrumbItem>
+        </Breadcrumb>
+        <h1 className="text-3xl font-bold tracking-tight mt-2">Randevu Takvimi</h1>
+        <p className="text-muted-foreground mt-1">
+          Tüm randevuları görüntüle ve yönet
+        </p>
       </div>
+
+      {canSelectBranch && branches && branches.length > 0 && (
+        <div className="flex justify-end">
+          <div className="w-full md:w-64">
+            <Select
+              value={selectedBranchId}
+              onValueChange={handleBranchChange}
+              disabled={isLoading}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Şube Seç" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  {branches.map((branch) => (
+                    <SelectItem key={branch.id} value={branch.id}>
+                      {branch.name}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      )}
+
+      <CalendarView branchId={selectedBranchId} />
     </div>
   );
 }

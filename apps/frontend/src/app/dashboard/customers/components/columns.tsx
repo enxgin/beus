@@ -6,9 +6,17 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { DataTableColumnHeader } from "./data-table-column-header"
 import { DataTableRowActions } from "./data-table-row-actions"
 import { Customer, Tag } from "@prisma/client"
+import { format } from "date-fns"
+import { tr } from "date-fns/locale"
 
 export type CustomerWithTags = Customer & {
   tags: Tag[]
+  analytics?: {
+    totalAppointments: number
+    lastAppointment: Date | null
+    totalSpent: number
+    totalDebt: number
+  }
 }
 
 export const columns: ColumnDef<CustomerWithTags>[] = [
@@ -114,6 +122,114 @@ export const columns: ColumnDef<CustomerWithTags>[] = [
     },
     filterFn: (row, id, value) => {
       return value.includes(row.getValue(id))
+    },
+  },
+  {
+    accessorKey: "analytics.totalAppointments",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Toplam Randevu" />
+    ),
+    cell: ({ row }) => {
+      const totalAppointments = row.original.analytics?.totalAppointments || 0;
+      return (
+        <div className="text-center">
+          <span className="font-medium">{totalAppointments}</span>
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "analytics.lastAppointment",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Son Randevu" />
+    ),
+    cell: ({ row }) => {
+      const lastAppointment = row.original.analytics?.lastAppointment;
+      if (!lastAppointment) {
+        return <span className="text-muted-foreground">-</span>;
+      }
+      return (
+        <span className="text-sm">
+          {format(new Date(lastAppointment), "dd MMM yyyy", { locale: tr })}
+        </span>
+      );
+    },
+  },
+  {
+    accessorKey: "analytics.totalSpent",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Toplam Harcama" />
+    ),
+    cell: ({ row }) => {
+      const totalSpent = row.original.analytics?.totalSpent || 0;
+      return (
+        <div className="text-right">
+          <span className="font-medium">
+            {new Intl.NumberFormat('tr-TR', {
+              style: 'currency',
+              currency: 'TRY'
+            }).format(totalSpent)}
+          </span>
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "analytics.totalDebt",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Borç Durumu" />
+    ),
+    cell: ({ row }) => {
+      const totalDebt = row.original.analytics?.totalDebt || 0;
+      if (totalDebt === 0) {
+        return <Badge variant="secondary">Borç Yok</Badge>;
+      }
+      return (
+        <div className="text-right">
+          <Badge variant="destructive">
+            {new Intl.NumberFormat('tr-TR', {
+              style: 'currency',
+              currency: 'TRY'
+            }).format(totalDebt)}
+          </Badge>
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "creditBalance",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Kredi Bakiyesi" />
+    ),
+    cell: ({ row }) => {
+      const creditBalance = row.getValue("creditBalance") as number || 0;
+      if (creditBalance === 0) {
+        return <span className="text-muted-foreground">-</span>;
+      }
+      return (
+        <div className="text-right">
+          <Badge variant="outline" className="text-green-600 border-green-600">
+            {new Intl.NumberFormat('tr-TR', {
+              style: 'currency',
+              currency: 'TRY'
+            }).format(creditBalance)}
+          </Badge>
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "createdAt",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Kayıt Tarihi" />
+    ),
+    cell: ({ row }) => {
+      const createdAt = row.getValue("createdAt") as string;
+      return (
+        <span className="text-sm">
+          {format(new Date(createdAt), "dd MMM yyyy", { locale: tr })}
+        </span>
+      );
     },
   },
   {

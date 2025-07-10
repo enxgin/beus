@@ -76,11 +76,22 @@ export function AddPaymentDialog({
     mutationFn: async (data: PaymentFormValues) => {
       return api.post(`/invoices/${invoiceId}/payments`, data);
     },
-    onSuccess: () => {
+    onSuccess: (response) => {
+      // Önce temel ödeme başarı mesajını göster
       toast({
         title: "Ödeme eklendi",
         description: "Fatura ödemesi başarıyla kaydedildi.",
       });
+      
+      // Prim hesaplandıysa ek bildirim göster
+      // Backend log'larını kontrol ederek prim hesaplanıp hesaplanmadığını anlayabiliriz
+      // Şimdilik basit bir yaklaşım kullanıyoruz
+      setTimeout(() => {
+        // Bu bildirim backend log'larında prim hesaplandığını gördüğümüzde gösterilecek
+        // Gerçek implementasyonda backend'ten prim bilgisi dönmeli
+        console.log("Ödeme tamamlandı, prim kontrolü yapılıyor...");
+      }, 1000);
+      
       form.reset();
       onSuccess();
     },

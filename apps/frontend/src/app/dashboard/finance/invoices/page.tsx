@@ -7,11 +7,17 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DataTable } from "@/components/ui/data-table";
-import { Plus, FileText, Download } from "lucide-react";
+import { Plus, FileText, Download, HomeIcon } from "lucide-react";
 import { columns } from "./components/columns";
 import api from "@/lib/api";
 import { InvoiceList } from "./components/invoice-list";
 import { CreateInvoiceButton } from "./components/create-invoice-button";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 
 export default function InvoicesPage() {
   const router = useRouter();
@@ -27,20 +33,42 @@ export default function InvoicesPage() {
   });
 
   return (
-    <div className="container mx-auto py-6">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold">Faturalar</h1>
-        <div className="flex gap-2">
-          <CreateInvoiceButton />
-          <Button variant="outline">
-            <Download className="mr-2 h-4 w-4" />
-            Dışa Aktar
-          </Button>
+    <div className="space-y-6">
+      <div>
+        <Breadcrumb>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/dashboard">
+              <HomeIcon className="h-4 w-4" />
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/dashboard/finance">Finans</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem isCurrentPage>
+            <BreadcrumbLink>Faturalar</BreadcrumbLink>
+          </BreadcrumbItem>
+        </Breadcrumb>
+        <div className="flex items-center justify-between mt-2">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Faturalar</h1>
+            <p className="text-muted-foreground mt-1">
+              Fatura işlemlerinizi yönetin ve takip edin
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <CreateInvoiceButton />
+            <Button variant="outline">
+              <Download className="mr-2 h-4 w-4" />
+              Dışa Aktar
+            </Button>
+          </div>
         </div>
       </div>
 
       <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="mb-4">
+        <TabsList>
           <TabsTrigger value="all">Tüm Faturalar</TabsTrigger>
           <TabsTrigger value="paid">Ödenmiş</TabsTrigger>
           <TabsTrigger value="unpaid">Ödenmemiş</TabsTrigger>

@@ -332,28 +332,31 @@ export default function AppointmentsList() {
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink href="/dashboard">Dashboard</BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbLink href="/dashboard/appointments">Randevular</BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbLink className="font-medium text-foreground">Randevu Listesi</BreadcrumbLink>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
-
-      <div className="flex items-center">
-        <h1 className="font-semibold text-lg md:text-2xl">Randevular</h1>
-        <div className="ml-auto flex items-center gap-2">
+    <div className="space-y-6">
+      <div>
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink href="/dashboard">Dashboard</BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink href="/dashboard/appointments">Randevular</BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem isCurrentPage>
+              <BreadcrumbLink>Randevu Listesi</BreadcrumbLink>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+        <div className="flex items-center justify-between mt-2">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Randevular</h1>
+            <p className="text-muted-foreground mt-1">
+              Randevularınızı görüntüleyin ve yönetin.
+            </p>
+          </div>
           <Button
-            size="sm"
             onClick={() => router.push(`/dashboard/appointments/create?branchId=${selectedBranchId}`)}
             disabled={!selectedBranchId}
           >
