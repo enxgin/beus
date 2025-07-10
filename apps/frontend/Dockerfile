@@ -16,6 +16,8 @@ RUN npm install
 # 2. Builder Image
 FROM node:20-alpine AS builder
 
+ENV NEXT_PUBLIC_API_URL=https://api.rezervgo.com
+
 WORKDIR /usr/src/app
 
 # Copy dependency installation files from deps stage
