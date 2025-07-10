@@ -12,6 +12,15 @@ export class RescheduleAppointmentDto {
   startTime!: Date;
 
   @ApiProperty({
+    description: 'Randevunun yeni bitiş zamanı',
+    example: '2024-07-05T15:00:00.000Z',
+    required: true,
+  })
+  @IsNotEmpty()
+  @IsDateString()
+  endTime!: Date;
+
+  @ApiProperty({
     description: 'Randevunun atanacağı yeni personel ID (isteğe bağlı)',
     example: 'clg2sdj8c000008l56ryo3f0z',
     required: false,

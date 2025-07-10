@@ -154,28 +154,15 @@ exports.Prisma.BranchScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
-exports.Prisma.TagScalarFieldEnum = {
-  id: 'id',
-  name: 'name',
-  color: 'color',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-};
-
-exports.Prisma.CustomerTagScalarFieldEnum = {
-  customerId: 'customerId',
-  tagId: 'tagId'
-};
-
 exports.Prisma.CustomerScalarFieldEnum = {
   id: 'id',
   name: 'name',
   phone: 'phone',
   email: 'email',
   notes: 'notes',
+  branchId: 'branchId',
   discountRate: 'discountRate',
   creditBalance: 'creditBalance',
-  branchId: 'branchId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -184,46 +171,54 @@ exports.Prisma.ServiceCategoryScalarFieldEnum = {
   id: 'id',
   name: 'name',
   description: 'description',
-  isActive: 'isActive',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt',
-  branchId: 'branchId'
+  updatedAt: 'updatedAt'
 };
 
 exports.Prisma.ServiceScalarFieldEnum = {
   id: 'id',
   name: 'name',
-  duration: 'duration',
   price: 'price',
+  duration: 'duration',
+  description: 'description',
   categoryId: 'categoryId',
   branchId: 'branchId',
   createdAt: 'createdAt',
-  isActive: 'isActive',
-  updatedAt: 'updatedAt',
-  commissionFixed: 'commissionFixed',
-  commissionRate: 'commissionRate',
-  description: 'description',
-  unitCount: 'unitCount'
+  updatedAt: 'updatedAt'
 };
 
 exports.Prisma.StaffServiceScalarFieldEnum = {
-  userId: 'userId',
+  staffId: 'staffId',
   serviceId: 'serviceId'
+};
+
+exports.Prisma.AppointmentScalarFieldEnum = {
+  id: 'id',
+  startTime: 'startTime',
+  endTime: 'endTime',
+  status: 'status',
+  notes: 'notes',
+  customerId: 'customerId',
+  serviceId: 'serviceId',
+  staffId: 'staffId',
+  branchId: 'branchId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 };
 
 exports.Prisma.PackageScalarFieldEnum = {
   id: 'id',
   name: 'name',
   price: 'price',
+  type: 'type',
+  totalSessions: 'totalSessions',
+  totalMinutes: 'totalMinutes',
   validityDays: 'validityDays',
+  description: 'description',
+  branchId: 'branchId',
   commissionRate: 'commissionRate',
   commissionFixed: 'commissionFixed',
-  branchId: 'branchId',
   createdAt: 'createdAt',
-  description: 'description',
-  totalMinutes: 'totalMinutes',
-  totalSessions: 'totalSessions',
-  type: 'type',
   updatedAt: 'updatedAt'
 };
 
@@ -238,82 +233,76 @@ exports.Prisma.CustomerPackageScalarFieldEnum = {
   purchaseDate: 'purchaseDate',
   expiryDate: 'expiryDate',
   remainingSessions: 'remainingSessions',
+  notes: 'notes',
+  salesCode: 'salesCode',
   customerId: 'customerId',
   packageId: 'packageId',
-  notes: 'notes',
-  salesCode: 'salesCode'
-};
-
-exports.Prisma.PackageUsageHistoryScalarFieldEnum = {
-  id: 'id',
-  usedAt: 'usedAt',
-  customerPackageId: 'customerPackageId',
-  appointmentId: 'appointmentId'
-};
-
-exports.Prisma.AppointmentScalarFieldEnum = {
-  id: 'id',
-  startTime: 'startTime',
-  endTime: 'endTime',
-  status: 'status',
-  notes: 'notes',
-  customerId: 'customerId',
-  staffId: 'staffId',
-  branchId: 'branchId',
-  serviceId: 'serviceId',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt',
-  duration: 'duration',
-  customerPackageId: 'customerPackageId',
-  packageServiceId: 'packageServiceId'
+  updatedAt: 'updatedAt'
 };
 
 exports.Prisma.InvoiceScalarFieldEnum = {
   id: 'id',
-  invoiceNumber: 'invoiceNumber',
   totalAmount: 'totalAmount',
   amountPaid: 'amountPaid',
   debt: 'debt',
   status: 'status',
   customerId: 'customerId',
   branchId: 'branchId',
-  appointmentId: 'appointmentId',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  appointmentId: 'appointmentId',
+  customerPackageId: 'customerPackageId'
 };
 
 exports.Prisma.PaymentScalarFieldEnum = {
   id: 'id',
   amount: 'amount',
-  method: 'method',
+  paymentMethod: 'paymentMethod',
   paymentDate: 'paymentDate',
+  notes: 'notes',
   invoiceId: 'invoiceId',
-  cashRegisterLogId: 'cashRegisterLogId'
+  cashLogId: 'cashLogId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 };
 
 exports.Prisma.CommissionRuleScalarFieldEnum = {
   id: 'id',
-  type: 'type',
-  value: 'value',
+  name: 'name',
   description: 'description',
+  type: 'type',
+  rate: 'rate',
+  fixedAmount: 'fixedAmount',
+  startDate: 'startDate',
+  endDate: 'endDate',
+  branchId: 'branchId',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt',
-  isGlobal: 'isGlobal',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.CommissionItemScalarFieldEnum = {
+  id: 'id',
+  invoiceId: 'invoiceId',
   serviceId: 'serviceId',
-  userId: 'userId'
+  amount: 'amount',
+  status: 'status',
+  appliedRuleId: 'appliedRuleId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 };
 
 exports.Prisma.StaffCommissionScalarFieldEnum = {
   id: 'id',
-  amount: 'amount',
-  isReversed: 'isReversed',
   staffId: 'staffId',
-  invoiceId: 'invoiceId',
-  createdAt: 'createdAt',
-  appliedRuleId: 'appliedRuleId',
-  serviceId: 'serviceId',
+  commissionItemId: 'commissionItemId',
+  amount: 'amount',
   status: 'status',
-  updatedAt: 'updatedAt'
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  appliedRuleId: 'appliedRuleId',
+  invoiceId: 'invoiceId',
+  serviceId: 'serviceId'
 };
 
 exports.Prisma.CashRegisterLogScalarFieldEnum = {
@@ -332,7 +321,8 @@ exports.Prisma.SortOrder = {
   desc: 'desc'
 };
 
-exports.Prisma.JsonNullValueInput = {
+exports.Prisma.NullableJsonNullValueInput = {
+  DbNull: Prisma.DbNull,
   JsonNull: Prisma.JsonNull
 };
 
@@ -360,11 +350,6 @@ exports.UserRole = exports.$Enums.UserRole = {
   CUSTOMER: 'CUSTOMER'
 };
 
-exports.PackageType = exports.$Enums.PackageType = {
-  SESSION: 'SESSION',
-  TIME: 'TIME'
-};
-
 exports.AppointmentStatus = exports.$Enums.AppointmentStatus = {
   CONFIRMED: 'CONFIRMED',
   COMPLETED: 'COMPLETED',
@@ -373,6 +358,11 @@ exports.AppointmentStatus = exports.$Enums.AppointmentStatus = {
   SCHEDULED: 'SCHEDULED',
   ARRIVED: 'ARRIVED',
   CANCELED: 'CANCELED'
+};
+
+exports.PackageType = exports.$Enums.PackageType = {
+  SESSION: 'SESSION',
+  TIME: 'TIME'
 };
 
 exports.PaymentStatus = exports.$Enums.PaymentStatus = {
@@ -427,20 +417,18 @@ exports.Prisma.ModelName = {
   User: 'User',
   WorkHour: 'WorkHour',
   Branch: 'Branch',
-  Tag: 'Tag',
-  CustomerTag: 'CustomerTag',
   Customer: 'Customer',
   ServiceCategory: 'ServiceCategory',
   Service: 'Service',
   StaffService: 'StaffService',
+  Appointment: 'Appointment',
   Package: 'Package',
   PackageService: 'PackageService',
   CustomerPackage: 'CustomerPackage',
-  PackageUsageHistory: 'PackageUsageHistory',
-  Appointment: 'Appointment',
   Invoice: 'Invoice',
   Payment: 'Payment',
   CommissionRule: 'CommissionRule',
+  CommissionItem: 'CommissionItem',
   StaffCommission: 'StaffCommission',
   CashRegisterLog: 'CashRegisterLog'
 };

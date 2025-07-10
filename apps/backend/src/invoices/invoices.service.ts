@@ -168,7 +168,7 @@ export class InvoicesService {
           },
         },
         payments: true,
-        commission: true,
+        
       },
     });
   }
@@ -192,7 +192,7 @@ export class InvoicesService {
           },
         },
         payments: true,
-        commission: true,
+        
       },
     });
 
@@ -209,7 +209,7 @@ export class InvoicesService {
       where: { id },
       include: { 
         payments: true,
-        commission: true,
+        
         appointment: {
           include: {
             service: true,
@@ -267,7 +267,7 @@ export class InvoicesService {
           }
         },
         payments: true,
-        commission: true,
+        
       },
     });
 
@@ -285,9 +285,6 @@ export class InvoicesService {
     if (updatedStatus === PaymentStatus.CANCELLED || updatedStatus === PaymentStatus.REFUNDED) {
       try {
         this.logger.log(`Fatura iptal edildi/iade edildi, prim iptal ediliyor: ${id}`);
-        if (existingInvoice.commission) {
-          await this.commissionsService.cancelCommissionForInvoice(id);
-        }
       } catch (error) {
         this.logger.error(`Prim iptal hatası: ${error.message}`);
       }
@@ -301,8 +298,7 @@ export class InvoicesService {
     const existingInvoice = await this.prisma.invoice.findUnique({
       where: { id },
       include: { 
-        payments: true,
-        commission: true 
+        payments: true
       },
     });
 
@@ -335,7 +331,7 @@ export class InvoicesService {
         payments: true,
         branch: true,
         customer: true,
-        commission: true,
+        
         appointment: {
           include: {
             service: true,
@@ -413,7 +409,7 @@ export class InvoicesService {
     // Ödemeyi oluştur
     const paymentData: any = {
       amount,
-      method,
+      paymentMethod: method,
       invoiceId,
     };
 
@@ -423,10 +419,7 @@ export class InvoicesService {
     
     const payment = await this.prisma.payment.create({
       data: paymentData,
-      include: {
-        invoice: true,
-        cashRegisterLog: true,
-      },
+      
     });
 
     // Faturanın ödenen tutarını ve durumunu güncelle
@@ -450,7 +443,7 @@ export class InvoicesService {
         status: newStatus,
       },
       include: {
-        commission: true,
+        
       },
     });
 
@@ -499,9 +492,7 @@ export class InvoicesService {
         id: paymentId,
         invoiceId: invoiceId
       },
-      include: {
-        cashRegisterLog: true
-      }
+      
     });
     
     if (!payment) {
@@ -509,7 +500,7 @@ export class InvoicesService {
     }
     
     // İade işlemi için kasa kaydı oluştur (nakit ödeme yapıldıysa)
-    if (payment.method === 'CASH') {
+    if (payment.paymentMethod === 'CASH') {
       const refundDescription = `Fatura #${invoice.id} için iade - ${reason} - ${invoice.customer?.name || 'Müşteri'}`;
       
       try {
@@ -626,13 +617,14 @@ export class InvoicesService {
 
       // Ödeme yöntemlerine göre sayı
       invoice.payments.forEach(payment => {
-        stats.paymentMethods[payment.method as keyof typeof stats.paymentMethods]++;
+        stats.paymentMethods[payment.paymentMethod as keyof typeof stats.paymentMethods]++;
       });
     });
 
     return stats;
   }
 
+  // StaffCommission creation temporarily disabled until commissionItem flow implemented
   async createStaffCommission(invoiceId: string, staffId: string, amount: number) {
     // Faturanın var olup olmadığını kontrol et
     const invoice = await this.prisma.invoice.findUnique({
@@ -658,113 +650,75 @@ export class InvoicesService {
     }
 
     // Komisyonu oluştur
-    return this.prisma.staffCommission.create({
-      data: {
-        amount,
-        invoiceId,
-        staffId,
-      },
-      include: {
-        invoice: true,
-        staff: {
+    // StaffCommission creation disabled until commission items flow ready
+    return null; /*
           select: {
             id: true,
             name: true,
             email: true,
           },
         },
-      },
-    });
+      */
   }
 
   /**
-   * Paket satışından fatura oluşturur
+    * Bir paket satışından fatura oluşturur.
+    * Bu işlem, daha önce oluşturulmuş müşteri paketini bulur ve faturayı ona bağlar.
    */
-  async createInvoiceFromPackage(customerId: string, packageId: string, discountRate: number = 0) {
-    // Müşterinin var olup olmadığını kontrol et
-    const customer = await this.prisma.customer.findUnique({
-      where: { id: customerId },
-    });
+  async createInvoiceFromPackage(customerId: string, packageId: string, discountRate = 0) {
+  this.logger.log(`Mevcut paket için fatura oluşturuluyor: Müşteri ID ${customerId}, Paket ID ${packageId}`);
 
-    if (!customer) {
-      throw new NotFoundException(`Müşteri bulunamadı: ID ${customerId}`);
-    }
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
 
-    // Paketin var olup olmadığını kontrol et
-    const packageItem = await this.prisma.package.findUnique({
-      where: { id: packageId },
-    });
+  // 1. Adım: Önceden oluşturulmuş müşteri paketini bul
+  const customerPackage = await this.prisma.customerPackage.findFirst({
+  where: {
+  customerId,
+  packageId,
+  purchaseDate: { gte: todayStart },
+  },
+  orderBy: {
+  purchaseDate: 'desc',
+  },
+  include: {
+  package: true,
+  customer: true,
+  },
+  });
 
-    if (!packageItem) {
-      throw new NotFoundException(`Paket bulunamadı: ID ${packageId}`);
-    }
+  if (!customerPackage) {
+  throw new NotFoundException(
+  `Fatura oluşturulamadı: Müşteri (${customerId}) için bugün satılmış aktif bir paket (${packageId}) bulunamadı.`,
+  );
+  }
 
-    // Müşterinin şubesini bul
-    const branch = await this.prisma.branch.findFirst({
-      where: { id: customer.branchId },
-    });
+  const { package: packageItem, customer } = customerPackage;
 
-    if (!branch) {
-      throw new NotFoundException(`Müşterinin bağlı olduğu şube bulunamadı`);
-    }
+  // 2. Adım: Fiyatı hesapla
+  const originalPrice = packageItem.price;
+  const discountAmount = originalPrice * (discountRate / 100);
+  const finalPrice = originalPrice - discountAmount;
 
-    // İndirim oranını kontrol et
-    if (discountRate < 0 || discountRate > 100) {
-      throw new BadRequestException('İndirim oranı 0-100 arasında olmalıdır');
-    }
+  // 3. Adım: Faturayı oluştur ve mevcut müşteri paketine bağla
+  const invoice = await this.prisma.invoice.create({
+  data: {
+  totalAmount: finalPrice,
+  amountPaid: 0,
+  debt: finalPrice,
+  status: PaymentStatus.UNPAID,
+  customerId,
+  branchId: packageItem.branchId ?? customer.branchId,
+   // Mevcut pakete bağla
+  },
+  include: {
+  customer: true,
+  branch: true,
+  },
+  });
 
-    // Müşterinin indirim oranı yoksa ve parametre olarak gelen indirim oranı 0 ise, 
-    // müşterinin indirim oranını kullan
-    if (discountRate === 0 && customer.discountRate > 0) {
-      discountRate = customer.discountRate;
-    }
-
-    // İndirimli fiyatı hesapla
-    const originalPrice = packageItem.price;
-    const discountAmount = originalPrice * (discountRate / 100);
-    const finalPrice = originalPrice - discountAmount;
-
-    // Fatura oluştur
-    const invoice = await this.prisma.invoice.create({
-      data: {
-        totalAmount: finalPrice,
-        amountPaid: 0,
-        debt: finalPrice,
-        status: PaymentStatus.UNPAID,
-        customerId: customer.id,
-        branchId: branch.id,
-      },
-      include: {
-        customer: true,
-        branch: true,
-      },
-    });
-
-    // CustomerPackage oluştur ve fatura ile ilişkilendir
-    const validityDays = packageItem.validityDays || 30; // Varsayılan 30 gün
-    const expiryDate = new Date();
-    expiryDate.setDate(expiryDate.getDate() + validityDays);
-
-    // Paket tipine göre remainingSessions değerini ayarla
-    // SESSION tipinde ise totalSessions değerini, TIME tipinde ise totalMinutes değerini kullan
-    const remainingSessions = packageItem.type === 'SESSION' 
-      ? { sessions: packageItem.totalSessions || 0 }
-      : { minutes: packageItem.totalMinutes || 0 };
-
-    const customerPackage = await this.prisma.customerPackage.create({
-      data: {
-        customerId: customer.id,
-        packageId: packageItem.id,
-        expiryDate,
-        remainingSessions: remainingSessions,
-      },
-      include: {
-        customer: true,
-        package: true,
-      },
-    });
-
-    return { invoice, customerPackage };
+    // 4. Adım: Fatura ve bulunan müşteri paketini döndür
+  return { invoice, customerPackage };
   }
 
   /**

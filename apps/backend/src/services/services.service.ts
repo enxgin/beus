@@ -17,14 +17,14 @@ export class ServicesService {
       data: {
         ...serviceData,
         branch: {
-          connect: { id: branchId }
+          connect: { id: branchId },
         },
         category: {
-          connect: { id: categoryId }
+          connect: { id: categoryId },
         },
         staff: {
           create: staffIds.map((staffId) => ({
-            user: {
+            staff: {
               connect: { id: staffId },
             },
           })),
@@ -35,7 +35,7 @@ export class ServicesService {
         branch: true,
         staff: {
           include: {
-            user: true,
+            staff: true,
           },
         },
       },
@@ -60,7 +60,6 @@ export class ServicesService {
       isActive: true,
     };
 
-    // Role-based branch filtering is skipped if ignoreBranchFilter is true
     if (ignoreBranchFilter !== 'true') {
       if (user.role === 'ADMIN') {
         if (branchId) {
@@ -74,13 +73,7 @@ export class ServicesService {
           where.branchId = { in: managedBranchIds };
         }
       } else {
-        // STAFF, BRANCH_MANAGER, RECEPTION
-        if (user.branchId) {
-          where.branchId = user.branchId;
-        } else {
-          // If user has no branch, they see no services.
-          return { data: [], totalCount: 0 };
-        }
+        where.branchId = user.branchId;
       }
     }
 
@@ -89,35 +82,32 @@ export class ServicesService {
     }
 
     if (search) {
-      where.OR = [
-        { name: { contains: search, mode: 'insensitive' } },
-        { category: { name: { contains: search, mode: 'insensitive' } } },
-      ];
+      where.name = {
+        contains: search,
+        mode: 'insensitive',
+      };
     }
 
-    const [services, totalCount] = await this.prisma.$transaction([
-      this.prisma.service.findMany({
-        skip,
-        take,
-        where,
-        orderBy,
-        include: {
-          category: true,
-          branch: true,
-          staff: {
-            include: {
-              user: {
-                select: {
-                  id: true,
-                  name: true,
-                },
-              },
-            },
+    const services = await this.prisma.service.findMany({
+      where,
+      skip: skip ? Number(skip) : undefined,
+      take: take ? Number(take) : undefined,
+      orderBy: orderBy ? JSON.parse(orderBy) : { name: 'asc' },
+      include: {
+        category: true,
+        branch: true,
+        staff: {
+          include: {
+            staff: true,
           },
         },
-      }),
-      this.prisma.service.count({ where }),
-    ]);
+        _count: {
+          select: { appointments: true },
+        },
+      },
+    });
+
+    const totalCount = await this.prisma.service.count({ where });
 
     return {
       data: services,
@@ -126,86 +116,74 @@ export class ServicesService {
   }
 
   async findOne(id: string) {
-    // 1. Get service without staff
     const service = await this.prisma.service.findUnique({
       where: { id },
       include: {
         category: true,
         branch: true,
+        staff: {
+          include: {
+            staff: true,
+          },
+        },
       },
     });
-
     if (!service) {
       throw new NotFoundException(`Hizmet bulunamadı: ID ${id}`);
     }
-
-    // 2. Get all relevant staff links
-    const staffLinks = await this.prisma.staffService.findMany({
-      where: { serviceId: service.id },
-      select: { userId: true },
-    });
-
-    const userIds = staffLinks.map((sl) => sl.userId);
-
-    // 3. Get all relevant users
-    const staff = await this.prisma.user.findMany({
-      where: { id: { in: userIds } },
-      select: { id: true, name: true, email: true },
-    });
-
-    // 4. Manually combine the data
-    return { ...service, staff };
+    return service;
   }
 
   async update(id: string, updateServiceDto: UpdateServiceDto) {
-    const { staffIds, ...serviceData } = updateServiceDto;
+    const { staffIds, categoryId, branchId, ...serviceData } = updateServiceDto;
 
-    // Tüm işlemleri tek bir atomik transaction içinde güvenli bir şekilde yap
-    return this.prisma.$transaction(async (tx) => {
-      // 1. Hizmetin kendi alanlarını (fiyat, süre vb.) güncelle
-      //    Eğer DTO içinde hizmetle ilgili başka alanlar varsa, onlar güncellenir.
-      if (Object.keys(serviceData).length > 0) {
-        await tx.service.update({
-          where: { id },
-          data: serviceData,
-        });
-      }
+    return this.prisma.$transaction(async (prisma) => {
+      await prisma.service.update({
+        where: { id },
+        data: {
+          ...serviceData,
+          ...(categoryId && { category: { connect: { id: categoryId } } }),
+          ...(branchId && { branch: { connect: { id: branchId } } }),
+        },
+      });
 
-      // 2. Personel ID'leri (staffIds) DTO içinde gönderildiyse, ilişkileri senkronize et.
-      //    Eğer staffIds gönderilmediyse (undefined), personel ilişkilerine dokunulmaz.
-      if (staffIds !== undefined) {
-        // Önce bu hizmete bağlı mevcut TÜM personel ilişkilerini sil.
-        await tx.staffService.deleteMany({
+      if (staffIds) {
+        const existingStaff = await prisma.staffService.findMany({
           where: { serviceId: id },
+          select: { staffId: true },
         });
+        const existingStaffIds = existingStaff.map((s) => s.staffId);
 
-        // Ardından, yeni listedeki her bir personel için yeni ilişki kayıtları oluştur.
-        // Eğer staffIds boş bir array ise, kimse eklenmez ve hizmet personelsiz kalır.
-        if (staffIds.length > 0) {
-          await tx.staffService.createMany({
-            data: staffIds.map((userId) => ({
+        const staffToConnect = staffIds.filter((sid) => !existingStaffIds.includes(sid));
+        const staffToDisconnect = existingStaffIds.filter((sid) => !staffIds.includes(sid));
+
+        if (staffToDisconnect.length > 0) {
+          await prisma.staffService.deleteMany({
+            where: {
               serviceId: id,
-              userId: userId,
+              staffId: { in: staffToDisconnect },
+            },
+          });
+        }
+
+        if (staffToConnect.length > 0) {
+          await prisma.staffService.createMany({
+            data: staffToConnect.map((staffId) => ({
+              serviceId: id,
+              staffId: staffId,
             })),
           });
         }
       }
 
-      // 3. Son olarak, güncellenmiş hizmeti tüm ilişkileriyle birlikte döndür.
-      return tx.service.findUnique({
+      return prisma.service.findUnique({
         where: { id },
         include: {
           category: true,
           branch: true,
           staff: {
             include: {
-              user: {
-                select: {
-                  id: true,
-                  name: true,
-                  email: true,
-                },
-              },
+              staff: true,
             },
           },
         },
@@ -214,7 +192,6 @@ export class ServicesService {
   }
 
   async remove(id: string) {
-    // İlişkili randevu olup olmadığını kontrol et
     const appointmentCount = await this.prisma.appointment.count({
       where: { serviceId: id },
     });
@@ -225,7 +202,6 @@ export class ServicesService {
       );
     }
 
-    // Prisma şemasında onDelete: Cascade olduğu için StaffService kayıtları otomatik silinecektir.
     return this.prisma.service.delete({
       where: { id },
     });
@@ -281,7 +257,6 @@ export class ServicesService {
     });
 
     if (serviceCount > 0) {
-      // NotFoundException yerine BadRequestException kullanıyoruz
       throw new BadRequestException(
         `Bu kategoriye ait ${serviceCount} adet hizmet bulunmaktadır. Önce bu hizmetleri başka bir kategoriye taşıyın veya silin.`,
       );

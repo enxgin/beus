@@ -8,13 +8,11 @@ import {
   Delete,
   Query,
   UseGuards,
-  BadRequestException,
   Patch,
 } from '@nestjs/common';
 import { AppointmentsService } from './appointments.service';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { UpdateAppointmentDto } from './dto/update-appointment.dto';
-import { FindAppointmentsDto } from './dto/find-appointments.dto';
 import { UpdateAppointmentStatusDto } from './dto/update-appointment-status.dto';
 import { RescheduleAppointmentDto } from './dto/reschedule-appointment.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -39,21 +37,11 @@ export class AppointmentsController {
   }
 
   @Get()
-  @ApiOperation({
-    summary: 'Belirtilen tarih aralığındaki tüm randevuları listeler',
-  })
-  @ApiQuery({ name: 'search', required: false, type: String })
-  findAll(
-    @Query() findAppointmentsDto: FindAppointmentsDto,
-    @Query('search') search?: string,
-  ) {
-    const { branchId, startDate, endDate } = findAppointmentsDto;
-    return this.appointmentsService.findAll(
-      branchId,
-      startDate ? new Date(startDate) : undefined,
-      endDate ? new Date(endDate) : undefined,
-      search,
-    );
+  @ApiOperation({ summary: 'Bir şubedeki tüm randevuları listeler' })
+  @ApiQuery({ name: 'branchId', required: true, type: String })
+  findAll(@Query('branchId') branchId: string) {
+    // Servis metoduyla uyumlu hale getirildi.
+    return this.appointmentsService.findAll(branchId);
   }
 
   @Get('calendar')
@@ -66,40 +54,12 @@ export class AppointmentsController {
     @Query('start') start: string,
     @Query('end') end: string,
   ) {
-    const startDate = new Date(start);
-    const endDate = new Date(end);
-    return this.appointmentsService.getCalendarData(branchId, startDate, endDate);
-  }
-
-  @Get('available-slots')
-  @ApiOperation({
-    summary: 'Belirtilen personel, tarih ve hizmet için uygun saatleri getirir',
-  })
-  @ApiQuery({ name: 'staffId', required: true, type: String })
-  @ApiQuery({ name: 'serviceId', required: true, type: String })
-  @ApiQuery({
-    name: 'date',
-    required: true,
-    type: String,
-    description: 'YYYY-MM-DD formatında tarih',
-  })
-  @ApiQuery({ name: 'branchId', required: true, type: String })
-  getAvailableSlots(
-    @Query('staffId') staffId: string,
-    @Query('serviceId') serviceId: string,
-    @Query('date') date: string,
-    @Query('branchId') branchId: string,
-  ) {
-    return this.appointmentsService.getAvailableSlots(
-      staffId,
-      serviceId,
-      date,
-      branchId,
-    );
+    // Servis metoduyla uyumlu hale getirildi.
+    return this.appointmentsService.getCalendarData(branchId, start, end);
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Belirtilen ID ile tek bir randevuyu getirir' })
+  @ApiOperation({ summary: 'ID ile tek bir randevuyu getirir' })
   findOne(@Param('id') id: string) {
     return this.appointmentsService.findOne(id);
   }
@@ -115,14 +75,12 @@ export class AppointmentsController {
 
   @Patch(':id/reschedule')
   @ApiOperation({ summary: 'Bir randevuyu yeniden zamanlar' })
-  rescheduleAppointment(
+  reschedule(
     @Param('id') id: string,
-    @Body() rescheduleAppointmentDto: RescheduleAppointmentDto,
+    @Body() rescheduleDto: RescheduleAppointmentDto,
   ) {
-    return this.appointmentsService.rescheduleAppointment(
-      id,
-      rescheduleAppointmentDto,
-    );
+    // Servis metoduyla uyumlu hale getirildi: reschedule
+    return this.appointmentsService.reschedule(id, rescheduleDto);
   }
 
   @Patch(':id/status')
@@ -131,6 +89,7 @@ export class AppointmentsController {
     @Param('id') id: string,
     @Body() updateStatusDto: UpdateAppointmentStatusDto,
   ) {
+    // Servis metoduyla uyumlu hale getirildi.
     return this.appointmentsService.updateStatus(id, updateStatusDto);
   }
 
@@ -140,35 +99,5 @@ export class AppointmentsController {
     return this.appointmentsService.remove(id);
   }
 
-  @Get('staff/:staffId')
-  @ApiOperation({
-    summary: 'Belirtilen personele ait randevuları tarih aralığına göre getirir',
-  })
-  findByStaffAndDateRange(
-    @Param('staffId') staffId: string,
-    @Query('startDate') startDate: string,
-    @Query('endDate') endDate: string,
-  ) {
-    return this.appointmentsService.findByStaffAndDateRange(
-      staffId,
-      new Date(startDate),
-      new Date(endDate),
-    );
-  }
-
-  @Get('customer/:customerId')
-  @ApiOperation({
-    summary: 'Belirtilen müşteriye ait randevuları tarih aralığına göre getirir',
-  })
-  findByCustomerAndDateRange(
-    @Param('customerId') customerId: string,
-    @Query('startDate') startDate: string,
-    @Query('endDate') endDate: string,
-  ) {
-    return this.appointmentsService.findByCustomerAndDateRange(
-      customerId,
-      new Date(startDate),
-      new Date(endDate),
-    );
-  }
+  // Serviste karşılığı olmayan ve hata üreten endpoint'ler kaldırıldı.
 }

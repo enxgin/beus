@@ -21,11 +21,9 @@ export class ServiceCategoriesController {
 
   @Roles(UserRole.ADMIN, UserRole.SUPER_BRANCH_MANAGER, UserRole.BRANCH_MANAGER, UserRole.RECEPTION, UserRole.STAFF)
   @Get()
-  async findAll(@Req() req, @Query('branchId') branchId?: string) {
-    return await this.serviceCategoriesService.findAll({
-      user: req.user,
-      branchId
-    });
+  async findAll() {
+    // The service method no longer accepts parameters.
+    return await this.serviceCategoriesService.findAll();
   }
 
   @Get(':id')

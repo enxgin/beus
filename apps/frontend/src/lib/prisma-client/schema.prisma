@@ -49,246 +49,227 @@ model WorkHour {
 }
 
 model Branch {
-  id                String            @id @default(cuid())
-  name              String
-  address           String?
-  phone             String?
-  description       String?
-  parentBranchId    String?
-  createdAt         DateTime          @default(now())
-  updatedAt         DateTime          @updatedAt
-  appointments      Appointment[]
-  parentBranch      Branch?           @relation("SubBranches", fields: [parentBranchId], references: [id], onDelete: Restrict)
-  subBranches       Branch[]          @relation("SubBranches")
-  CashRegisterLog   CashRegisterLog[]
-  customers         Customer[]
-  invoices          Invoice[]
-  packages          Package[]
-  services          Service[]
-  serviceCategories ServiceCategory[]
-  users             User[]
-  workHours         WorkHour[]
-}
-
-model Tag {
-  id        String        @id @default(cuid())
-  name      String        @unique
-  color     String        @default("#000000")
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
-  customers CustomerTag[]
-}
-
-model CustomerTag {
-  customerId String
-  tagId      String
-  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  tag        Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
-
-  @@id([customerId, tagId])
+  id              String            @id @default(cuid())
+  name            String
+  address         String?
+  phone           String?
+  description     String?
+  parentBranchId  String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  appointments    Appointment[]
+  parentBranch    Branch?           @relation("SubBranches", fields: [parentBranchId], references: [id], onDelete: Restrict)
+  subBranches     Branch[]          @relation("SubBranches")
+  users           User[]
+  services        Service[]
+  packages        Package[]
+  invoices        Invoice[]
+  customers       Customer[]
+  workHours       WorkHour[]
+  CashRegisterLog CashRegisterLog[]
+  commissionRules CommissionRule[]
 }
 
 model Customer {
-  id               String            @id @default(cuid())
-  name             String
-  phone            String            @unique
-  email            String?
-  notes            String?
-  discountRate     Float             @default(0)
-  creditBalance    Float             @default(0)
-  branchId         String
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
-  appointments     Appointment[]
-  branch           Branch            @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  customerPackages CustomerPackage[]
-  tags             CustomerTag[]
-  invoices         Invoice[]
+  id            String            @id @default(cuid())
+  name          String
+  phone         String?           @unique
+  email         String?           @unique
+  notes         String?
+  branchId      String
+  discountRate  Float             @default(0)
+  creditBalance Float             @default(0)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  branch        Branch            @relation(fields: [branchId], references: [id])
+  appointments  Appointment[]
+  packages      CustomerPackage[]
+  invoices      Invoice[]
 }
 
 model ServiceCategory {
   id          String    @id @default(cuid())
   name        String
   description String?
-  isActive    Boolean   @default(true)
   createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @default(now()) @updatedAt
-  branchId    String?
+  updatedAt   DateTime  @updatedAt
   services    Service[]
-  branch      Branch?   @relation(fields: [branchId], references: [id])
 }
 
 model Service {
   id              String            @id @default(cuid())
   name            String
-  duration        Int
   price           Float
+  duration        Int
+  description     String?
   categoryId      String
   branchId        String
   createdAt       DateTime          @default(now())
-  isActive        Boolean           @default(true)
   updatedAt       DateTime          @updatedAt
-  commissionFixed Float?
-  commissionRate  Float?
-  description     String?
-  unitCount       Int?
-  appointments    Appointment[]     @relation("ServiceAppointments")
-  commissionRules CommissionRule[]
-  packages        PackageService[]
-  branch          Branch            @relation(fields: [branchId], references: [id], onDelete: Cascade)
   category        ServiceCategory   @relation(fields: [categoryId], references: [id])
-  commissions     StaffCommission[]
+  branch          Branch            @relation(fields: [branchId], references: [id])
+  appointments    Appointment[]
   staff           StaffService[]
+  packages        PackageService[]
+  commissionItems CommissionItem[]
+  StaffCommission StaffCommission[]
 }
 
 model StaffService {
-  userId    String
+  staffId   String
   serviceId String
-  service   Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
-  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  staff     User    @relation(fields: [staffId], references: [id])
+  service   Service @relation(fields: [serviceId], references: [id])
 
-  @@id([userId, serviceId])
+  @@id([staffId, serviceId])
+}
+
+model Appointment {
+  id         String            @id @default(cuid())
+  startTime  DateTime
+  endTime    DateTime
+  status     AppointmentStatus
+  notes      String?
+  customerId String
+  serviceId  String
+  staffId    String
+  branchId   String
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+  customer   Customer          @relation(fields: [customerId], references: [id])
+  service    Service           @relation(fields: [serviceId], references: [id])
+  staff      User              @relation("StaffAppointments", fields: [staffId], references: [id])
+  branch     Branch            @relation(fields: [branchId], references: [id])
+  invoice    Invoice?
 }
 
 model Package {
   id               String            @id @default(cuid())
   name             String
   price            Float
-  validityDays     Int
-  commissionRate   Float?
-  commissionFixed  Float?
-  branchId         String?
-  createdAt        DateTime          @default(now())
-  description      String?
-  totalMinutes     Int?
+  type             PackageType
   totalSessions    Int?
-  type             PackageType       @default(SESSION)
+  totalMinutes     Int?
+  validityDays     Int?
+  description      String?
+  branchId         String
+  commissionRate   Float? // Prim oranı
+  commissionFixed  Float? // Sabit prim tutarı
+  createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
-  customerPackages CustomerPackage[]
-  branch           Branch?           @relation(fields: [branchId], references: [id])
+  branch           Branch            @relation(fields: [branchId], references: [id])
   services         PackageService[]
+  customerPackages CustomerPackage[]
 }
 
 model PackageService {
   packageId String
   serviceId String
   quantity  Int
-  package   Package @relation(fields: [packageId], references: [id], onDelete: Cascade)
-  service   Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  package   Package @relation(fields: [packageId], references: [id])
+  service   Service @relation(fields: [serviceId], references: [id])
 
   @@id([packageId, serviceId])
 }
 
 model CustomerPackage {
-  id                String                @id @default(cuid())
-  purchaseDate      DateTime              @default(now())
-  expiryDate        DateTime
-  remainingSessions Json
+  id                String    @id @default(cuid())
+  purchaseDate      DateTime  @default(now())
+  expiryDate        DateTime?
+  remainingSessions Json?
+  notes             String?
+  salesCode         String?   @unique
   customerId        String
   packageId         String
-  notes             String?
-  salesCode         String?
-  appointments      Appointment[]
-  customer          Customer              @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  package           Package               @relation(fields: [packageId], references: [id])
-  usageHistory      PackageUsageHistory[]
-}
-
-model PackageUsageHistory {
-  id                String          @id @default(cuid())
-  usedAt            DateTime        @default(now())
-  customerPackageId String
-  appointmentId     String          @unique
-  appointment       Appointment     @relation(fields: [appointmentId], references: [id])
-  customerPackage   CustomerPackage @relation(fields: [customerPackageId], references: [id], onDelete: Cascade)
-}
-
-model Appointment {
-  id                String               @id @default(cuid())
-  startTime         DateTime
-  endTime           DateTime
-  status            AppointmentStatus    @default(CONFIRMED)
-  notes             String?
-  customerId        String
-  staffId           String
-  branchId          String
-  serviceId         String
-  createdAt         DateTime             @default(now())
-  updatedAt         DateTime             @updatedAt
-  duration          Int?
-  customerPackageId String?
-  packageServiceId  String?
-  branch            Branch               @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  customer          Customer             @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  customerPackage   CustomerPackage?     @relation(fields: [customerPackageId], references: [id])
-  service           Service              @relation("ServiceAppointments", fields: [serviceId], references: [id])
-  staff             User                 @relation("StaffAppointments", fields: [staffId], references: [id])
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  customer          Customer  @relation(fields: [customerId], references: [id])
+  package           Package   @relation(fields: [packageId], references: [id])
   invoice           Invoice?
-  packageUsage      PackageUsageHistory?
 }
 
 model Invoice {
-  id            String           @id @default(cuid())
-  invoiceNumber String?          @unique
-  totalAmount   Float
-  amountPaid    Float            @default(0)
-  debt          Float
-  status        PaymentStatus    @default(UNPAID)
-  customerId    String
-  branchId      String
-  appointmentId String?          @unique
-  createdAt     DateTime         @default(now())
-  updatedAt     DateTime         @updatedAt
-  appointment   Appointment?     @relation(fields: [appointmentId], references: [id])
-  branch        Branch           @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  customer      Customer         @relation(fields: [customerId], references: [id])
-  payments      Payment[]
-  commission    StaffCommission?
+  id                String            @id @default(cuid())
+  totalAmount       Float
+  amountPaid        Float
+  debt              Float
+  status            PaymentStatus
+  customerId        String
+  branchId          String
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  appointmentId     String?           @unique
+  customerPackageId String?           @unique
+  customer          Customer          @relation(fields: [customerId], references: [id])
+  branch            Branch            @relation(fields: [branchId], references: [id])
+  appointment       Appointment?      @relation(fields: [appointmentId], references: [id])
+  customerPackage   CustomerPackage?  @relation(fields: [customerPackageId], references: [id])
+  payments          Payment[]
+  commissionItems   CommissionItem[]
+  StaffCommission   StaffCommission[]
 }
 
 model Payment {
-  id                String           @id @default(cuid())
-  amount            Float
-  method            PaymentMethod
-  paymentDate       DateTime         @default(now())
-  invoiceId         String
-  cashRegisterLogId String?
-  cashRegisterLog   CashRegisterLog? @relation(fields: [cashRegisterLogId], references: [id])
-  invoice           Invoice          @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  id            String           @id @default(cuid())
+  amount        Float
+  paymentMethod PaymentMethod
+  paymentDate   DateTime         @default(now())
+  notes         String?
+  invoiceId     String
+  cashLogId     String?          @unique
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  invoice       Invoice          @relation(fields: [invoiceId], references: [id])
+  cashLog       CashRegisterLog? @relation(fields: [cashLogId], references: [id])
 }
 
 model CommissionRule {
-  id          String            @id @default(cuid())
-  type        CommissionType
-  value       Float
-  description String?
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
-  isGlobal    Boolean           @default(false)
-  serviceId   String?
-  userId      String?
-  service     Service?          @relation(fields: [serviceId], references: [id])
-  user        User?             @relation(fields: [userId], references: [id])
-  commissions StaffCommission[]
+  id              String           @id @default(cuid())
+  name            String
+  description     String?
+  type            CommissionType
+  rate            Float
+  fixedAmount     Float
+  startDate       DateTime
+  endDate         DateTime?
+  branchId        String
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  branch          Branch           @relation(fields: [branchId], references: [id])
+  commissionItems CommissionItem[]
+  staff           User[]
+}
 
-  @@index([userId, serviceId, isGlobal])
+model CommissionItem {
+  id            String            @id @default(cuid())
+  invoiceId     String
+  serviceId     String?
+  amount        Float
+  status        CommissionStatus
+  appliedRuleId String?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  invoice       Invoice           @relation(fields: [invoiceId], references: [id])
+  service       Service?          @relation(fields: [serviceId], references: [id])
+  commissions   StaffCommission[]
+  appliedRule   CommissionRule?   @relation(fields: [appliedRuleId], references: [id])
 }
 
 model StaffCommission {
-  id            String           @id @default(cuid())
-  amount        Float
-  isReversed    Boolean          @default(false)
-  staffId       String
-  invoiceId     String           @unique
-  createdAt     DateTime         @default(now())
-  appliedRuleId String?
-  serviceId     String?
-  status        CommissionStatus @default(PENDING)
-  updatedAt     DateTime         @updatedAt
-  appliedRule   CommissionRule?  @relation(fields: [appliedRuleId], references: [id])
-  invoice       Invoice          @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
-  service       Service?         @relation(fields: [serviceId], references: [id])
-  staff         User             @relation(fields: [staffId], references: [id])
+  id               String           @id @default(cuid())
+  staffId          String
+  commissionItemId String
+  amount           Float
+  status           CommissionStatus
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  appliedRuleId    String?
+  invoiceId        String
+  serviceId        String?
+  staff            User             @relation(fields: [staffId], references: [id])
+  commissionItem   CommissionItem   @relation(fields: [commissionItemId], references: [id])
+  invoice          Invoice          @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  service          Service?         @relation(fields: [serviceId], references: [id])
 
   @@index([staffId, serviceId, status])
 }

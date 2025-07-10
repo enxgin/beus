@@ -54,7 +54,7 @@ export class FinanceService {
       acc[customerId].totalPaid += paidAmount;
       acc[customerId].invoices.push({
         invoiceId: invoice.id,
-        invoiceNumber: invoice.invoiceNumber,
+        
         totalAmount: invoice.totalAmount,
         paidAmount: paidAmount,
         remainingAmount: invoice.totalAmount - paidAmount,
