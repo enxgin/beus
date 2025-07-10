@@ -32,8 +32,8 @@ COPY apps/backend/prisma ./apps/backend/prisma
 COPY apps/backend/tsconfig.json ./apps/backend/
 COPY apps/backend/nest-cli.json ./apps/backend/
 
-# Generate Prisma Client
-RUN npx prisma generate --schema=./apps/backend/prisma/schema.prisma
+# Generate Prisma Client (DÜZELTİLMİŞ SATIR)
+RUN ./node_modules/.bin/prisma generate --schema=./apps/backend/prisma/schema.prisma
 
 # Build the application
 RUN npm run build --workspace=backend
@@ -60,5 +60,5 @@ COPY --from=builder /usr/src/app/node_modules/.prisma ./node_modules/.prisma
 # Expose port
 EXPOSE 3000
 
-# Command to run the application (DÜZELTİLMİŞ SATIR)
+# Command to run the application
 CMD ["node", "dist/src/main.js"]
