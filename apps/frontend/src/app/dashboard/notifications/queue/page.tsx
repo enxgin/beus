@@ -176,6 +176,129 @@ const priorityConfig = {
   URGENT: { label: 'Acil', color: 'bg-red-100 text-red-800' },
 };
 
+// Mobile Card Component
+function QueueCard({ 
+  notification, 
+  onViewDetails, 
+  onRetry, 
+  onCancel, 
+  onDelete,
+  getTypeIcon,
+  getTypeBadgeColor 
+}: {
+  notification: QueuedNotification;
+  onViewDetails: (notification: QueuedNotification) => void;
+  onRetry: (id: string) => void;
+  onCancel: (id: string) => void;
+  onDelete: (id: string) => void;
+  getTypeIcon: (type: string) => React.ReactNode;
+  getTypeBadgeColor: (type: string) => string;
+}) {
+  const statusInfo = statusConfig[notification.status];
+  const StatusIcon = statusInfo.icon;
+  const priorityInfo = priorityConfig[notification.priority];
+
+  return (
+    <Card className="mb-4">
+      <CardContent className="p-4">
+        <div className="space-y-3">
+          {/* Header */}
+          <div className="flex items-start justify-between">
+            <div className="flex-1 min-w-0">
+              <h3 className="font-medium text-sm truncate">{notification.recipientName}</h3>
+              <p className="text-xs text-muted-foreground truncate">{notification.recipient}</p>
+            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => onViewDetails(notification)}>
+                  <Eye className="h-4 w-4 mr-2" />
+                  Detayları Görüntüle
+                </DropdownMenuItem>
+                {notification.status === 'FAILED' && notification.retryCount < notification.maxRetries && (
+                  <DropdownMenuItem onClick={() => onRetry(notification.id)}>
+                    <RotateCcw className="h-4 w-4 mr-2" />
+                    Yeniden Dene
+                  </DropdownMenuItem>
+                )}
+                {(notification.status === 'PENDING' || notification.status === 'PROCESSING') && (
+                  <DropdownMenuItem onClick={() => onCancel(notification.id)}>
+                    <Pause className="h-4 w-4 mr-2" />
+                    İptal Et
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem
+                  onClick={() => onDelete(notification.id)}
+                  className="text-red-600"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Sil
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+
+          {/* Badges */}
+          <div className="flex flex-wrap gap-2">
+            <Badge className={getTypeBadgeColor(notification.type)}>
+              <div className="flex items-center space-x-1">
+                {getTypeIcon(notification.type)}
+                <span>{notification.type}</span>
+              </div>
+            </Badge>
+            <Badge className={statusInfo.color}>
+              <div className="flex items-center space-x-1">
+                <StatusIcon className="h-3 w-3" />
+                <span>{statusInfo.label}</span>
+              </div>
+            </Badge>
+            <Badge className={priorityInfo.color}>
+              {priorityInfo.label}
+            </Badge>
+          </div>
+
+          {/* Content */}
+          <div className="space-y-2">
+            {notification.subject && (
+              <p className="font-medium text-sm">{notification.subject}</p>
+            )}
+            <p className="text-sm text-muted-foreground line-clamp-2">
+              {notification.content}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {notification.templateName}
+            </p>
+          </div>
+
+          {/* Footer */}
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <div>
+              <div>{new Date(notification.scheduledAt).toLocaleString('tr-TR')}</div>
+              {notification.processedAt && (
+                <div>İşlendi: {new Date(notification.processedAt).toLocaleString('tr-TR')}</div>
+              )}
+            </div>
+            <div>
+              Deneme: {notification.retryCount}/{notification.maxRetries}
+            </div>
+          </div>
+
+          {/* Error Message */}
+          {notification.errorMessage && (
+            <div className="text-xs text-red-600 bg-red-50 p-2 rounded">
+              {notification.errorMessage}
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function NotificationQueuePage() {
   const [notifications, setNotifications] = useState<QueuedNotification[]>(mockQueuedNotifications);
   const [searchTerm, setSearchTerm] = useState('');
@@ -266,7 +389,7 @@ export default function NotificationQueuePage() {
   const stats = getStatusStats();
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       <div>
         <Breadcrumb>
           <BreadcrumbItem>
@@ -283,92 +406,92 @@ export default function NotificationQueuePage() {
             <BreadcrumbLink>Kuyruk</BreadcrumbLink>
           </BreadcrumbItem>
         </Breadcrumb>
-        <div className="flex items-center justify-between mt-2">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mt-2 gap-4">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Bildirim Kuyruğu</h1>
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Bildirim Kuyruğu</h1>
             <p className="text-muted-foreground mt-1">
               Bekleyen ve işlenen bildirimleri görüntüleyin
             </p>
           </div>
-          <Button variant="outline">
+          <Button variant="outline" className="w-fit">
             <RefreshCw className="h-4 w-4 mr-2" />
             Yenile
           </Button>
         </div>
       </div>
 
-      {/* İstatistikler */}
-      <div className="grid grid-cols-5 gap-4">
+      {/* İstatistikler - Responsive Grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">
         <Card>
-          <CardContent className="p-4">
+          <CardContent className="p-3 md:p-4">
             <div className="flex items-center space-x-2">
               <div className="p-2 bg-gray-100 rounded-lg">
                 <MessageSquare className="h-4 w-4 text-gray-600" />
               </div>
-              <div>
-                <p className="text-sm font-medium text-gray-600">Toplam</p>
-                <p className="text-2xl font-bold">{stats.total}</p>
+              <div className="min-w-0">
+                <p className="text-xs md:text-sm font-medium text-gray-600">Toplam</p>
+                <p className="text-lg md:text-2xl font-bold">{stats.total}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4">
+          <CardContent className="p-3 md:p-4">
             <div className="flex items-center space-x-2">
               <div className="p-2 bg-yellow-100 rounded-lg">
                 <Clock className="h-4 w-4 text-yellow-600" />
               </div>
-              <div>
-                <p className="text-sm font-medium text-gray-600">Bekliyor</p>
-                <p className="text-2xl font-bold">{stats.pending}</p>
+              <div className="min-w-0">
+                <p className="text-xs md:text-sm font-medium text-gray-600">Bekliyor</p>
+                <p className="text-lg md:text-2xl font-bold">{stats.pending}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4">
+          <CardContent className="p-3 md:p-4">
             <div className="flex items-center space-x-2">
               <div className="p-2 bg-blue-100 rounded-lg">
                 <RefreshCw className="h-4 w-4 text-blue-600" />
               </div>
-              <div>
-                <p className="text-sm font-medium text-gray-600">İşleniyor</p>
-                <p className="text-2xl font-bold">{stats.processing}</p>
+              <div className="min-w-0">
+                <p className="text-xs md:text-sm font-medium text-gray-600">İşleniyor</p>
+                <p className="text-lg md:text-2xl font-bold">{stats.processing}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4">
+          <CardContent className="p-3 md:p-4">
             <div className="flex items-center space-x-2">
               <div className="p-2 bg-green-100 rounded-lg">
                 <CheckCircle className="h-4 w-4 text-green-600" />
               </div>
-              <div>
-                <p className="text-sm font-medium text-gray-600">Gönderildi</p>
-                <p className="text-2xl font-bold">{stats.sent}</p>
+              <div className="min-w-0">
+                <p className="text-xs md:text-sm font-medium text-gray-600">Gönderildi</p>
+                <p className="text-lg md:text-2xl font-bold">{stats.sent}</p>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="p-4">
+        <Card className="col-span-2 sm:col-span-3 lg:col-span-1">
+          <CardContent className="p-3 md:p-4">
             <div className="flex items-center space-x-2">
               <div className="p-2 bg-red-100 rounded-lg">
                 <XCircle className="h-4 w-4 text-red-600" />
               </div>
-              <div>
-                <p className="text-sm font-medium text-gray-600">Başarısız</p>
-                <p className="text-2xl font-bold">{stats.failed}</p>
+              <div className="min-w-0">
+                <p className="text-xs md:text-sm font-medium text-gray-600">Başarısız</p>
+                <p className="text-lg md:text-2xl font-bold">{stats.failed}</p>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Filtreler */}
-      <div className="flex items-center space-x-4">
-        <div className="relative flex-1 max-w-sm">
+      {/* Filtreler - Responsive Layout */}
+      <div className="space-y-4">
+        <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
           <Input
             placeholder="Bildirim ara..."
@@ -377,45 +500,48 @@ export default function NotificationQueuePage() {
             className="pl-10"
           />
         </div>
-        <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-          <SelectTrigger className="w-40">
-            <SelectValue placeholder="Durum" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Tüm Durumlar</SelectItem>
-            <SelectItem value="PENDING">Bekliyor</SelectItem>
-            <SelectItem value="PROCESSING">İşleniyor</SelectItem>
-            <SelectItem value="SENT">Gönderildi</SelectItem>
-            <SelectItem value="FAILED">Başarısız</SelectItem>
-            <SelectItem value="CANCELLED">İptal Edildi</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={selectedType} onValueChange={setSelectedType}>
-          <SelectTrigger className="w-32">
-            <SelectValue placeholder="Tür" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Tüm Türler</SelectItem>
-            <SelectItem value="SMS">SMS</SelectItem>
-            <SelectItem value="WHATSAPP">WhatsApp</SelectItem>
-            <SelectItem value="EMAIL">E-posta</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={selectedPriority} onValueChange={setSelectedPriority}>
-          <SelectTrigger className="w-32">
-            <SelectValue placeholder="Öncelik" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Tüm Öncelikler</SelectItem>
-            <SelectItem value="LOW">Düşük</SelectItem>
-            <SelectItem value="NORMAL">Normal</SelectItem>
-            <SelectItem value="HIGH">Yüksek</SelectItem>
-            <SelectItem value="URGENT">Acil</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+            <SelectTrigger>
+              <SelectValue placeholder="Durum" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tüm Durumlar</SelectItem>
+              <SelectItem value="PENDING">Bekliyor</SelectItem>
+              <SelectItem value="PROCESSING">İşleniyor</SelectItem>
+              <SelectItem value="SENT">Gönderildi</SelectItem>
+              <SelectItem value="FAILED">Başarısız</SelectItem>
+              <SelectItem value="CANCELLED">İptal Edildi</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={selectedType} onValueChange={setSelectedType}>
+            <SelectTrigger>
+              <SelectValue placeholder="Tür" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tüm Türler</SelectItem>
+              <SelectItem value="SMS">SMS</SelectItem>
+              <SelectItem value="WHATSAPP">WhatsApp</SelectItem>
+              <SelectItem value="EMAIL">E-posta</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={selectedPriority} onValueChange={setSelectedPriority}>
+            <SelectTrigger>
+              <SelectValue placeholder="Öncelik" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tüm Öncelikler</SelectItem>
+              <SelectItem value="LOW">Düşük</SelectItem>
+              <SelectItem value="NORMAL">Normal</SelectItem>
+              <SelectItem value="HIGH">Yüksek</SelectItem>
+              <SelectItem value="URGENT">Acil</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
-      <Card>
+      {/* Desktop Table - Hidden on Mobile */}
+      <Card className="hidden md:block">
         <CardHeader>
           <CardTitle>Kuyruk ({filteredNotifications.length})</CardTitle>
           <CardDescription>
@@ -560,9 +686,37 @@ export default function NotificationQueuePage() {
         </CardContent>
       </Card>
 
-      {/* Detay Dialog */}
+      {/* Mobile Cards - Visible on Mobile */}
+      <div className="md:hidden space-y-4">
+        {filteredNotifications.length > 0 ? (
+          filteredNotifications.map((notification) => (
+            <QueueCard
+              key={notification.id}
+              notification={notification}
+              onViewDetails={handleViewDetails}
+              onRetry={handleRetry}
+              onCancel={handleCancel}
+              onDelete={handleDelete}
+              getTypeIcon={getTypeIcon}
+              getTypeBadgeColor={getTypeBadgeColor}
+            />
+          ))
+        ) : (
+          <div className="text-center py-8">
+            <Clock className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Bildirim bulunamadı</h3>
+            <p className="text-gray-500 text-center">
+              {searchTerm || selectedStatus !== 'all' || selectedType !== 'all' || selectedPriority !== 'all'
+                ? 'Arama kriterlerinize uygun bildirim bulunamadı.'
+                : 'Kuyrukta bekleyen bildirim bulunmuyor.'}
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Detay Dialog - Mobile Responsive */}
       <Dialog open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Bildirim Detayları</DialogTitle>
             <DialogDescription>
@@ -571,7 +725,7 @@ export default function NotificationQueuePage() {
           </DialogHeader>
           {selectedNotification && (
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label className="text-sm font-medium text-gray-500">Alıcı</Label>
                   <p className="font-medium">{selectedNotification.recipientName}</p>
@@ -630,7 +784,7 @@ export default function NotificationQueuePage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label className="text-sm font-medium text-gray-500">Zamanlandığı Tarih</Label>
                   <p>{new Date(selectedNotification.scheduledAt).toLocaleString('tr-TR')}</p>

@@ -248,6 +248,81 @@ export default function NotificationHistoryPage() {
 
   const stats = getStats();
 
+  // Mobile card component for notifications
+  const NotificationCard = ({ notification }: { notification: NotificationHistory }) => {
+    const statusInfo = statusConfig[notification.status];
+    const StatusIcon = statusInfo.icon;
+
+    return (
+      <Card className="mb-4">
+        <CardContent className="p-4">
+          <div className="flex items-start justify-between mb-3">
+            <div className="flex-1">
+              <div className="font-medium text-sm">{notification.recipientName}</div>
+              <div className="text-xs text-gray-500">{notification.recipient}</div>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Badge className={getTypeBadgeColor(notification.type)} variant="secondary">
+                <div className="flex items-center space-x-1">
+                  {getTypeIcon(notification.type)}
+                  <span className="text-xs">{notification.type}</span>
+                </div>
+              </Badge>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm">
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => handleViewDetails(notification)}>
+                    <Eye className="h-4 w-4 mr-2" />
+                    Detayları Görüntüle
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            {notification.subject && (
+              <div className="font-medium text-sm">{notification.subject}</div>
+            )}
+            <div className="text-sm text-gray-600 line-clamp-2">
+              {notification.content}
+            </div>
+            <div className="text-xs text-gray-500">
+              {notification.templateName}
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between mt-3 pt-3 border-t">
+            <div className="flex items-center space-x-2">
+              <Badge className={statusInfo.color} variant="secondary">
+                <div className="flex items-center space-x-1">
+                  <StatusIcon className="h-3 w-3" />
+                  <span className="text-xs">{statusInfo.label}</span>
+                </div>
+              </Badge>
+              {notification.cost && (
+                <span className="text-xs font-medium">₺{notification.cost.toFixed(3)}</span>
+              )}
+            </div>
+            <div className="text-xs text-gray-500">
+              {new Date(notification.sentAt).toLocaleDateString('tr-TR')}
+            </div>
+          </div>
+
+          {notification.errorMessage && (
+            <div className="mt-2 text-xs text-red-600 bg-red-50 p-2 rounded">
+              {notification.errorMessage}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    );
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -266,22 +341,22 @@ export default function NotificationHistoryPage() {
             <BreadcrumbLink>Geçmiş</BreadcrumbLink>
           </BreadcrumbItem>
         </Breadcrumb>
-        <div className="flex items-center justify-between mt-2">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mt-2 gap-4">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Bildirim Geçmişi</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Bildirim Geçmişi</h1>
             <p className="text-muted-foreground mt-1">
               Gönderilen bildirimlerin detaylı geçmişi ve istatistikleri
             </p>
           </div>
-          <Button onClick={handleExport} variant="outline">
+          <Button onClick={handleExport} variant="outline" size="sm">
             <Download className="h-4 w-4 mr-2" />
             Dışa Aktar
           </Button>
         </div>
       </div>
 
-      {/* İstatistikler */}
-      <div className="grid grid-cols-6 gap-4">
+      {/* İstatistikler - Responsive Grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
@@ -289,8 +364,8 @@ export default function NotificationHistoryPage() {
                 <MessageSquare className="h-4 w-4 text-gray-600" />
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-600">Toplam</p>
-                <p className="text-2xl font-bold">{stats.total}</p>
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Toplam</p>
+                <p className="text-lg sm:text-2xl font-bold">{stats.total}</p>
               </div>
             </div>
           </CardContent>
@@ -302,8 +377,8 @@ export default function NotificationHistoryPage() {
                 <CheckCircle className="h-4 w-4 text-blue-600" />
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-600">Gönderildi</p>
-                <p className="text-2xl font-bold">{stats.sent}</p>
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Gönderildi</p>
+                <p className="text-lg sm:text-2xl font-bold">{stats.sent}</p>
               </div>
             </div>
           </CardContent>
@@ -315,8 +390,8 @@ export default function NotificationHistoryPage() {
                 <CheckCircle className="h-4 w-4 text-green-600" />
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-600">Teslim Edildi</p>
-                <p className="text-2xl font-bold">{stats.delivered}</p>
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Teslim Edildi</p>
+                <p className="text-lg sm:text-2xl font-bold">{stats.delivered}</p>
               </div>
             </div>
           </CardContent>
@@ -328,8 +403,8 @@ export default function NotificationHistoryPage() {
                 <Eye className="h-4 w-4 text-emerald-600" />
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-600">Okundu</p>
-                <p className="text-2xl font-bold">{stats.read}</p>
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Okundu</p>
+                <p className="text-lg sm:text-2xl font-bold">{stats.read}</p>
               </div>
             </div>
           </CardContent>
@@ -341,8 +416,8 @@ export default function NotificationHistoryPage() {
                 <XCircle className="h-4 w-4 text-red-600" />
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-600">Başarısız</p>
-                <p className="text-2xl font-bold">{stats.failed}</p>
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Başarısız</p>
+                <p className="text-lg sm:text-2xl font-bold">{stats.failed}</p>
               </div>
             </div>
           </CardContent>
@@ -354,8 +429,8 @@ export default function NotificationHistoryPage() {
                 <TrendingUp className="h-4 w-4 text-yellow-600" />
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-600">Toplam Maliyet</p>
-                <p className="text-2xl font-bold">₺{stats.totalCost.toFixed(2)}</p>
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Toplam Maliyet</p>
+                <p className="text-lg sm:text-2xl font-bold">₺{stats.totalCost.toFixed(2)}</p>
               </div>
             </div>
           </CardContent>
@@ -363,13 +438,13 @@ export default function NotificationHistoryPage() {
       </div>
 
       {/* Performans Metrikleri */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Teslimat Oranı</p>
-                <p className="text-3xl font-bold text-green-600">%{stats.deliveryRate}</p>
+                <p className="text-2xl sm:text-3xl font-bold text-green-600">%{stats.deliveryRate}</p>
               </div>
               <div className="p-3 bg-green-100 rounded-lg">
                 <BarChart3 className="h-6 w-6 text-green-600" />
@@ -382,7 +457,7 @@ export default function NotificationHistoryPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Okuma Oranı</p>
-                <p className="text-3xl font-bold text-blue-600">%{stats.readRate}</p>
+                <p className="text-2xl sm:text-3xl font-bold text-blue-600">%{stats.readRate}</p>
               </div>
               <div className="p-3 bg-blue-100 rounded-lg">
                 <Users className="h-6 w-6 text-blue-600" />
@@ -392,9 +467,9 @@ export default function NotificationHistoryPage() {
         </Card>
       </div>
 
-      {/* Filtreler */}
-      <div className="flex items-center space-x-4">
-        <div className="relative flex-1 max-w-sm">
+      {/* Filtreler - Mobile Responsive */}
+      <div className="space-y-4">
+        <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
           <Input
             placeholder="Geçmiş ara..."
@@ -403,43 +478,46 @@ export default function NotificationHistoryPage() {
             className="pl-10"
           />
         </div>
-        <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-          <SelectTrigger className="w-40">
-            <SelectValue placeholder="Durum" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Tüm Durumlar</SelectItem>
-            <SelectItem value="SENT">Gönderildi</SelectItem>
-            <SelectItem value="DELIVERED">Teslim Edildi</SelectItem>
-            <SelectItem value="READ">Okundu</SelectItem>
-            <SelectItem value="FAILED">Başarısız</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={selectedType} onValueChange={setSelectedType}>
-          <SelectTrigger className="w-32">
-            <SelectValue placeholder="Tür" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Tüm Türler</SelectItem>
-            <SelectItem value="SMS">SMS</SelectItem>
-            <SelectItem value="WHATSAPP">WhatsApp</SelectItem>
-            <SelectItem value="EMAIL">E-posta</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={dateRange} onValueChange={setDateRange}>
-          <SelectTrigger className="w-40">
-            <SelectValue placeholder="Tarih Aralığı" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="1">Son 1 gün</SelectItem>
-            <SelectItem value="7">Son 7 gün</SelectItem>
-            <SelectItem value="30">Son 30 gün</SelectItem>
-            <SelectItem value="90">Son 90 gün</SelectItem>
-            <SelectItem value="all">Tüm zamanlar</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+            <SelectTrigger>
+              <SelectValue placeholder="Durum" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tüm Durumlar</SelectItem>
+              <SelectItem value="SENT">Gönderildi</SelectItem>
+              <SelectItem value="DELIVERED">Teslim Edildi</SelectItem>
+              <SelectItem value="READ">Okundu</SelectItem>
+              <SelectItem value="FAILED">Başarısız</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={selectedType} onValueChange={setSelectedType}>
+            <SelectTrigger>
+              <SelectValue placeholder="Tür" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tüm Türler</SelectItem>
+              <SelectItem value="SMS">SMS</SelectItem>
+              <SelectItem value="WHATSAPP">WhatsApp</SelectItem>
+              <SelectItem value="EMAIL">E-posta</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={dateRange} onValueChange={setDateRange}>
+            <SelectTrigger>
+              <SelectValue placeholder="Tarih Aralığı" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="1">Son 1 gün</SelectItem>
+              <SelectItem value="7">Son 7 gün</SelectItem>
+              <SelectItem value="30">Son 30 gün</SelectItem>
+              <SelectItem value="90">Son 90 gün</SelectItem>
+              <SelectItem value="all">Tüm zamanlar</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
+      {/* Desktop Table / Mobile Cards */}
       <Card>
         <CardHeader>
           <CardTitle>Geçmiş ({filteredHistory.length})</CardTitle>
@@ -448,110 +526,120 @@ export default function NotificationHistoryPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Alıcı</TableHead>
-                <TableHead>Tür</TableHead>
-                <TableHead>İçerik</TableHead>
-                <TableHead>Durum</TableHead>
-                <TableHead>Gönderim Tarihi</TableHead>
-                <TableHead>Teslimat</TableHead>
-                <TableHead>Maliyet</TableHead>
-                <TableHead className="w-[50px]"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredHistory.map((notification) => {
-                const statusInfo = statusConfig[notification.status];
-                const StatusIcon = statusInfo.icon;
+          {/* Desktop Table */}
+          <div className="hidden lg:block">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Alıcı</TableHead>
+                  <TableHead>Tür</TableHead>
+                  <TableHead>İçerik</TableHead>
+                  <TableHead>Durum</TableHead>
+                  <TableHead>Gönderim Tarihi</TableHead>
+                  <TableHead>Teslimat</TableHead>
+                  <TableHead>Maliyet</TableHead>
+                  <TableHead className="w-[50px]"></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredHistory.map((notification) => {
+                  const statusInfo = statusConfig[notification.status];
+                  const StatusIcon = statusInfo.icon;
 
-                return (
-                  <TableRow key={notification.id}>
-                    <TableCell>
-                      <div>
-                        <div className="font-medium">{notification.recipientName}</div>
-                        <div className="text-sm text-gray-500">{notification.recipient}</div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={getTypeBadgeColor(notification.type)}>
-                        <div className="flex items-center space-x-1">
-                          {getTypeIcon(notification.type)}
-                          <span>{notification.type}</span>
+                  return (
+                    <TableRow key={notification.id}>
+                      <TableCell>
+                        <div>
+                          <div className="font-medium">{notification.recipientName}</div>
+                          <div className="text-sm text-gray-500">{notification.recipient}</div>
                         </div>
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="max-w-xs">
-                        {notification.subject && (
-                          <div className="font-medium text-sm mb-1">{notification.subject}</div>
-                        )}
-                        <div className="text-sm text-gray-600 truncate">
-                          {notification.content}
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={getTypeBadgeColor(notification.type)}>
+                          <div className="flex items-center space-x-1">
+                            {getTypeIcon(notification.type)}
+                            <span>{notification.type}</span>
+                          </div>
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="max-w-xs">
+                          {notification.subject && (
+                            <div className="font-medium text-sm mb-1">{notification.subject}</div>
+                          )}
+                          <div className="text-sm text-gray-600 truncate">
+                            {notification.content}
+                          </div>
+                          <div className="text-xs text-gray-500 mt-1">
+                            {notification.templateName}
+                          </div>
                         </div>
-                        <div className="text-xs text-gray-500 mt-1">
-                          {notification.templateName}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={statusInfo.color}>
-                        <div className="flex items-center space-x-1">
-                          <StatusIcon className="h-3 w-3" />
-                          <span>{statusInfo.label}</span>
-                        </div>
-                      </Badge>
-                      {notification.errorMessage && (
-                        <div className="text-xs text-red-600 mt-1">
-                          {notification.errorMessage}
-                        </div>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <div className="text-sm">
-                        {new Date(notification.sentAt).toLocaleString('tr-TR')}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="text-sm">
-                        {notification.deliveredAt && (
-                          <div className="text-green-600">
-                            {new Date(notification.deliveredAt).toLocaleString('tr-TR')}
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={statusInfo.color}>
+                          <div className="flex items-center space-x-1">
+                            <StatusIcon className="h-3 w-3" />
+                            <span>{statusInfo.label}</span>
+                          </div>
+                        </Badge>
+                        {notification.errorMessage && (
+                          <div className="text-xs text-red-600 mt-1">
+                            {notification.errorMessage}
                           </div>
                         )}
-                        {notification.readAt && (
-                          <div className="text-blue-600 text-xs">
-                            Okundu: {new Date(notification.readAt).toLocaleString('tr-TR')}
-                          </div>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="text-sm font-medium">
-                        {notification.cost ? `₺${notification.cost.toFixed(3)}` : '-'}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleViewDetails(notification)}>
-                            <Eye className="h-4 w-4 mr-2" />
-                            Detayları Görüntüle
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm">
+                          {new Date(notification.sentAt).toLocaleString('tr-TR')}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm">
+                          {notification.deliveredAt && (
+                            <div className="text-green-600">
+                              {new Date(notification.deliveredAt).toLocaleString('tr-TR')}
+                            </div>
+                          )}
+                          {notification.readAt && (
+                            <div className="text-blue-600 text-xs">
+                              Okundu: {new Date(notification.readAt).toLocaleString('tr-TR')}
+                            </div>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm font-medium">
+                          {notification.cost ? `₺${notification.cost.toFixed(3)}` : '-'}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleViewDetails(notification)}>
+                              <Eye className="h-4 w-4 mr-2" />
+                              Detayları Görüntüle
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* Mobile Cards */}
+          <div className="lg:hidden">
+            {filteredHistory.map((notification) => (
+              <NotificationCard key={notification.id} notification={notification} />
+            ))}
+          </div>
 
           {filteredHistory.length === 0 && (
             <div className="text-center py-8">
@@ -567,9 +655,9 @@ export default function NotificationHistoryPage() {
         </CardContent>
       </Card>
 
-      {/* Detay Dialog */}
+      {/* Detay Dialog - Mobile Responsive */}
       <Dialog open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Bildirim Detayları</DialogTitle>
             <DialogDescription>
@@ -578,7 +666,7 @@ export default function NotificationHistoryPage() {
           </DialogHeader>
           {selectedNotification && (
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label className="text-sm font-medium text-gray-500">Alıcı</Label>
                   <p className="font-medium">{selectedNotification.recipientName}</p>
@@ -631,7 +719,7 @@ export default function NotificationHistoryPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                   <Label className="text-sm font-medium text-gray-500">Gönderim Tarihi</Label>
                   <p>{new Date(selectedNotification.sentAt).toLocaleString('tr-TR')}</p>

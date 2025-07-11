@@ -118,6 +118,117 @@ const availableVariables = [
   { key: 'totalAmount', label: 'Toplam Tutar', description: 'Ödeme tutarı' },
 ];
 
+// Mobile Template Card Component
+const TemplateCard = ({ template, onEdit, onDuplicate, onDelete }: {
+  template: NotificationTemplate;
+  onEdit: (template: NotificationTemplate) => void;
+  onDuplicate: (template: NotificationTemplate) => void;
+  onDelete: (id: string) => void;
+}) => {
+  const getTypeIcon = (type: string) => {
+    switch (type) {
+      case 'SMS':
+        return <Phone className="h-4 w-4" />;
+      case 'WHATSAPP':
+        return <MessageSquare className="h-4 w-4" />;
+      case 'EMAIL':
+        return <Mail className="h-4 w-4" />;
+      default:
+        return <FileText className="h-4 w-4" />;
+    }
+  };
+
+  const getTypeBadgeColor = (type: string) => {
+    switch (type) {
+      case 'SMS':
+        return 'bg-blue-100 text-blue-800';
+      case 'WHATSAPP':
+        return 'bg-green-100 text-green-800';
+      case 'EMAIL':
+        return 'bg-purple-100 text-purple-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  return (
+    <Card className="p-4">
+      <div className="flex items-start justify-between mb-3">
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-1">
+            <h3 className="font-medium text-sm">{template.name}</h3>
+            <Badge variant={template.isActive ? 'default' : 'secondary'} className="text-xs">
+              {template.isActive ? 'Aktif' : 'Pasif'}
+            </Badge>
+          </div>
+          {template.subject && (
+            <p className="text-xs text-gray-500 mb-1">Konu: {template.subject}</p>
+          )}
+          <Badge className={`${getTypeBadgeColor(template.type)} text-xs`}>
+            <div className="flex items-center space-x-1">
+              {getTypeIcon(template.type)}
+              <span>{template.type}</span>
+            </div>
+          </Badge>
+        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm">
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => onEdit(template)}>
+              <Edit className="h-4 w-4 mr-2" />
+              Düzenle
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onDuplicate(template)}>
+              <Copy className="h-4 w-4 mr-2" />
+              Kopyala
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => onDelete(template.id)}
+              className="text-red-600"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Sil
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+      
+      <div className="space-y-2">
+        <div>
+          <p className="text-xs text-gray-500 mb-1">İçerik Önizleme:</p>
+          <p className="text-sm text-gray-700 line-clamp-2">{template.content}</p>
+        </div>
+        
+        {template.variables.length > 0 && (
+          <div>
+            <p className="text-xs text-gray-500 mb-1">Değişkenler:</p>
+            <div className="flex flex-wrap gap-1">
+              {template.variables.slice(0, 3).map((variable) => (
+                <Badge key={variable} variant="outline" className="text-xs">
+                  {variable}
+                </Badge>
+              ))}
+              {template.variables.length > 3 && (
+                <Badge variant="outline" className="text-xs">
+                  +{template.variables.length - 3}
+                </Badge>
+              )}
+            </div>
+          </div>
+        )}
+        
+        <div className="text-xs text-gray-500 pt-1">
+          Son güncelleme: {new Date(template.updatedAt).toLocaleDateString('tr-TR')}
+        </div>
+      </div>
+    </Card>
+  );
+};
+
 export default function NotificationTemplatesPage() {
   const [templates, setTemplates] = useState<NotificationTemplate[]>(mockTemplates);
   const [searchTerm, setSearchTerm] = useState('');
@@ -254,7 +365,7 @@ export default function NotificationTemplatesPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       <div>
         <Breadcrumb>
           <BreadcrumbItem>
@@ -271,121 +382,122 @@ export default function NotificationTemplatesPage() {
             <BreadcrumbLink>Şablonlar</BreadcrumbLink>
           </BreadcrumbItem>
         </Breadcrumb>
-        <div className="flex items-center justify-between mt-2">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mt-2 gap-4">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Bildirim Şablonları</h1>
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Bildirim Şablonları</h1>
             <p className="text-muted-foreground mt-1">
               SMS, WhatsApp ve E-posta şablonlarını yönetin
             </p>
           </div>
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
-              <Button>
+              <Button className="w-fit">
                 <Plus className="h-4 w-4 mr-2" />
                 Yeni Şablon
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Yeni Şablon Oluştur</DialogTitle>
-              <DialogDescription>
-                Yeni bir bildirim şablonu oluşturun
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid grid-cols-3 gap-6">
-              <div className="col-span-2 space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Şablon Adı</Label>
-                  <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                    placeholder="Şablon adını girin"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="type">Bildirim Türü</Label>
-                  <Select
-                    value={formData.type}
-                    onValueChange={(value: 'SMS' | 'WHATSAPP' | 'EMAIL') =>
-                      setFormData(prev => ({ ...prev, type: value }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="SMS">SMS</SelectItem>
-                      <SelectItem value="WHATSAPP">WhatsApp</SelectItem>
-                      <SelectItem value="EMAIL">E-posta</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {formData.type === 'EMAIL' && (
+              <DialogHeader>
+                <DialogTitle>Yeni Şablon Oluştur</DialogTitle>
+                <DialogDescription>
+                  Yeni bir bildirim şablonu oluşturun
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2 space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="subject">E-posta Konusu</Label>
+                    <Label htmlFor="name">Şablon Adı</Label>
                     <Input
-                      id="subject"
-                      value={formData.subject}
-                      onChange={(e) => setFormData(prev => ({ ...prev, subject: e.target.value }))}
-                      placeholder="E-posta konusunu girin"
+                      id="name"
+                      value={formData.name}
+                      onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                      placeholder="Şablon adını girin"
                     />
                   </div>
-                )}
 
-                <div className="space-y-2">
-                  <Label htmlFor="content">İçerik</Label>
-                  <Textarea
-                    id="content"
-                    value={formData.content}
-                    onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
-                    placeholder="Şablon içeriğini girin"
-                    rows={8}
-                  />
+                  <div className="space-y-2">
+                    <Label htmlFor="type">Bildirim Türü</Label>
+                    <Select
+                      value={formData.type}
+                      onValueChange={(value: 'SMS' | 'WHATSAPP' | 'EMAIL') =>
+                        setFormData(prev => ({ ...prev, type: value }))
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="SMS">SMS</SelectItem>
+                        <SelectItem value="WHATSAPP">WhatsApp</SelectItem>
+                        <SelectItem value="EMAIL">E-posta</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {formData.type === 'EMAIL' && (
+                    <div className="space-y-2">
+                      <Label htmlFor="subject">E-posta Konusu</Label>
+                      <Input
+                        id="subject"
+                        value={formData.subject}
+                        onChange={(e) => setFormData(prev => ({ ...prev, subject: e.target.value }))}
+                        placeholder="E-posta konusunu girin"
+                      />
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    <Label htmlFor="content">İçerik</Label>
+                    <Textarea
+                      id="content"
+                      value={formData.content}
+                      onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
+                      placeholder="Şablon içeriğini girin"
+                      rows={8}
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <div className="space-y-4">
-                <div>
-                  <Label className="text-sm font-medium">Kullanılabilir Değişkenler</Label>
-                  <p className="text-xs text-gray-500 mb-3">
-                    Değişkenleri tıklayarak içeriğe ekleyin
-                  </p>
-                  <div className="space-y-2 max-h-96 overflow-y-auto">
-                    {availableVariables.map((variable) => (
-                      <div
-                        key={variable.key}
-                        className="p-2 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
-                        onClick={() => insertVariable(variable.key)}
-                      >
-                        <div className="font-medium text-sm">{variable.label}</div>
-                        <div className="text-xs text-gray-500">{variable.description}</div>
-                        <div className="text-xs text-blue-600 mt-1">
-                          {`{{${variable.key}}}`}
+                <div className="space-y-4">
+                  <div>
+                    <Label className="text-sm font-medium">Kullanılabilir Değişkenler</Label>
+                    <p className="text-xs text-gray-500 mb-3">
+                      Değişkenleri tıklayarak içeriğe ekleyin
+                    </p>
+                    <div className="space-y-2 max-h-96 overflow-y-auto">
+                      {availableVariables.map((variable) => (
+                        <div
+                          key={variable.key}
+                          className="p-2 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
+                          onClick={() => insertVariable(variable.key)}
+                        >
+                          <div className="font-medium text-sm">{variable.label}</div>
+                          <div className="text-xs text-gray-500">{variable.description}</div>
+                          <div className="text-xs text-blue-600 mt-1">
+                            {`{{${variable.key}}}`}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-                İptal
-              </Button>
-              <Button onClick={handleCreate} disabled={!formData.name || !formData.content}>
-                <Save className="h-4 w-4 mr-2" />
-                Kaydet
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                  İptal
+                </Button>
+                <Button onClick={handleCreate} disabled={!formData.name || !formData.content}>
+                  <Save className="h-4 w-4 mr-2" />
+                  Kaydet
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
-      <div className="flex items-center space-x-4">
+      {/* Mobile-Responsive Filters */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
           <Input
@@ -396,7 +508,7 @@ export default function NotificationTemplatesPage() {
           />
         </div>
         <Select value={selectedType} onValueChange={setSelectedType}>
-          <SelectTrigger className="w-48">
+          <SelectTrigger className="w-full sm:w-48">
             <SelectValue placeholder="Tür filtrele" />
           </SelectTrigger>
           <SelectContent>
@@ -416,94 +528,110 @@ export default function NotificationTemplatesPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Şablon</TableHead>
-                <TableHead>Tür</TableHead>
-                <TableHead>İçerik Önizleme</TableHead>
-                <TableHead>Değişkenler</TableHead>
-                <TableHead>Durum</TableHead>
-                <TableHead>Son Güncelleme</TableHead>
-                <TableHead className="w-[50px]"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredTemplates.map((template) => (
-                <TableRow key={template.id}>
-                  <TableCell>
-                    <div className="font-medium">{template.name}</div>
-                    {template.subject && (
-                      <div className="text-sm text-gray-500">Konu: {template.subject}</div>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Badge className={getTypeBadgeColor(template.type)}>
-                      <div className="flex items-center space-x-1">
-                        {getTypeIcon(template.type)}
-                        <span>{template.type}</span>
-                      </div>
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="max-w-xs truncate text-sm text-gray-600">
-                      {template.content}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-wrap gap-1">
-                      {template.variables.slice(0, 3).map((variable) => (
-                        <Badge key={variable} variant="outline" className="text-xs">
-                          {variable}
-                        </Badge>
-                      ))}
-                      {template.variables.length > 3 && (
-                        <Badge variant="outline" className="text-xs">
-                          +{template.variables.length - 3}
-                        </Badge>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={template.isActive ? 'default' : 'secondary'}>
-                      {template.isActive ? 'Aktif' : 'Pasif'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="text-sm text-gray-500">
-                      {new Date(template.updatedAt).toLocaleDateString('tr-TR')}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => openEditDialog(template)}>
-                          <Edit className="h-4 w-4 mr-2" />
-                          Düzenle
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleDuplicate(template)}>
-                          <Copy className="h-4 w-4 mr-2" />
-                          Kopyala
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => handleDelete(template.id)}
-                          className="text-red-600"
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Sil
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
+          {/* Desktop Table - Hidden on Mobile */}
+          <div className="hidden md:block">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Şablon</TableHead>
+                  <TableHead>Tür</TableHead>
+                  <TableHead>İçerik Önizleme</TableHead>
+                  <TableHead>Değişkenler</TableHead>
+                  <TableHead>Durum</TableHead>
+                  <TableHead>Son Güncelleme</TableHead>
+                  <TableHead className="w-[50px]"></TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filteredTemplates.map((template) => (
+                  <TableRow key={template.id}>
+                    <TableCell>
+                      <div className="font-medium">{template.name}</div>
+                      {template.subject && (
+                        <div className="text-sm text-gray-500">Konu: {template.subject}</div>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Badge className={getTypeBadgeColor(template.type)}>
+                        <div className="flex items-center space-x-1">
+                          {getTypeIcon(template.type)}
+                          <span>{template.type}</span>
+                        </div>
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="max-w-xs truncate text-sm text-gray-600">
+                        {template.content}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1">
+                        {template.variables.slice(0, 3).map((variable) => (
+                          <Badge key={variable} variant="outline" className="text-xs">
+                            {variable}
+                          </Badge>
+                        ))}
+                        {template.variables.length > 3 && (
+                          <Badge variant="outline" className="text-xs">
+                            +{template.variables.length - 3}
+                          </Badge>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={template.isActive ? 'default' : 'secondary'}>
+                        {template.isActive ? 'Aktif' : 'Pasif'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="text-sm text-gray-500">
+                        {new Date(template.updatedAt).toLocaleDateString('tr-TR')}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => openEditDialog(template)}>
+                            <Edit className="h-4 w-4 mr-2" />
+                            Düzenle
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleDuplicate(template)}>
+                            <Copy className="h-4 w-4 mr-2" />
+                            Kopyala
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => handleDelete(template.id)}
+                            className="text-red-600"
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Sil
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* Mobile Cards - Visible on Mobile Only */}
+          <div className="md:hidden space-y-3">
+            {filteredTemplates.map((template) => (
+              <TemplateCard
+                key={template.id}
+                template={template}
+                onEdit={openEditDialog}
+                onDuplicate={handleDuplicate}
+                onDelete={handleDelete}
+              />
+            ))}
+          </div>
 
           {filteredTemplates.length === 0 && (
             <div className="text-center py-8">
@@ -534,8 +662,8 @@ export default function NotificationTemplatesPage() {
               Mevcut şablonu düzenleyin
             </DialogDescription>
           </DialogHeader>
-          <div className="grid grid-cols-3 gap-6">
-            <div className="col-span-2 space-y-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="edit-name">Şablon Adı</Label>
                 <Input

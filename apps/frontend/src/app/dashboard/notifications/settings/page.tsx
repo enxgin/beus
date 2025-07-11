@@ -250,7 +250,7 @@ export default function NotificationSettingsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       <div>
         <Breadcrumb>
           <BreadcrumbItem>
@@ -267,9 +267,9 @@ export default function NotificationSettingsPage() {
             <BreadcrumbLink>Ayarlar</BreadcrumbLink>
           </BreadcrumbItem>
         </Breadcrumb>
-        <div className="flex items-center justify-between mt-2">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mt-2 gap-4">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Bildirim Ayarları</h1>
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Bildirim Ayarları</h1>
             <p className="text-muted-foreground mt-1">
               SMS, WhatsApp ve E-posta bildirim ayarlarını yapılandırın
             </p>
@@ -278,7 +278,7 @@ export default function NotificationSettingsPage() {
             <Badge variant={settings.isActive ? 'default' : 'secondary'}>
               {settings.isActive ? 'Aktif' : 'Pasif'}
             </Badge>
-            <Button onClick={handleSave} disabled={loading}>
+            <Button onClick={handleSave} disabled={loading} className="w-fit">
               {loading ? (
                 <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
               ) : (
@@ -290,30 +290,31 @@ export default function NotificationSettingsPage() {
         </div>
       </div>
 
-      <Tabs defaultValue="sms" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="sms" className="flex items-center space-x-2">
+      <Tabs defaultValue="sms" className="space-y-4 md:space-y-6">
+        {/* Mobile-Responsive Tabs */}
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 h-auto">
+          <TabsTrigger value="sms" className="flex flex-col sm:flex-row items-center space-y-1 sm:space-y-0 sm:space-x-2 p-2 sm:p-3">
             <Phone className="h-4 w-4" />
-            <span>SMS</span>
+            <span className="text-xs sm:text-sm">SMS</span>
           </TabsTrigger>
-          <TabsTrigger value="whatsapp" className="flex items-center space-x-2">
+          <TabsTrigger value="whatsapp" className="flex flex-col sm:flex-row items-center space-y-1 sm:space-y-0 sm:space-x-2 p-2 sm:p-3">
             <MessageSquare className="h-4 w-4" />
-            <span>WhatsApp</span>
+            <span className="text-xs sm:text-sm">WhatsApp</span>
           </TabsTrigger>
-          <TabsTrigger value="email" className="flex items-center space-x-2">
+          <TabsTrigger value="email" className="flex flex-col sm:flex-row items-center space-y-1 sm:space-y-0 sm:space-x-2 p-2 sm:p-3">
             <Mail className="h-4 w-4" />
-            <span>E-posta</span>
+            <span className="text-xs sm:text-sm">E-posta</span>
           </TabsTrigger>
-          <TabsTrigger value="general" className="flex items-center space-x-2">
+          <TabsTrigger value="general" className="flex flex-col sm:flex-row items-center space-y-1 sm:space-y-0 sm:space-x-2 p-2 sm:p-3 col-span-2 md:col-span-1">
             <Settings className="h-4 w-4" />
-            <span>Genel</span>
+            <span className="text-xs sm:text-sm">Genel</span>
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="sms">
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
                   <CardTitle className="flex items-center space-x-2">
                     <Phone className="h-5 w-5" />
@@ -394,7 +395,7 @@ export default function NotificationSettingsPage() {
         <TabsContent value="whatsapp">
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
                   <CardTitle className="flex items-center space-x-2">
                     <MessageSquare className="h-5 w-5" />
@@ -475,7 +476,7 @@ export default function NotificationSettingsPage() {
         <TabsContent value="email">
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
                   <CardTitle className="flex items-center space-x-2">
                     <Mail className="h-5 w-5" />
@@ -564,7 +565,7 @@ export default function NotificationSettingsPage() {
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
                       <Label className="text-base">Sistem Durumu</Label>
                       <p className="text-sm text-gray-500">
@@ -582,7 +583,7 @@ export default function NotificationSettingsPage() {
                   <Separator />
 
                   <div className="space-y-4">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                       <div>
                         <Label className="text-base">Çalışma Saatleri</Label>
                         <p className="text-sm text-gray-500">
@@ -607,7 +608,7 @@ export default function NotificationSettingsPage() {
                     </div>
 
                     {settings.generalSettings.businessHours.enabled && (
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label>Başlangıç Saati</Label>
                           <Input
@@ -654,7 +655,7 @@ export default function NotificationSettingsPage() {
 
                   <div className="space-y-4">
                     <Label className="text-base">Yeniden Deneme Ayarları</Label>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label>Maksimum Deneme</Label>
                         <Input
@@ -703,7 +704,7 @@ export default function NotificationSettingsPage() {
                   <Separator />
 
                   <div className="space-y-4">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                       <div>
                         <Label className="text-base">Hız Sınırlaması</Label>
                         <p className="text-sm text-gray-500">
@@ -728,7 +729,7 @@ export default function NotificationSettingsPage() {
                     </div>
 
                     {settings.generalSettings.rateLimiting.enabled && (
-                      <div className="grid grid-cols-3 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div className="space-y-2">
                           <Label>SMS/Saat</Label>
                           <Input
@@ -801,3 +802,4 @@ export default function NotificationSettingsPage() {
     </div>
   );
 }
+                
