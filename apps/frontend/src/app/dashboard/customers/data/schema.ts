@@ -69,7 +69,16 @@ export const packageSchema = z.object({
   id: z.string(),
   name: z.string(),
   price: z.number(),
-  sessionCount: z.number(),
+  totalSessions: z.number().optional(),
+  sessionCount: z.number().optional(), // Backward compatibility
+  services: z.array(z.object({
+    serviceId: z.string(),
+    quantity: z.number(),
+    service: z.object({
+      id: z.string(),
+      name: z.string(),
+    }).optional(),
+  })).optional(),
 });
 
 // Customer Package schema
@@ -77,6 +86,8 @@ export const customerPackageSchema = z.object({
   id: z.string(),
   purchaseDate: z.string(), // ISO date string
   expiryDate: z.string(),   // ISO date string (backend'de expiryDate olarak geliyor)
+  createdAt: z.string().optional(), // Backward compatibility
+  endDate: z.string().optional(), // Backward compatibility
   remainingSessions: z.any().nullable().optional(), // JSON olarak geliyor
   package: packageSchema,
   usageHistory: z.array(z.any()).optional(),

@@ -49,6 +49,7 @@ import {
   Play,
   Pause,
   HomeIcon,
+  Filter,
 } from 'lucide-react';
 import {
   Breadcrumb,
@@ -163,6 +164,132 @@ const mockTemplates = [
   { id: '3', name: 'Paket Süresi Dolumu', type: 'EMAIL' },
   { id: '4', name: 'Hoş Geldin E-postası', type: 'EMAIL' },
 ];
+
+// Mobile Trigger Card Component
+function TriggerCard({ trigger, onEdit, onToggleActive, onDuplicate, onDelete }: {
+  trigger: NotificationTrigger;
+  onEdit: (trigger: NotificationTrigger) => void;
+  onToggleActive: (id: string) => void;
+  onDuplicate: (trigger: NotificationTrigger) => void;
+  onDelete: (id: string) => void;
+}) {
+  const eventTypeInfo = eventTypes.find(et => et.value === trigger.eventType);
+  const EventIcon = eventTypeInfo?.icon || Zap;
+
+  const getConditionText = () => {
+    switch (trigger.eventType) {
+      case 'APPOINTMENT_REMINDER':
+        return `${trigger.conditions.reminderHours} saat öncesi`;
+      case 'BIRTHDAY':
+        return `Saat ${trigger.conditions.sendTime}`;
+      case 'PACKAGE_EXPIRY':
+        return `${trigger.conditions.expiryDays} gün öncesi`;
+      case 'PAYMENT_REMINDER':
+        return `${trigger.conditions.reminderDays} gün öncesi`;
+      case 'WELCOME_MESSAGE':
+        return `${trigger.conditions.delayMinutes} dakika sonra`;
+      default:
+        return '';
+    }
+  };
+
+  return (
+    <Card className="w-full">
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between">
+          <div className="flex-1 min-w-0">
+            <CardTitle className="text-base font-medium truncate">
+              {trigger.name}
+            </CardTitle>
+            <CardDescription className="text-sm mt-1">
+              Son güncelleme: {new Date(trigger.updatedAt).toLocaleDateString('tr-TR')}
+            </CardDescription>
+          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => onEdit(trigger)}>
+                <Edit className="h-4 w-4 mr-2" />
+                Düzenle
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onToggleActive(trigger.id)}>
+                {trigger.isActive ? (
+                  <>
+                    <Pause className="h-4 w-4 mr-2" />
+                    Duraklat
+                  </>
+                ) : (
+                  <>
+                    <Play className="h-4 w-4 mr-2" />
+                    Aktifleştir
+                  </>
+                )}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onDuplicate(trigger)}>
+                <Copy className="h-4 w-4 mr-2" />
+                Kopyala
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => onDelete(trigger.id)}
+                className="text-red-600"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Sil
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="flex items-center justify-between">
+          <Badge className={eventTypeInfo?.color}>
+            <div className="flex items-center space-x-1">
+              <EventIcon className="h-3 w-3" />
+              <span className="text-xs">{eventTypeInfo?.label}</span>
+            </div>
+          </Badge>
+          <div className="flex items-center space-x-2">
+            <Switch
+              checked={trigger.isActive}
+              onCheckedChange={() => onToggleActive(trigger.id)}
+            />
+            <Badge variant={trigger.isActive ? 'default' : 'secondary'} className="text-xs">
+              {trigger.isActive ? 'Aktif' : 'Pasif'}
+            </Badge>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <div>
+            <div className="text-sm font-medium text-gray-900">Şablon</div>
+            <div className="text-sm text-gray-600">{trigger.templateName}</div>
+          </div>
+          
+          <div>
+            <div className="text-sm font-medium text-gray-900">Koşullar</div>
+            <div className="text-sm text-gray-600">{getConditionText()}</div>
+          </div>
+
+          <div>
+            <div className="text-sm font-medium text-gray-900">İstatistikler</div>
+            <div className="text-sm text-gray-600">
+              {trigger.triggerCount} tetikleme
+              {trigger.lastTriggered && (
+                <span className="block">
+                  Son: {new Date(trigger.lastTriggered).toLocaleDateString('tr-TR')}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function NotificationTriggersPage() {
   const [triggers, setTriggers] = useState<NotificationTrigger[]>(mockTriggers);
@@ -344,8 +471,31 @@ export default function NotificationTriggersPage() {
     }
   };
 
+  // Statistics
+  const stats = [
+    {
+      title: 'Toplam Tetikleyici',
+      value: triggers.length.toString(),
+      icon: Zap,
+      color: 'text-blue-600',
+    },
+    {
+      title: 'Aktif Tetikleyici',
+      value: triggers.filter(t => t.isActive).length.toString(),
+      icon: Play,
+      color: 'text-green-600',
+    },
+    {
+      title: 'Toplam Tetikleme',
+      value: triggers.reduce((sum, t) => sum + t.triggerCount, 0).toString(),
+      icon: Clock,
+      color: 'text-orange-600',
+    },
+  ];
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
+      {/* Header */}
       <div>
         <Breadcrumb>
           <BreadcrumbItem>
@@ -362,119 +512,139 @@ export default function NotificationTriggersPage() {
             <BreadcrumbLink>Tetikleyiciler</BreadcrumbLink>
           </BreadcrumbItem>
         </Breadcrumb>
-        <div className="flex items-center justify-between mt-2">
+        
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mt-2 space-y-4 sm:space-y-0">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Bildirim Tetikleyicileri</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Bildirim Tetikleyicileri</h1>
             <p className="text-muted-foreground mt-1">
               Otomatik bildirim kurallarını yönetin
             </p>
           </div>
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
-              <Button>
+              <Button className="w-full sm:w-auto">
                 <Plus className="h-4 w-4 mr-2" />
                 Yeni Tetikleyici
               </Button>
             </DialogTrigger>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Yeni Tetikleyici Oluştur</DialogTitle>
-              <DialogDescription>
-                Otomatik bildirim tetikleyicisi oluşturun
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Tetikleyici Adı</Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder="Tetikleyici adını girin"
-                />
-              </div>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Yeni Tetikleyici Oluştur</DialogTitle>
+                <DialogDescription>
+                  Otomatik bildirim tetikleyicisi oluşturun
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Tetikleyici Adı</Label>
+                  <Input
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                    placeholder="Tetikleyici adını girin"
+                  />
+                </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="eventType">Olay Türü</Label>
-                <Select
-                  value={formData.eventType}
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, eventType: value, conditions: {} }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Olay türü seçin" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {eventTypes.map((eventType) => (
-                      <SelectItem key={eventType.value} value={eventType.value}>
-                        <div className="flex items-center space-x-2">
-                          <eventType.icon className="h-4 w-4" />
-                          <span>{eventType.label}</span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="space-y-2">
+                  <Label htmlFor="eventType">Olay Türü</Label>
+                  <Select
+                    value={formData.eventType}
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, eventType: value, conditions: {} }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Olay türü seçin" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {eventTypes.map((eventType) => (
+                        <SelectItem key={eventType.value} value={eventType.value}>
+                          <div className="flex items-center space-x-2">
+                            <eventType.icon className="h-4 w-4" />
+                            <span>{eventType.label}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {formData.eventType && (
+                    <p className="text-sm text-gray-500">
+                      {getEventTypeInfo(formData.eventType)?.description}
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="templateId">Bildirim Şablonu</Label>
+                  <Select
+                    value={formData.templateId}
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, templateId: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Şablon seçin" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {mockTemplates.map((template) => (
+                        <SelectItem key={template.id} value={template.id}>
+                          <div className="flex items-center space-x-2">
+                            <Badge variant="outline">{template.type}</Badge>
+                            <span>{template.name}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 {formData.eventType && (
-                  <p className="text-sm text-gray-500">
-                    {getEventTypeInfo(formData.eventType)?.description}
-                  </p>
+                  <div className="space-y-2">
+                    <Label>Koşullar</Label>
+                    <div className="border rounded-lg p-4 bg-gray-50">
+                      {renderConditionFields(
+                        formData.eventType,
+                        formData.conditions,
+                        (updates) => setFormData(prev => ({ ...prev, conditions: { ...prev.conditions, ...updates } }))
+                      )}
+                    </div>
+                  </div>
                 )}
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="templateId">Bildirim Şablonu</Label>
-                <Select
-                  value={formData.templateId}
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, templateId: value }))}
+              <DialogFooter className="flex-col sm:flex-row space-y-2 sm:space-y-0">
+                <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)} className="w-full sm:w-auto">
+                  İptal
+                </Button>
+                <Button 
+                  onClick={handleCreate} 
+                  disabled={!formData.name || !formData.eventType || !formData.templateId}
+                  className="w-full sm:w-auto"
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Şablon seçin" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {mockTemplates.map((template) => (
-                      <SelectItem key={template.id} value={template.id}>
-                        <div className="flex items-center space-x-2">
-                          <Badge variant="outline">{template.type}</Badge>
-                          <span>{template.name}</span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {formData.eventType && (
-                <div className="space-y-2">
-                  <Label>Koşullar</Label>
-                  <div className="border rounded-lg p-4 bg-gray-50">
-                    {renderConditionFields(
-                      formData.eventType,
-                      formData.conditions,
-                      (updates) => setFormData(prev => ({ ...prev, conditions: { ...prev.conditions, ...updates } }))
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-                İptal
-              </Button>
-              <Button 
-                onClick={handleCreate} 
-                disabled={!formData.name || !formData.eventType || !formData.templateId}
-              >
-                <Save className="h-4 w-4 mr-2" />
-                Kaydet
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+                  <Save className="h-4 w-4 mr-2" />
+                  Kaydet
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
-      <div className="flex items-center space-x-4">
-        <div className="relative flex-1 max-w-sm">
+      {/* Statistics */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+        {stats.map((stat, index) => (
+          <Card key={index}>
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-2">
+                <stat.icon className={`h-5 w-5 ${stat.color}`} />
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">{stat.title}</p>
+                  <p className="text-lg sm:text-xl font-bold text-gray-900">{stat.value}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row gap-4">
+        <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
           <Input
             placeholder="Tetikleyici ara..."
@@ -484,7 +654,7 @@ export default function NotificationTriggersPage() {
           />
         </div>
         <Select value={selectedEventType} onValueChange={setSelectedEventType}>
-          <SelectTrigger className="w-48">
+          <SelectTrigger className="w-full sm:w-48">
             <SelectValue placeholder="Olay türü filtrele" />
           </SelectTrigger>
           <SelectContent>
@@ -498,7 +668,40 @@ export default function NotificationTriggersPage() {
         </Select>
       </div>
 
-      <Card>
+      {/* Mobile Cards - Visible on Mobile Only */}
+      <div className="md:hidden space-y-4">
+        {filteredTriggers.map((trigger) => (
+          <TriggerCard
+            key={trigger.id}
+            trigger={trigger}
+            onEdit={openEditDialog}
+            onToggleActive={handleToggleActive}
+            onDuplicate={handleDuplicate}
+            onDelete={handleDelete}
+          />
+        ))}
+        
+        {filteredTriggers.length === 0 && (
+          <div className="text-center py-8">
+            <Zap className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Tetikleyici bulunamadı</h3>
+            <p className="text-gray-500 mb-4">
+              {searchTerm || selectedEventType !== 'all'
+                ? 'Arama kriterlerinize uygun tetikleyici bulunamadı.'
+                : 'Henüz hiç tetikleyici oluşturulmamış.'}
+            </p>
+            {!searchTerm && selectedEventType === 'all' && (
+              <Button onClick={() => setIsCreateDialogOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                İlk Tetikleyicinizi Oluşturun
+              </Button>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Desktop Table - Hidden on Mobile */}
+      <Card className="hidden md:block">
         <CardHeader>
           <CardTitle>Tetikleyiciler ({filteredTriggers.length})</CardTitle>
           <CardDescription>
@@ -644,7 +847,7 @@ export default function NotificationTriggersPage() {
 
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Tetikleyiciyi Düzenle</DialogTitle>
             <DialogDescription>
@@ -719,13 +922,14 @@ export default function NotificationTriggersPage() {
               </div>
             )}
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+          <DialogFooter className="flex-col sm:flex-row space-y-2 sm:space-y-0">
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)} className="w-full sm:w-auto">
               İptal
             </Button>
-            <Button 
-              onClick={handleEdit} 
+            <Button
+              onClick={handleEdit}
               disabled={!formData.name || !formData.eventType || !formData.templateId}
+              className="w-full sm:w-auto"
             >
               <Save className="h-4 w-4 mr-2" />
               Güncelle
@@ -736,3 +940,4 @@ export default function NotificationTriggersPage() {
     </div>
   );
 }
+                

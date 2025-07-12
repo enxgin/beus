@@ -35,9 +35,11 @@ import {
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import api from "@/lib/api"
 import { Customer } from "../data/schema"
+import { CustomerPackage } from "@/types"
 import { EditCustomerDialog } from "../components/edit-customer-dialog"
 import { AnalyticsCards } from "./components/analytics-cards"
 import { useCustomerAnalytics } from "./hooks/use-customer-analytics"
+import { CustomerPackagesTab } from "./components/customer-packages-tab"
 
 export default function CustomerProfilePage() {
   const params = useParams()
@@ -304,42 +306,7 @@ export default function CustomerProfilePage() {
             </TabsContent>
 
             <TabsContent value="packages" className="mt-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Satın Alınan Paketler</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {customer.customerPackages && customer.customerPackages.length > 0 ? (
-                    <div className="grid gap-4 md:grid-cols-2">
-                      {customer.customerPackages.map((cp, index) => (
-                        <Card key={cp.id || index}>
-                          <CardHeader>
-                            <CardTitle>{cp.package.name}</CardTitle>
-                            <CardDescription>{new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(cp.package.price)}</CardDescription>
-                          </CardHeader>
-                          <CardContent>
-                            <p>Kalan Seans: <span className="font-bold">
-                              {typeof cp.remainingSessions === 'object' ? 
-                                JSON.stringify(cp.remainingSessions) : 
-                                cp.remainingSessions
-                              } / 
-                              {typeof cp.package.sessionCount === 'object' ? 
-                                JSON.stringify(cp.package.sessionCount) : 
-                                cp.package.sessionCount
-                              }
-                            </span></p>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-10 text-muted-foreground">
-                      <Package className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4" />
-                      <p>Henüz satın alınmış paket bulunmuyor.</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+              <CustomerPackagesTab customerId={customerId} />
             </TabsContent>
 
             <TabsContent value="payments" className="mt-4">

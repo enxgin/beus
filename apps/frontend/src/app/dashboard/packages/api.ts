@@ -88,3 +88,45 @@ export const getCustomerPackage = async (id: string): Promise<CustomerPackage> =
 export const deleteCustomerPackage = async (id: string): Promise<void> => {
   await api.delete(`/packages/customer-package/${id}`);
 };
+
+// Get customer packages with status information
+export const getCustomerPackagesWithStatus = async (params: {
+  skip?: number;
+  take?: number;
+  customerId?: string;
+  active?: boolean
+} = {}): Promise<{ data: CustomerPackage[]; total: number }> => {
+  const queryParams = new URLSearchParams();
+  
+  if (params.skip !== undefined) queryParams.append('skip', params.skip.toString());
+  if (params.take !== undefined) queryParams.append('take', params.take.toString());
+  if (params.customerId) queryParams.append('customerId', params.customerId);
+  if (params.active !== undefined) queryParams.append('active', params.active.toString());
+  
+  // customerId belirtilmemişse 'all' parametresi ekle
+  if (!params.customerId) {
+    queryParams.append('customerId', 'all');
+  }
+  
+  console.log('getCustomerPackagesWithStatus API çağrısı yapılıyor:', `/packages/customer-packages-with-status?${queryParams.toString()}`);
+  
+  try {
+    const response = await api.get<CustomerPackage[]>(`/packages/customer-packages-with-status?${queryParams.toString()}`);
+    return {
+      data: response.data,
+      total: response.data.length
+    };
+  } catch (error: any) {
+    console.error('Statülü müşteri paketleri getirilirken hata:', error);
+    if (error.response?.status === 404) {
+      console.warn('Endpoint bulunamadı (404). API yolu kontrol edilmeli.');
+    }
+    throw error;
+  }
+};
+
+// Get customer package status
+export const getCustomerPackageStatus = async (id: string): Promise<any> => {
+  const response = await api.get(`/packages/customer-package/${id}/status`);
+  return response.data;
+};

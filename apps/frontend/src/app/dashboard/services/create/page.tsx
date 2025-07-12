@@ -42,61 +42,6 @@ const formSchema = z.object({
 
 type ServiceFormValues = z.infer<typeof formSchema>;
 
-const fetchFormData = async () => {
-  try {
-    const [categories, branches, staffResult] = await Promise.all([
-      api.get("/service-categories").then(res => res.data),
-      api.get("/branches").then(res => res.data),
-      api.get("/users?role=STAFF").then(res => res.data),
-    ]);
-    
-    // API might return a paginated response { items: [...] }, so we extract the array.
-    let rawStaff = Array.isArray(staffResult) ? staffResult : staffResult.data || staffResult.items || [];
-    
-    // API verilerini normalize et
-    const staff = rawStaff.map((user: any) => {
-      // API'den gelen verilerde branch farklı formatlarda olabilir
-      
-      // 1. Eğer branch bir string ise (ID olarak gelmiş)
-      if (typeof user.branch === 'string') {
-        const branchInfo = branches.find((b: any) => b.id === user.branch);
-        if (branchInfo) {
-          return {
-            ...user,
-            branch: {
-              id: branchInfo.id,
-              name: branchInfo.name
-            }
-          };
-        }
-      } 
-      // 2. Eğer branchId varsa ama branch nesnesi yoksa
-      else if (user.branchId && !user.branch) {
-        const branchInfo = branches.find((b: any) => b.id === user.branchId);
-        if (branchInfo) {
-          return {
-            ...user,
-            branch: {
-              id: branchInfo.id,
-              name: branchInfo.name
-            }
-          };
-        }
-      }
-      
-      // 3. Zaten doğru formatta veya branch yoksa
-      return user;
-    });
-    
-    console.log('Normalized Staff Data:', staff);
-    console.log('Available Branches:', branches);
-    
-    return { categories, branches, staff };
-  } catch (error) {
-    console.error('Error fetching form data:', error);
-    return { categories: [], branches: [], staff: [] };
-  }
-};
 
 const CreateServicePage = () => {
   const router = useRouter();
@@ -119,7 +64,61 @@ const CreateServicePage = () => {
   // Form data loading
   const { data: formData, isLoading: isFormDataLoading } = useQuery({
     queryKey: ["service-form-data"],
-    queryFn: fetchFormData,
+    queryFn: async () => {
+      try {
+        const [categories, branches, staffResult] = await Promise.all([
+          api.get("/service-categories").then(res => res.data),
+          api.get("/branches").then(res => res.data),
+          api.get("/users?role=STAFF").then(res => res.data),
+        ]);
+        
+        // API might return a paginated response { items: [...] }, so we extract the array.
+        let rawStaff = Array.isArray(staffResult) ? staffResult : staffResult.data || staffResult.items || [];
+        
+        // API verilerini normalize et
+        const staff = rawStaff.map((user: any) => {
+          // API'den gelen verilerde branch farklı formatlarda olabilir
+          
+          // 1. Eğer branch bir string ise (ID olarak gelmiş)
+          if (typeof user.branch === 'string') {
+            const branchInfo = branches.find((b: any) => b.id === user.branch);
+            if (branchInfo) {
+              return {
+                ...user,
+                branch: {
+                  id: branchInfo.id,
+                  name: branchInfo.name
+                }
+              };
+            }
+          }
+          // 2. Eğer branchId varsa ama branch nesnesi yoksa
+          else if (user.branchId && !user.branch) {
+            const branchInfo = branches.find((b: any) => b.id === user.branchId);
+            if (branchInfo) {
+              return {
+                ...user,
+                branch: {
+                  id: branchInfo.id,
+                  name: branchInfo.name
+                }
+              };
+            }
+          }
+          
+          // 3. Zaten doğru formatta veya branch yoksa
+          return user;
+        });
+        
+        console.log('Normalized Staff Data:', staff);
+        console.log('Available Branches:', branches);
+        
+        return { categories, branches, staff };
+      } catch (error) {
+        console.error('Error fetching form data:', error);
+        return { categories: [], branches: [], staff: [] };
+      }
+    },
   });
   
   // MEVCUT ID'leri backend'in tanıdığı şekilde gönderelim

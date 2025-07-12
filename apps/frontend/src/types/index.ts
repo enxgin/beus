@@ -47,13 +47,30 @@ export interface CustomerPackage {
   package: Package;
   startDate: string;
   endDate: string;
-  remainingSessions?: number;
+  remainingSessions?: Record<string, number>;
   remainingMinutes?: number;
   isActive: boolean;
   salesCode?: string;
   notes?: string;
   createdAt: string;
   updatedAt: string;
+  purchaseDate?: string;
+  expiryDate?: string;
+  customer?: {
+    id: string;
+    name: string;
+    email?: string;
+    phone?: string;
+  };
+  status?: PackageStatus;
+}
+
+export interface PackageStatus {
+  isCompleted: boolean;
+  totalSessions: number;
+  usedSessions: number;
+  remainingSessions: Record<string, number>;
+  completionPercentage: number;
 }
 
 export interface CreateCustomerPackageDto {

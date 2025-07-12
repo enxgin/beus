@@ -162,6 +162,39 @@ export class PackagesController {
     return this.packagesService.usePackageForAppointment(id, usePackageSessionDto.appointmentId);
   }
 
+  @ApiOperation({ summary: 'Müşteri paketinin tamamlanma durumunu kontrol et' })
+  @ApiResponse({ status: 200, description: 'Paket durumu başarıyla getirildi' })
+  @ApiResponse({ status: 404, description: 'Müşteri paketi bulunamadı' })
+  @ApiParam({ name: 'id', description: 'Müşteri Paketi ID' })
+  @Roles(UserRole.ADMIN, UserRole.SUPER_BRANCH_MANAGER, UserRole.BRANCH_MANAGER, UserRole.RECEPTION, UserRole.STAFF)
+  @Get('customer-package/:id/status')
+  checkPackageCompletion(@Param('id') id: string) {
+    return this.packagesService.checkPackageCompletion(id);
+  }
+
+  @ApiOperation({ summary: 'Müşterinin tüm paketlerini durumlarıyla birlikte getir' })
+  @ApiResponse({ status: 200, description: 'Müşteri paketleri durumlarıyla birlikte getirildi' })
+  @ApiResponse({ status: 400, description: 'Müşteri ID gerekli' })
+  @ApiQuery({ name: 'customerId', required: false, description: 'Müşteri ID (all = tüm müşteriler)' })
+  @ApiQuery({ name: 'skip', required: false, description: 'Atlanacak kayıt sayısı' })
+  @ApiQuery({ name: 'take', required: false, description: 'Alınacak kayıt sayısı' })
+  @ApiQuery({ name: 'active', required: false, description: 'Sadece aktif paketleri getir' })
+  @Roles(UserRole.ADMIN, UserRole.SUPER_BRANCH_MANAGER, UserRole.BRANCH_MANAGER, UserRole.RECEPTION, UserRole.STAFF)
+  @Get('customer-packages-with-status')
+  getCustomerPackagesWithStatus(@Query() query: any, @Req() req) {
+    const { customerId, skip, take, active, ...where } = query;
+    
+    // customerId 'all' ise tüm müşterilerin paketlerini getir
+    const actualCustomerId = customerId === 'all' ? undefined : customerId;
+    
+    return this.packagesService.getCustomerPackagesWithStatus(actualCustomerId, {
+      skip: skip ? parseInt(skip, 10) : undefined,
+      take: take ? parseInt(take, 10) : undefined,
+      active: active === 'true' ? true : undefined,
+      ...where
+    }, req.user);
+  }
+
   @ApiOperation({ summary: 'Müşteri paketini sil' })
   @ApiResponse({ status: 200, description: 'Müşteri paketi başarıyla silindi' })
   @ApiResponse({ status: 404, description: 'Müşteri paketi bulunamadı' })

@@ -14,7 +14,7 @@ import {
   CardHeader,
   CardTitle,
 } from "../../../../components/ui/card";
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink } from "../../../../components/ui/breadcrumb";
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbSeparator } from "../../../../components/ui/breadcrumb";
 import { HomeIcon, PackageIcon, PencilIcon, ArrowLeftIcon } from "lucide-react";
 import { formatTurkishLira } from "../../../../lib/utils";
 import { Badge } from "../../../../components/ui/badge";
@@ -84,9 +84,11 @@ const PackageDetailPage = () => {
               Ana Sayfa
             </BreadcrumbLink>
           </BreadcrumbItem>
+          <BreadcrumbSeparator />
           <BreadcrumbItem>
             <BreadcrumbLink href="/dashboard/packages">Paketler</BreadcrumbLink>
           </BreadcrumbItem>
+          <BreadcrumbSeparator />
           <BreadcrumbItem isCurrentPage>
             <BreadcrumbLink>Hata</BreadcrumbLink>
           </BreadcrumbItem>
@@ -124,9 +126,11 @@ const PackageDetailPage = () => {
               Ana Sayfa
             </BreadcrumbLink>
           </BreadcrumbItem>
+          <BreadcrumbSeparator />
           <BreadcrumbItem>
             <BreadcrumbLink href="/dashboard/packages">Paketler</BreadcrumbLink>
           </BreadcrumbItem>
+          <BreadcrumbSeparator />
           <BreadcrumbItem isCurrentPage>
             <BreadcrumbLink>{packageData.name}</BreadcrumbLink>
           </BreadcrumbItem>

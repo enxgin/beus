@@ -160,6 +160,7 @@ export class PackagesService {
       where,
       orderBy,
       include: include || {
+        customer: true,
         package: {
           include: {
             services: {
@@ -217,6 +218,114 @@ export class PackagesService {
         data: { remainingSessions: remainingSessions as any },
       });
     });
+  }
+
+  // Paket tamamlanma durumunu kontrol eden metod
+  async checkPackageCompletion(customerPackageId: string) {
+    const customerPackage = await this.prisma.customerPackage.findUnique({
+      where: { id: customerPackageId },
+      include: {
+        package: {
+          include: {
+            services: true,
+          },
+        },
+      },
+    });
+
+    if (!customerPackage) {
+      throw new NotFoundException(`Müşteri paketi bulunamadı: ID ${customerPackageId}`);
+    }
+
+    const remainingSessions = customerPackage.remainingSessions as Record<string, number>;
+    
+    if (!remainingSessions) {
+      return { isCompleted: false, totalSessions: 0, usedSessions: 0 };
+    }
+
+    // Toplam seans sayısını hesapla
+    let totalSessions = 0;
+    let usedSessions = 0;
+
+    customerPackage.package.services.forEach(service => {
+      totalSessions += service.quantity;
+      const remaining = remainingSessions[service.serviceId] || 0;
+      usedSessions += (service.quantity - remaining);
+    });
+
+    const isCompleted = Object.values(remainingSessions).every(count => count === 0);
+
+    return {
+      isCompleted,
+      totalSessions,
+      usedSessions,
+      remainingSessions,
+      completionPercentage: totalSessions > 0 ? Math.round((usedSessions / totalSessions) * 100) : 0,
+    };
+  }
+
+  // Müşterinin tüm paketlerinin durumunu getiren metod
+  async getCustomerPackagesWithStatus(customerId?: string, options?: {
+    skip?: number;
+    take?: number;
+    active?: boolean;
+    [key: string]: any;
+  }, user?: any) {
+    // Where koşullarını oluştur
+    const whereConditions: any = {};
+    
+    // customerId belirtilmişse filtrele
+    if (customerId) {
+      whereConditions.customerId = customerId;
+    }
+    
+    // Role-based filtering: Kullanıcı rolüne göre şube filtresi uygula
+    if (user) {
+      const { role, branchId } = user;
+      
+      // ADMIN tüm şubeleri görebilir
+      if (role !== 'ADMIN') {
+        // Diğer roller sadece kendi şubelerini görebilir
+        if (role === 'SUPER_BRANCH_MANAGER') {
+          // SUPER_BRANCH_MANAGER birden fazla şubeyi yönetebilir
+          // Şimdilik kendi şubesini gösterelim, daha sonra genişletilebilir
+          whereConditions.customer = {
+            branchId: branchId
+          };
+        } else {
+          // STAFF, BRANCH_MANAGER, RECEPTION sadece kendi şubelerini görebilir
+          whereConditions.customer = {
+            branchId: branchId
+          };
+        }
+      }
+    }
+    
+    // Aktif paket filtresi
+    if (options?.active === true) {
+      whereConditions.expiryDate = {
+        gte: new Date(),
+      };
+    }
+
+    const customerPackages = await this.findAllCustomerPackages({
+      where: whereConditions,
+      skip: options?.skip,
+      take: options?.take,
+      orderBy: { createdAt: 'desc' },
+    });
+
+    const packagesWithStatus = await Promise.all(
+      customerPackages.map(async (pkg) => {
+        const status = await this.checkPackageCompletion(pkg.id);
+        return {
+          ...pkg,
+          status,
+        };
+      })
+    );
+
+    return packagesWithStatus;
   }
 
   async removeCustomerPackage(id: string) {

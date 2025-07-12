@@ -2,11 +2,14 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import { useQuery, UseQueryOptions } from '@tanstack/react-query';
-import { useAuthStore } from '@/stores/auth.store'; 
+import { useAuthStore } from '@/stores/auth.store';
 import api from '@/lib/api';
 import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import { UserRole } from '@/types/user';
+import Link from 'next/link';
+import { getCustomerPackagesWithStatus } from '../api';
+import type { CustomerPackage as ImportedCustomerPackage, PackageService as ImportedPackageService } from '@/types';
 
 // UI Bileşenleri
 import {
@@ -35,7 +38,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Calendar, Search, AlertCircle } from 'lucide-react';
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { Calendar, Search, AlertCircle, HomeIcon } from 'lucide-react';
 
 // Sayfada kullanılacak sabit değerler
 const PAGE_SIZE = 10;
@@ -56,43 +65,36 @@ type SoldPackageParams = {
   useMockData?: boolean;
 };
 
-type PackageService = {
-  service?: {
-    id: string;
-    name: string;
-  };
-};
-
-type CustomerPackage = {
-  id: string;
-  customerId: string;
-  packageId: string;
-  purchaseDate: string;
-  expiryDate: string;
-  remainingSessions?: Record<string, number>;
-  customer?: {
-    id: string;
-    name: string;
-    email?: string;
-    phone?: string;
-  };
-  package?: {
-    id: string;
-    name: string;
-    description?: string;
-    price?: number;
-    services?: PackageService[];
-  };
-};
+// Merkezi tiplerden import edilen tipleri kullanıyoruz
+type CustomerPackage = ImportedCustomerPackage;
+type PackageService = ImportedPackageService;
 
 // Sayfa başlık bileşeni
 function PageTitle() {
   return (
-    <div className="mb-6">
-      <h1 className="text-3xl font-bold tracking-tight">Satılan Paketler</h1>
-      <p className="text-muted-foreground">
-        Müşterilere satılan tüm paketleri ve kullanım durumlarını görüntüleyin.
-      </p>
+    <div className="space-y-6">
+      <div>
+        <Breadcrumb>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/dashboard">
+              <HomeIcon className="h-4 w-4 mr-1" />
+              Ana Sayfa
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/dashboard/packages">Paketler</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem isCurrentPage>
+            <BreadcrumbLink>Satılan Paketler</BreadcrumbLink>
+          </BreadcrumbItem>
+        </Breadcrumb>
+        <h1 className="text-3xl font-bold tracking-tight mt-2">Satılan Paketler</h1>
+        <p className="text-muted-foreground mt-1">
+          Müşterilere satılan tüm paketleri ve kullanım durumlarını görüntüleyin.
+        </p>
+      </div>
     </div>
   );
 }
@@ -111,41 +113,9 @@ async function fetchBranches(): Promise<Branch[]> {
   }
 }
 
-// API'den satılan paketleri çekmek için fonksiyon - rol bazlı filtreleme ve sunucu tarafında arama ile
+// API'den satılan paketleri çekmek için fonksiyon - yeni API ile
 async function fetchSoldPackages(params: SoldPackageParams): Promise<CustomerPackage[]> {
   console.log('fetchSoldPackages çağrıldı, parametreler:', params);
-  
-  // Token kontrolü
-  const authState = useAuthStore.getState();
-  let token = authState.token;
-  
-  // Token yoksa manuel yedekten kontrol et
-  if (!token) {
-    console.log('Zustand store\'da token bulunamadı, manuel yedek kontrol ediliyor...');
-    try {
-      if (typeof window !== 'undefined') {
-        const manualBackup = localStorage.getItem('auth-manual-backup');
-        if (manualBackup) {
-          const parsedBackup = JSON.parse(manualBackup);
-          if (parsedBackup.token) {
-            token = parsedBackup.token;
-            console.log('Manuel yedekten token alındı:', parsedBackup.token.substring(0, 10) + '...');
-          }
-        }
-      }
-    } catch (e) {
-      console.error('Manuel token yedeği okunurken hata:', e);
-    }
-  }
-  
-  // Hala token yoksa mock veri dön
-  if (!token) {
-    console.error('Token bulunamadı! Oturum açık değil veya token kayıp.');
-    console.log('Mock veriler kullanılıyor (token bulunamadı)');
-    return getMockPackages(params);
-  }
-  
-  console.log('Kullanılan token:', token.substring(0, 15) + '...');
   
   // Mock veri kullanılacaksa doğrudan mock veri döndür
   if (params.useMockData) {
@@ -153,50 +123,28 @@ async function fetchSoldPackages(params: SoldPackageParams): Promise<CustomerPac
     return getMockPackages(params);
   }
   
-  // URL parametrelerini oluştur
-  const queryParams = new URLSearchParams();
-  if (params.skip !== undefined) queryParams.append('skip', params.skip.toString());
-  if (params.take !== undefined) queryParams.append('take', params.take.toString());
-  if (params.statusFilter === 'active') queryParams.append('active', 'true');
-  
-  // Arama terimi varsa ekle
-  if (params.searchTerm) {
-    queryParams.append('searchTerm', params.searchTerm);
-  }
-  
-  // Şube filtresi varsa ekle
-  if (params.branchId) {
-    queryParams.append('branchId', params.branchId);
-  }
-  
-  // CustomerId parametresi - customer-package endpoint'i için gerekli değil
-  // Bu endpoint tüm customer package'ları döndürür, backend'de branchId ile filtrelenir
-  
   try {
-    // Backend API'sine istek gönder
-    console.log('API isteği yapılıyor:', `/packages/customer-package?${queryParams.toString()}`);
+    // Yeni API fonksiyonunu kullan
+    const apiParams = {
+      skip: params.skip,
+      take: params.take,
+      customerId: 'all', // Tüm müşterilerin paketlerini getir
+      active: params.statusFilter === 'active' ? true : undefined
+    };
     
-    // Token'dan emin olalım
-    if (!token) {
-      console.error('API isteği için token bulunamadı, mock veriler kullanılacak');
-      return getMockPackages(params);
-    }
+    console.log('getCustomerPackagesWithStatus API çağrısı yapılıyor:', apiParams);
     
-    console.log('Token durumu: Token var, uzunluk:', token.length);
-    
-    // API isteğini doğrudan api instance ile yap (interceptor token ekleyecek)
-    const response = await api.get<CustomerPackage[]>(`/packages/customer-package?${queryParams.toString()}`);
-    console.log('API yanıtı:', response.status, response.statusText);
-    console.log('Veri sayısı:', response.data?.length || 0);
+    const response = await getCustomerPackagesWithStatus(apiParams);
     let apiData = response.data;
-    console.log('Backend API yanıtı:', apiData);
     
-    // API yanıtı ile client-side filtreleme yap (backend tam olarak desteklemediği için)
+    console.log('API yanıtı alındı, veri sayısı:', apiData.length);
+    
+    // Client-side filtreleme yap
     
     // Arama terimi varsa filtreleme yap
     if (params.searchTerm && params.searchTerm.trim() !== '') {
       const searchTerm = params.searchTerm.trim().toLowerCase();
-      apiData = apiData.filter(pkg => 
+      apiData = apiData.filter(pkg =>
         pkg.customer?.name?.toLowerCase().includes(searchTerm) ||
         pkg.package?.name?.toLowerCase().includes(searchTerm)
       );
@@ -208,10 +156,11 @@ async function fetchSoldPackages(params: SoldPackageParams): Promise<CustomerPac
       // Backend bu özelliği desteklediğinde burası güncellenecek
     }
     
-    // Sadece 'expired' durumu için filtreleme yap (aktif olanları backend filtreler)
+    // 'expired' durumu için filtreleme yap
     if (params.statusFilter === 'expired') {
       const now = new Date();
       apiData = apiData.filter(pkg => {
+        if (!pkg.expiryDate) return false;
         const expiryDate = new Date(pkg.expiryDate);
         return expiryDate < now || !hasRemainingSessionsCheck(pkg);
       });
@@ -221,27 +170,6 @@ async function fetchSoldPackages(params: SoldPackageParams): Promise<CustomerPac
     
   } catch (error: any) {
     console.error('API Hatası:', error);
-    
-    // Daha detaylı hata bilgisi
-    if (error.response) {
-      // Sunucu yanıtı ile dönen hata (4xx, 5xx)
-      console.error(`Sunucu hatası: ${error.response.status} ${error.response.statusText}`);
-      console.error('Hata detayları:', error.response.data || {});
-      
-      if (error.response.status === 401) {
-        console.warn('Yetkilendirme hatası (401). Token geçersiz veya eksik olabilir.');
-        // Oturumu yenileme mantığı eklenebilir
-      } else if (error.response.status === 404) {
-        console.warn('Endpoint bulunamadı (404). API yolu doğru mu?');
-        console.log('Aranan endpoint:', `/packages/customer?${queryParams.toString()}`);
-      }
-    } else if (error.request) {
-      // İstek yapıldı ama yanıt alınamadı
-      console.error('Sunucudan yanıt alınamadı. Backend çalışıyor mu?');
-    } else {
-      // İstek oluşturulurken hata
-      console.error('API isteği oluşturulurken hata:', error.message);
-    }
     
     // Hata durumunda mock veri dön
     console.log('Hata nedeniyle mock veriler kullanılıyor');
@@ -256,72 +184,99 @@ function getMockPackages(params: SoldPackageParams): CustomerPackage[] {
       id: "1",
       customerId: "customer1",
       packageId: "package1",
+      startDate: new Date().toISOString(),
+      endDate: new Date(Date.now() + 30*24*60*60*1000).toISOString(),
       purchaseDate: new Date().toISOString(),
       expiryDate: new Date(Date.now() + 30*24*60*60*1000).toISOString(),
       remainingSessions: { "service1": 5, "service2": 3 },
+      isActive: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
       customer: { id: "customer1", name: "Ahmet Yılmaz" },
-      package: { 
-        id: "package1", 
-        name: "Deluxe Bakım Paketi", 
-        price: 500, 
+      package: {
+        id: "package1",
+        name: "Deluxe Bakım Paketi",
+        price: 500,
+        validityDays: 30,
+        type: "SESSION" as const,
         services: [
-          { 
-            service: { id: "service1", name: "Yüz Bakımı" },
-            count: 5 
+          {
+            serviceId: "service1",
+            quantity: 5,
+            service: { id: "service1", name: "Yüz Bakımı", price: 100, duration: 60 }
           },
-          { 
-            service: { id: "service2", name: "Masaj" },
-            count: 3 
+          {
+            serviceId: "service2",
+            quantity: 3,
+            service: { id: "service2", name: "Masaj", price: 150, duration: 90 }
           }
-        ] as unknown as PackageService[] 
+        ]
       }
     },
     {
       id: "2",
       customerId: "customer2",
       packageId: "package2",
+      startDate: new Date().toISOString(),
+      endDate: new Date(Date.now() + 60*24*60*60*1000).toISOString(),
       purchaseDate: new Date().toISOString(),
       expiryDate: new Date(Date.now() + 60*24*60*60*1000).toISOString(),
       remainingSessions: { "service3": 8, "service4": 2 },
+      isActive: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
       customer: { id: "customer2", name: "Ayşe Demir" },
-      package: { 
-        id: "package2", 
-        name: "Premium Yüz Bakımı", 
-        price: 750, 
+      package: {
+        id: "package2",
+        name: "Premium Yüz Bakımı",
+        price: 750,
+        validityDays: 60,
+        type: "SESSION" as const,
         services: [
-          { 
-            service: { id: "service3", name: "Derin Yüz Bakımı" },
-            count: 8 
+          {
+            serviceId: "service3",
+            quantity: 8,
+            service: { id: "service3", name: "Derin Yüz Bakımı", price: 200, duration: 120 }
           },
-          { 
-            service: { id: "service4", name: "El Masajı" },
-            count: 2 
+          {
+            serviceId: "service4",
+            quantity: 2,
+            service: { id: "service4", name: "El Masajı", price: 80, duration: 45 }
           }
-        ] as unknown as PackageService[] 
+        ]
       }
     },
     {
       id: "3",
       customerId: "customer3",
       packageId: "package1",
+      startDate: new Date(Date.now() - 60*24*60*60*1000).toISOString(),
+      endDate: new Date(Date.now() - 1*24*60*60*1000).toISOString(),
       purchaseDate: new Date(Date.now() - 60*24*60*60*1000).toISOString(),
       expiryDate: new Date(Date.now() - 1*24*60*60*1000).toISOString(), // Süresi bitmiş
       remainingSessions: { "service1": 0, "service2": 0 },
+      isActive: false,
+      createdAt: new Date(Date.now() - 60*24*60*60*1000).toISOString(),
+      updatedAt: new Date().toISOString(),
       customer: { id: "customer3", name: "Mehmet Kaya" },
-      package: { 
-        id: "package1", 
-        name: "Deluxe Bakım Paketi", 
-        price: 500, 
+      package: {
+        id: "package1",
+        name: "Deluxe Bakım Paketi",
+        price: 500,
+        validityDays: 30,
+        type: "SESSION" as const,
         services: [
-          { 
-            service: { id: "service1", name: "Yüz Bakımı" },
-            count: 5 
+          {
+            serviceId: "service1",
+            quantity: 5,
+            service: { id: "service1", name: "Yüz Bakımı", price: 100, duration: 60 }
           },
-          { 
-            service: { id: "service2", name: "Masaj" },
-            count: 3 
+          {
+            serviceId: "service2",
+            quantity: 3,
+            service: { id: "service2", name: "Masaj", price: 150, duration: 90 }
           }
-        ] as unknown as PackageService[] 
+        ]
       }
     }
   ];
@@ -346,6 +301,7 @@ function getMockPackages(params: SoldPackageParams): CustomerPackage[] {
       // Aktif paketleri filtrele
       const now = new Date();
       filteredData = filteredData.filter(pkg => {
+        if (!pkg.expiryDate) return false;
         const expiryDate = new Date(pkg.expiryDate);
         return expiryDate >= now && hasRemainingSessionsCheck(pkg);
       });
@@ -353,6 +309,7 @@ function getMockPackages(params: SoldPackageParams): CustomerPackage[] {
       // Süresi dolmuş paketleri filtrele
       const now = new Date();
       filteredData = filteredData.filter(pkg => {
+        if (!pkg.expiryDate) return false;
         const expiryDate = new Date(pkg.expiryDate);
         return expiryDate < now || !hasRemainingSessionsCheck(pkg);
       });
@@ -484,46 +441,117 @@ export default function SoldPackagesPage() {
     return Object.values(pkg.remainingSessions).some((count) => count > 0);
   };
 
-  // Paket durumunu belirleme
+  // Paket durumunu belirleme - geliştirilmiş versiyon
   const getPackageStatus = (pkg: CustomerPackage) => {
     const now = new Date();
+    if (!pkg.expiryDate) {
+      return {
+        label: "Tarih Bilgisi Yok",
+        variant: "outline" as const,
+        completionPercentage: 0
+      };
+    }
     const expiryDate = new Date(pkg.expiryDate);
     
+    // Toplam seans sayısını ve kullanılan seans sayısını hesapla
+    let totalSessions = 0;
+    let remainingTotal = 0;
+    
+    if (pkg.remainingSessions) {
+      Object.entries(pkg.remainingSessions).forEach(([serviceId, remaining]) => {
+        if (pkg.package?.services) {
+          const service = pkg.package.services.find((s: any) => s.service?.id === serviceId);
+          if (service) {
+            totalSessions += service.quantity || 0;
+            remainingTotal += remaining;
+          }
+        }
+      });
+    }
+    
+    const usedSessions = totalSessions - remainingTotal;
+    const completionPercentage = totalSessions > 0 ? Math.round((usedSessions / totalSessions) * 100) : 0;
+    
     if (expiryDate < now) {
-      return { label: "Süresi Dolmuş", variant: "destructive" as const };
-    } else if (!hasRemainingSessions(pkg)) {
-      return { label: "Kullanılmış", variant: "secondary" as const };
+      return {
+        label: "Süresi Dolmuş",
+        variant: "destructive" as const,
+        completionPercentage
+      };
+    } else if (remainingTotal === 0) {
+      return {
+        label: "Tamamlandı",
+        variant: "secondary" as const,
+        completionPercentage: 100
+      };
+    } else if (completionPercentage >= 75) {
+      return {
+        label: `Aktif (%${completionPercentage})`,
+        variant: "outline" as const,
+        completionPercentage
+      };
     } else {
-      return { label: "Aktif", variant: "success" as const };
+      return {
+        label: `Aktif (%${completionPercentage})`,
+        variant: "success" as const,
+        completionPercentage
+      };
     }
   };
 
-  // Kalan seansları gösterme
-  const renderRemainingSessions = (remainingSessions: Record<string, number> | undefined) => {
+  // Kalan seansları gösterme - geliştirilmiş versiyon
+  const renderRemainingSessions = (pkg: CustomerPackage) => {
+    const remainingSessions = pkg.remainingSessions;
     if (!remainingSessions) return "Veri yok";
     
-    return Object.entries(remainingSessions).map(([serviceId, count]) => {
-      // Hizmet adını bulmaya çalış
+    let totalRemaining = 0;
+    let totalOriginal = 0;
+    
+    const sessionDetails = Object.entries(remainingSessions).map(([serviceId, remaining]) => {
+      // Hizmet adını ve orijinal seans sayısını bul
       let serviceName = serviceId;
+      let originalCount = remaining;
       
-      if (soldPackages) {
-        for (const p of soldPackages) {
-          if (p.package?.services) {
-            const service = p.package.services.find((s: PackageService) => s.service?.id === serviceId);
-            if (service?.service?.name) {
-              serviceName = service.service.name;
-              break;
-            }
-          }
+      if (pkg.package?.services) {
+        const service = pkg.package.services.find((s: any) => s.service?.id === serviceId);
+        if (service?.service?.name) {
+          serviceName = service.service.name;
+          originalCount = service.quantity || remaining;
         }
       }
       
+      totalRemaining += remaining;
+      totalOriginal += originalCount;
+      const used = originalCount - remaining;
+      
       return (
-        <div key={serviceId} className="text-xs mb-1">
-          <span className="font-medium">{serviceName}:</span> {count}
+        <div key={serviceId} className="text-xs mb-1 flex justify-between items-center">
+          <span className="font-medium">{serviceName}:</span>
+          <div className="flex items-center gap-2">
+            <span className={`${remaining > 0 ? 'text-green-600' : 'text-gray-500'}`}>
+              {remaining}/{originalCount}
+            </span>
+            <div className="w-16 bg-gray-200 rounded-full h-1.5">
+              <div
+                className={`h-1.5 rounded-full ${remaining > 0 ? 'bg-green-500' : 'bg-gray-400'}`}
+                style={{ width: `${originalCount > 0 ? (used / originalCount) * 100 : 0}%` }}
+              ></div>
+            </div>
+          </div>
         </div>
       );
     });
+    
+    const completionPercentage = totalOriginal > 0 ? Math.round(((totalOriginal - totalRemaining) / totalOriginal) * 100) : 0;
+    
+    return (
+      <div className="space-y-2">
+        <div className="text-xs font-semibold text-gray-700 border-b pb-1">
+          Toplam İlerleme: %{completionPercentage}
+        </div>
+        {sessionDetails}
+      </div>
+    );
   };
 
   // Arama işlemi için input handler
@@ -536,7 +564,7 @@ export default function SoldPackagesPage() {
   // Yükleme durumu
   if (isLoading) {
     return (
-      <div className="p-6">
+      <div className="space-y-6">
         <PageTitle />
         <Card>
           <CardHeader>
@@ -553,7 +581,7 @@ export default function SoldPackagesPage() {
   // Hata durumu
   if (error) {
     return (
-      <div className="p-6">
+      <div className="space-y-6">
         <PageTitle />
         <Card>
           <CardHeader>
@@ -575,11 +603,11 @@ export default function SoldPackagesPage() {
   }
 
   return (
-    <div className="p-6">
+    <div className="space-y-6">
       <PageTitle />
 
       {/* Filtreleme Barı */}
-      <div className="mb-6 flex flex-wrap gap-4">
+      <div className="flex flex-wrap gap-4">
         {/* Arama Kutusu */}
         <div className="flex-1 min-w-[250px]">
           <div className="relative">
@@ -660,13 +688,39 @@ export default function SoldPackagesPage() {
                   const status = getPackageStatus(pkg);
                   return (
                     <TableRow key={pkg.id}>
-                      <TableCell className="font-medium">{pkg.customer?.name || "Bilinmiyor"}</TableCell>
-                      <TableCell>{pkg.package?.name || "Bilinmiyor"}</TableCell>
-                      <TableCell>{format(new Date(pkg.purchaseDate), 'PP', { locale: tr })}</TableCell>
-                      <TableCell>{format(new Date(pkg.expiryDate), 'PP', { locale: tr })}</TableCell>
+                      <TableCell className="font-medium">
+                        {pkg.customer?.id ? (
+                          <Link
+                            href={`/dashboard/customers/${pkg.customer.id}`}
+                            className="text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                          >
+                            {pkg.customer.name || "Bilinmiyor"}
+                          </Link>
+                        ) : (
+                          "Bilinmiyor"
+                        )}
+                      </TableCell>
                       <TableCell>
-                        <div className="max-h-24 overflow-y-auto">
-                          {renderRemainingSessions(pkg.remainingSessions)}
+                        {pkg.package?.id ? (
+                          <Link
+                            href={`/dashboard/packages/${pkg.package.id}`}
+                            className="text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                          >
+                            {pkg.package.name || "Bilinmiyor"}
+                          </Link>
+                        ) : (
+                          "Bilinmiyor"
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {pkg.purchaseDate ? format(new Date(pkg.purchaseDate), 'PP', { locale: tr }) : 'Tarih yok'}
+                      </TableCell>
+                      <TableCell>
+                        {pkg.expiryDate ? format(new Date(pkg.expiryDate), 'PP', { locale: tr }) : 'Tarih yok'}
+                      </TableCell>
+                      <TableCell>
+                        <div className="max-h-32 overflow-y-auto">
+                          {renderRemainingSessions(pkg)}
                         </div>
                       </TableCell>
                       <TableCell>

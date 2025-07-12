@@ -182,17 +182,15 @@ export const columns: ColumnDef<CustomerWithTags>[] = [
     cell: ({ row }) => {
       const totalDebt = row.original.analytics?.totalDebt || 0;
       if (totalDebt === 0) {
-        return <Badge variant="secondary">Borç Yok</Badge>;
+        return <Badge variant="default" className="bg-gray-800 text-white">Borç Yok</Badge>;
       }
       return (
-        <div className="text-right">
-          <Badge variant="destructive">
-            {new Intl.NumberFormat('tr-TR', {
+        <Badge variant="destructive">
+          {new Intl.NumberFormat('tr-TR', {
               style: 'currency',
               currency: 'TRY'
             }).format(totalDebt)}
           </Badge>
-        </div>
       );
     },
   },

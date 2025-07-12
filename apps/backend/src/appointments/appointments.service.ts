@@ -50,21 +50,81 @@ export class AppointmentsService {
 
   async updateStatus(id: string, updateStatusDto: UpdateAppointmentStatusDto): Promise<Appointment> {
     const { status, cancellationReason } = updateStatusDto;
-    const appointment = await this.prisma.appointment.findUnique({ where: { id } });
+    const appointment = await this.prisma.appointment.findUnique({
+      where: { id },
+      include: { customer: true, service: true }
+    });
 
     if (!appointment) {
       throw new NotFoundException(`Randevu bulunamadı (ID: ${id}).`);
     }
 
-    
+    return this.prisma.$transaction(async (tx) => {
+      // Randevu durumunu güncelle
+      const updatedAppointment = await tx.appointment.update({
+        where: { id },
+        data: {
+          status,
+          ...(status === AppointmentStatus.CANCELLED && cancellationReason && { notes: `İptal Nedeni: ${cancellationReason}` }),
+        },
+      });
 
-    return this.prisma.appointment.update({
-      where: { id },
-      data: {
-        status,
-        ...(status === AppointmentStatus.CANCELLED && cancellationReason && { notes: `İptal Nedeni: ${cancellationReason}` }),
+      // Eğer randevu tamamlandı ise, müşterinin aktif paketlerinden seans düş
+      if (status === AppointmentStatus.COMPLETED) {
+        await this.deductSessionFromCustomerPackages(tx, appointment.customerId, appointment.serviceId);
+      }
+
+      return updatedAppointment;
+    });
+  }
+
+  // Müşterinin aktif paketlerinden seans düşürme metodu
+  private async deductSessionFromCustomerPackages(tx: any, customerId: string, serviceId: string) {
+    // Müşterinin bu hizmeti içeren aktif paketlerini bul
+    const customerPackages = await tx.customerPackage.findMany({
+      where: {
+        customerId,
+        expiryDate: {
+          gte: new Date(), // Süresi dolmamış paketler
+        },
+        package: {
+          services: {
+            some: {
+              serviceId: serviceId,
+            },
+          },
+        },
+      },
+      include: {
+        package: {
+          include: {
+            services: true,
+          },
+        },
+      },
+      orderBy: {
+        expiryDate: 'asc', // En yakın süresi dolacak paketten başla
       },
     });
+
+    // Uygun paket bulundu mu kontrol et
+    for (const customerPackage of customerPackages) {
+      const remainingSessions = customerPackage.remainingSessions as Record<string, number>;
+      
+      if (remainingSessions && remainingSessions[serviceId] && remainingSessions[serviceId] > 0) {
+        // Seans sayısını düş
+        remainingSessions[serviceId] -= 1;
+        
+        // Paketi güncelle
+        await tx.customerPackage.update({
+          where: { id: customerPackage.id },
+          data: { remainingSessions: remainingSessions as any },
+        });
+        
+        console.log(`Müşteri ${customerId} için paket ${customerPackage.id}'den ${serviceId} hizmeti için 1 seans düşürüldü. Kalan: ${remainingSessions[serviceId]}`);
+        break; // İlk uygun paketten düştük, döngüden çık
+      }
+    }
   }
 
   async reschedule(id: string, rescheduleDto: RescheduleAppointmentDto): Promise<Appointment> {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useMemo, useEffect } from 'react';
+import { useState, useRef, useMemo, useEffect, useCallback } from 'react';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
@@ -57,6 +57,56 @@ export function CalendarView({ branchId }: CalendarViewProps) {
   // Aktif görünüm türü için state
   const [activeView, setActiveView] = useState<string>('resourceTimeGridDay');
 
+  // Sütun çizgilerini ekleyen fonksiyon
+  const addColumnBorders = useCallback(() => {
+    const calendarEl = document.querySelector('#main-calendar');
+    if (!calendarEl) return;
+
+    // Önceki çizgileri temizle
+    const existingBorders = calendarEl.querySelectorAll('.custom-column-border');
+    existingBorders.forEach(border => border.remove());
+
+    // Sadece gün ve hafta görünümlerinde çizgi ekle
+    if (!['resourceTimeGridDay', 'timeGridWeek'].includes(activeView)) return;
+
+    // Ana sütun container'ını bul
+    const colsTable = calendarEl.querySelector('.fc-timegrid-cols table');
+    if (!colsTable) return;
+
+    // Personel sütunlarını bul
+    const resourceCols = colsTable.querySelectorAll('.fc-timegrid-col');
+    if (resourceCols.length <= 1) return;
+
+    // Her sütun için (son hariç) sağ kenarına çizgi ekle
+    resourceCols.forEach((col, index) => {
+      if (index < resourceCols.length - 1) {
+        const colRect = col.getBoundingClientRect();
+        const tableRect = colsTable.getBoundingClientRect();
+        
+        // Çizgi elementi oluştur
+        const border = document.createElement('div');
+        border.className = 'custom-column-border';
+        border.style.cssText = `
+          position: absolute;
+          top: 0;
+          bottom: 0;
+          right: 0;
+          width: 1px;
+          background-color: hsl(var(--border));
+          z-index: 10;
+          pointer-events: none;
+        `;
+        
+        // Sütuna çizgiyi ekle
+        const colFrame = col.querySelector('.fc-timegrid-col-frame') as HTMLElement;
+        if (colFrame) {
+          colFrame.style.position = 'relative';
+          colFrame.appendChild(border);
+        }
+      }
+    });
+  }, [activeView]);
+
   useEffect(() => {
     if (calendarRef.current) {
       const calendarApi = calendarRef.current.getApi();
@@ -86,6 +136,7 @@ export function CalendarView({ branchId }: CalendarViewProps) {
   });
 
   const allStaff = useMemo(() => data?.resources || [], [data]);
+
 
   const filteredResources = useMemo(() => {
     if (selectedStaffIds.has('all')) {
@@ -197,8 +248,8 @@ export function CalendarView({ branchId }: CalendarViewProps) {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md">
-      <div className="p-4 flex flex-col sm:flex-row sm:flex-wrap gap-3 justify-between items-start sm:items-center border-b">
+    <div className="bg-card rounded-lg shadow-md border">
+      <div className="p-4 flex flex-col sm:flex-row sm:flex-wrap gap-3 justify-between items-start sm:items-center border-b bg-card">
         <h2 className="text-xl font-bold">Randevu Takvimi</h2>
         <div className="flex flex-wrap w-full sm:w-auto gap-2 mt-2 sm:mt-0">
           <Popover open={isFilterOpen} onOpenChange={setIsFilterOpen}>
@@ -303,7 +354,7 @@ export function CalendarView({ branchId }: CalendarViewProps) {
         />
       )}
 
-      <div className="p-4 relative min-h-[600px]">
+      <div className="p-4 relative min-h-[600px] bg-card">
         <div id="main-calendar" className={cn('shadcn-calendar-container transition-opacity', { 'opacity-50': isFetching && !!branchId })}>
           {/* Özel takvim kontrolleri - mobil için optimize edilmiş */}
           <div className="mb-4 flex flex-col space-y-3 sm:space-y-0 sm:flex-row sm:justify-between sm:items-center">
@@ -417,11 +468,19 @@ export function CalendarView({ branchId }: CalendarViewProps) {
               setCalendarTitle(arg.view.title);
               setActiveView(arg.view.type);
             }}
+            viewDidMount={() => {
+              // Takvim render olduktan sonra sütun çizgilerini ekle
+              setTimeout(addColumnBorders, 100);
+            }}
+            eventDidMount={() => {
+              // Event'ler render olduktan sonra sütun çizgilerini ekle
+              setTimeout(addColumnBorders, 50);
+            }}
           />
         </div>
         
         {(isLoading || !branchId) && (
-           <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex justify-center items-center rounded-lg">
+           <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-10 flex justify-center items-center rounded-lg">
              {!branchId ? (
                <p className="text-lg font-medium text-muted-foreground">Lütfen takvimi görüntülemek için bir şube seçin.</p>
              ) : (

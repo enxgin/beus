@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import {
   Settings,
   FileText,
@@ -14,6 +14,7 @@ import {
   Clock,
   Bell,
   Menu,
+  MoreVertical,
 } from 'lucide-react';
 
 const navigationItems = [
@@ -132,24 +133,6 @@ export default function NotificationsLayout({
 
   return (
     <div className="flex h-full">
-      {/* Mobile Sidebar */}
-      <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-        <SheetTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="fixed top-4 left-4 z-40 md:hidden"
-          >
-            <Menu className="h-6 w-6" />
-          </Button>
-        </SheetTrigger>
-        <SheetContent side="left" className="w-64 p-0">
-          <div className="flex flex-col h-full">
-            <NavigationContent pathname={pathname} />
-          </div>
-        </SheetContent>
-      </Sheet>
-
       {/* Desktop Sidebar */}
       <div className="hidden md:flex w-64 bg-white border-r border-gray-200 flex-col">
         <NavigationContent pathname={pathname} />
@@ -158,6 +141,32 @@ export default function NotificationsLayout({
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         <main className="flex-1 overflow-auto p-4 md:p-6">
+          {/* Mobile Menu Button */}
+          <div className="md:hidden mb-4">
+            <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+              <SheetTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full justify-start"
+                >
+                  <Menu className="h-4 w-4 mr-2" />
+                  Bildirim Menüsü
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-64 p-0">
+                <SheetHeader className="sr-only">
+                  <SheetTitle>Bildirim Menüsü</SheetTitle>
+                  <SheetDescription>
+                    Bildirim sistemi navigasyon menüsü
+                  </SheetDescription>
+                </SheetHeader>
+                <div className="flex flex-col h-full">
+                  <NavigationContent pathname={pathname} />
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
           {children}
         </main>
       </div>

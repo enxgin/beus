@@ -134,23 +134,85 @@
   border-width: 1px;
 }
 
-/* Sütun çizgilerini daha belirgin hale getir */
-.shadcn-calendar-container .fc-timegrid-col {
+/* SÜTUN ÇİZGİLERİ - AGRESİF YAKLAŞIM */
+
+/* Başlık hücreleri için */
+.shadcn-calendar-container .fc-col-header-cell:not(:last-child) {
   border-right: 1px solid hsl(var(--border)) !important;
 }
 
+/* Zaman ekseni - her zaman sağ border olsun */
 .shadcn-calendar-container .fc-timegrid-axis {
   border-right: 1px solid hsl(var(--border)) !important;
 }
 
-/* Resource (personel) sütunları için çizgiler */
-.shadcn-calendar-container .fc-resource-timeline .fc-resource-cell {
+/* ANA PERSONEL SÜTUNLARI - fc-timegrid-cols tablosundaki td'ler */
+.shadcn-calendar-container .fc-timegrid-cols td:not(:last-child) {
+  border-right: 1px solid hsl(var(--border)) !important;
+  position: relative !important;
+}
+
+/* Personel sütunları için çok spesifik kurallar */
+.shadcn-calendar-container .fc-timegrid-col:not(:last-child) {
+  border-right: 1px solid hsl(var(--border)) !important;
+  position: relative !important;
+}
+
+/* Resource class'ı olan td'ler için */
+.shadcn-calendar-container td.fc-resource:not(:last-child) {
   border-right: 1px solid hsl(var(--border)) !important;
 }
 
-/* Gün ve hafta görünümünde sütun ayırıcıları */
-.shadcn-calendar-container .fc-col-header-cell {
+/* fc-day class'ı olan td'ler için */
+.shadcn-calendar-container td.fc-day:not(:last-child) {
   border-right: 1px solid hsl(var(--border)) !important;
+}
+
+/* Resource timegrid görünümü için */
+.shadcn-calendar-container .fc-resource-timegrid .fc-timegrid-col:not(:last-child) {
+  border-right: 1px solid hsl(var(--border)) !important;
+}
+
+/* Hafta görünümü için gün sütunları */
+.shadcn-calendar-container .fc-timegrid .fc-timegrid-col:not(:last-child) {
+  border-right: 1px solid hsl(var(--border)) !important;
+}
+
+/* Scrollgrid genel kuralları */
+.shadcn-calendar-container .fc-scrollgrid td:not(:last-child),
+.shadcn-calendar-container .fc-scrollgrid th:not(:last-child) {
+  border-right: 1px solid hsl(var(--border)) !important;
+}
+
+/* Tablo gövdesi - fc-timegrid-body içindeki tüm td'ler */
+.shadcn-calendar-container .fc-timegrid-body td:not(:last-child) {
+  border-right: 1px solid hsl(var(--border)) !important;
+}
+
+/* ULTRA AGRESİF - TÜM TD'LER İÇİN */
+.shadcn-calendar-container .fc-view-harness td:not(:last-child) {
+  border-right: 1px solid hsl(var(--border)) !important;
+}
+
+/* Özel data attribute'ları olan td'ler için */
+.shadcn-calendar-container td[data-resource-id]:not(:last-child) {
+  border-right: 1px solid hsl(var(--border)) !important;
+}
+
+.shadcn-calendar-container td[data-date]:not(:last-child) {
+  border-right: 1px solid hsl(var(--border)) !important;
+}
+
+/* fc-timegrid-col-frame içindeki div'ler için pseudo-element */
+.shadcn-calendar-container .fc-timegrid-col:not(:last-child) .fc-timegrid-col-frame::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 1px;
+  background-color: hsl(var(--border));
+  z-index: 10;
 }
 
 /* Tablo başlıkları */
@@ -267,12 +329,12 @@
 
 /* Dark mode specific overrides */
 .dark .shadcn-calendar-container .fc {
-  --fc-neutral-bg-color: hsl(var(--muted) / 0.3);
-  --fc-page-bg-color: hsl(var(--background));
+  --fc-neutral-bg-color: hsl(var(--card));
+  --fc-page-bg-color: hsl(var(--card));
   --fc-border-color: hsl(var(--border));
-  --fc-today-bg-color: hsl(var(--accent) / 0.2);
-  --fc-non-business-color: hsl(var(--background));
-  background-color: hsl(var(--background));
+  --fc-today-bg-color: hsl(var(--accent) / 0.3);
+  --fc-non-business-color: hsl(var(--card));
+  background-color: hsl(var(--card));
 }
 
 .dark .shadcn-calendar-container .fc-theme-standard td,
@@ -281,7 +343,7 @@
 }
 
 .dark .shadcn-calendar-container .fc-col-header {
-  background-color: hsl(var(--muted) / 0.3);
+  background-color: hsl(var(--muted));
 }
 
 .dark .shadcn-calendar-container .fc-day-other .fc-daygrid-day-top {
@@ -303,19 +365,90 @@
 }
 
 .dark .shadcn-calendar-container .fc-timegrid-slot {
-  background-color: hsl(var(--background));
+  background-color: hsl(var(--card));
 }
 
 .dark .shadcn-calendar-container .fc-timegrid-col.fc-day-today {
   background-color: hsl(var(--accent) / 0.1) !important;
 }
 
-.dark .shadcn-calendar-container .fc-timegrid-col {
-  background-color: hsl(var(--background));
+/* Dark mode sütun çizgileri - AGRESİF YAKLAŞIM */
+
+/* Dark mode başlık hücreleri */
+.dark .shadcn-calendar-container .fc-col-header-cell:not(:last-child) {
+  border-right: 1px solid hsl(var(--border)) !important;
 }
 
-.dark .shadcn-calendar-container .fc-timegrid-slot-minor {
-  border-color: hsl(var(--border) / 0.5);
+/* Dark mode zaman ekseni */
+.dark .shadcn-calendar-container .fc-timegrid-axis {
+  border-right: 1px solid hsl(var(--border)) !important;
+}
+
+/* Dark mode ana personel sütunları */
+.dark .shadcn-calendar-container .fc-timegrid-cols td:not(:last-child) {
+  border-right: 1px solid hsl(var(--border)) !important;
+  position: relative !important;
+}
+
+/* Dark mode personel sütunları */
+.dark .shadcn-calendar-container .fc-timegrid-col:not(:last-child) {
+  border-right: 1px solid hsl(var(--border)) !important;
+  position: relative !important;
+}
+
+/* Dark mode resource class'ı olan td'ler */
+.dark .shadcn-calendar-container td.fc-resource:not(:last-child) {
+  border-right: 1px solid hsl(var(--border)) !important;
+}
+
+/* Dark mode fc-day class'ı olan td'ler */
+.dark .shadcn-calendar-container td.fc-day:not(:last-child) {
+  border-right: 1px solid hsl(var(--border)) !important;
+}
+
+.dark .shadcn-calendar-container .fc-resource-timegrid .fc-timegrid-col:not(:last-child) {
+  border-right: 1px solid hsl(var(--border)) !important;
+}
+
+.dark .shadcn-calendar-container .fc-timegrid .fc-timegrid-col:not(:last-child) {
+  border-right: 1px solid hsl(var(--border)) !important;
+}
+
+/* Dark mode scrollgrid */
+.dark .shadcn-calendar-container .fc-scrollgrid td:not(:last-child),
+.dark .shadcn-calendar-container .fc-scrollgrid th:not(:last-child) {
+  border-right: 1px solid hsl(var(--border)) !important;
+}
+
+/* Dark mode tablo gövdesi */
+.dark .shadcn-calendar-container .fc-timegrid-body td:not(:last-child) {
+  border-right: 1px solid hsl(var(--border)) !important;
+}
+
+/* Dark mode ultra agresif */
+.dark .shadcn-calendar-container .fc-view-harness td:not(:last-child) {
+  border-right: 1px solid hsl(var(--border)) !important;
+}
+
+/* Dark mode data attribute'ları olan td'ler */
+.dark .shadcn-calendar-container td[data-resource-id]:not(:last-child) {
+  border-right: 1px solid hsl(var(--border)) !important;
+}
+
+.dark .shadcn-calendar-container td[data-date]:not(:last-child) {
+  border-right: 1px solid hsl(var(--border)) !important;
+}
+
+/* Dark mode pseudo-element */
+.dark .shadcn-calendar-container .fc-timegrid-col:not(:last-child) .fc-timegrid-col-frame::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 1px;
+  background-color: hsl(var(--border));
+  z-index: 10;
 }
 
 /* Fix for white backgrounds in resource cells */
@@ -329,12 +462,13 @@
 /* Fix for white backgrounds in all cells */
 .dark .shadcn-calendar-container .fc td,
 .dark .shadcn-calendar-container .fc th {
-  background-color: hsl(var(--background));
+  background-color: hsl(var(--card));
 }
 
 /* Fix for white backgrounds in header cells */
 .dark .shadcn-calendar-container .fc-col-header-cell {
-  background-color: hsl(var(--muted) / 0.3);
+  background-color: hsl(var(--muted));
+  color: hsl(var(--muted-foreground));
 }
 
 /* Fix for any remaining white areas */
@@ -347,5 +481,49 @@
 .dark .shadcn-calendar-container .fc-daygrid-body,
 .dark .shadcn-calendar-container .fc-timegrid-body,
 .dark .shadcn-calendar-container .fc-timegrid-body .fc-daygrid-body {
-  background-color: hsl(var(--background));
+  background-color: hsl(var(--card));
+}
+
+/* Dark mode zaman etiketleri */
+.dark .shadcn-calendar-container .fc-timegrid-slot-label-cushion,
+.dark .shadcn-calendar-container .fc-timegrid-axis-cushion {
+  color: hsl(var(--muted-foreground));
+}
+
+/* Dark mode bugün vurgusu */
+.dark .shadcn-calendar-container .fc-day-today {
+  background-color: hsl(var(--accent) / 0.2) !important;
+}
+
+/* Dark mode sütun başlıkları */
+.dark .shadcn-calendar-container .fc-col-header-cell-cushion {
+  color: hsl(var(--foreground));
+  font-weight: 600;
+}
+
+/* Dark mode zaman sütunu */
+.dark .shadcn-calendar-container .fc-timegrid-axis {
+  background-color: hsl(var(--muted));
+}
+
+/* JavaScript ile eklenen özel sütun çizgileri */
+.shadcn-calendar-container .custom-column-border {
+  position: absolute !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  right: 0 !important;
+  width: 1px !important;
+  background-color: hsl(var(--border)) !important;
+  z-index: 10 !important;
+  pointer-events: none !important;
+}
+
+/* Sütun frame'lerinin pozisyonunu ayarla */
+.shadcn-calendar-container .fc-timegrid-col-frame {
+  position: relative !important;
+}
+
+/* Dark mode için özel çizgiler */
+.dark .shadcn-calendar-container .custom-column-border {
+  background-color: hsl(var(--border)) !important;
 }
