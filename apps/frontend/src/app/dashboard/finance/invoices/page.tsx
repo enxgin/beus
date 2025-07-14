@@ -12,6 +12,8 @@ import { columns } from "./components/columns";
 import api from "@/lib/api";
 import { InvoiceList } from "./components/invoice-list";
 import { CreateInvoiceButton } from "./components/create-invoice-button";
+import { AddPaymentDialog } from "./[id]/components/add-payment-dialog";
+import { Invoice } from "./components/columns";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -23,7 +25,7 @@ export default function InvoicesPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("all");
 
-  const { data: invoices = [], isLoading } = useQuery({
+  const { data: invoices, isLoading, refetch } = useQuery({
     queryKey: ["invoices", activeTab],
     queryFn: async () => {
       const params = activeTab !== "all" ? { status: activeTab.toUpperCase() } : {};
@@ -31,6 +33,15 @@ export default function InvoicesPage() {
       return response.data;
     },
   });
+
+  const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
+  const [selectedInvoiceId, setSelectedInvoiceId] = useState("");
+
+  const handleOpenPaymentDialog = (invoiceId: string) => {
+    setSelectedInvoiceId(invoiceId);
+    setIsPaymentDialogOpen(true);
+  };
+  
 
   return (
     <div className="space-y-6">
@@ -76,21 +87,51 @@ export default function InvoicesPage() {
         </TabsList>
 
         <TabsContent value="all" className="space-y-4">
-          <InvoiceList invoices={invoices} isLoading={isLoading} />
+          <InvoiceList
+            invoices={invoices as Invoice[]}
+            isLoading={isLoading}
+            onOpenPaymentDialog={handleOpenPaymentDialog}
+          />
         </TabsContent>
-        
+
         <TabsContent value="paid" className="space-y-4">
-          <InvoiceList invoices={invoices} isLoading={isLoading} />
+          <InvoiceList
+            invoices={invoices as Invoice[]}
+            isLoading={isLoading}
+            onOpenPaymentDialog={handleOpenPaymentDialog}
+          />
         </TabsContent>
-        
+
         <TabsContent value="unpaid" className="space-y-4">
-          <InvoiceList invoices={invoices} isLoading={isLoading} />
+          <InvoiceList
+            invoices={invoices as Invoice[]}
+            isLoading={isLoading}
+            onOpenPaymentDialog={handleOpenPaymentDialog}
+          />
         </TabsContent>
-        
+
         <TabsContent value="partially_paid" className="space-y-4">
-          <InvoiceList invoices={invoices} isLoading={isLoading} />
+          <InvoiceList
+            invoices={invoices as Invoice[]}
+            isLoading={isLoading}
+            onOpenPaymentDialog={handleOpenPaymentDialog}
+          />
         </TabsContent>
+
       </Tabs>
+
+      <AddPaymentDialog
+        open={isPaymentDialogOpen}
+        onOpenChange={setIsPaymentDialogOpen}
+        invoiceId={selectedInvoiceId}
+        remainingAmount={
+          (invoices as Invoice[])?.find((invoice: Invoice) => invoice.id === selectedInvoiceId)?.debt || 0
+        }
+        onSuccess={() => {
+          refetch();
+          setIsPaymentDialogOpen(false);
+        }}
+      />
     </div>
   );
 }

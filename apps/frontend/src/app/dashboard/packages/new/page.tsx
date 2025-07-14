@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, SubmitHandler } from "react-hook-form";
 import * as z from "zod";
 import { useRouter } from "next/navigation";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -88,6 +88,7 @@ export default function NewPackagePage() {
   const router = useRouter();
   const { toast } = useToast();
   const { user } = useAuthStore();
+  const queryClient = useQueryClient();
   const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
   const [manualServices, setManualServices] = useState<Service[]>([]);
   const [manualServicesLoading, setManualServicesLoading] = useState(false);
@@ -132,6 +133,8 @@ export default function NewPackagePage() {
   const createPackageMutation = useMutation({
     mutationFn: (newPackage: any) => api.post("/packages", newPackage),
     onSuccess: () => {
+      // Cache'i invalidate et ki paket listesi otomatik güncellensin
+      queryClient.invalidateQueries({ queryKey: ["packages"] });
       toast({
         title: "Başarılı",
         description: "Paket başarıyla oluşturuldu.",

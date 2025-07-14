@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/api";
 import { ServiceCategory, Branch } from "@/types/service";
 import { User, UserRole } from "@/types/user";
@@ -45,6 +45,7 @@ type ServiceFormValues = z.infer<typeof formSchema>;
 
 const CreateServicePage = () => {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useAuthStore();
   
@@ -294,6 +295,8 @@ const CreateServicePage = () => {
       .then((response) => {
         console.log("Hizmet oluşturma başarılı:", response.data);
         toast.success("Hizmet başarıyla oluşturuldu!");
+        // Services cache'ini invalidate et
+        queryClient.invalidateQueries({ queryKey: ["services"] });
         router.push("/dashboard/services");
       })
       .catch((error) => {

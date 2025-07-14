@@ -54,11 +54,12 @@ export default function InvoiceDetailPage() {
   };
 
   const handlePaymentSuccess = () => {
-    refetch();
+    // refetch(); // Fatura detaylarını güncelle (gereksiz)
     setIsPaymentDialogOpen(false);
+    router.push("/dashboard/finance/invoices"); // Fatura listesini güncellemek için sayfayı yenile
     toast({
       title: "Ödeme başarılı",
-      description: "Fatura ödemesi başarıyla kaydedildi.",
+      description: "Fatura ödemesi başarıyla kaydedildi. Fatura listesi güncelleniyor...",
     });
   };
 

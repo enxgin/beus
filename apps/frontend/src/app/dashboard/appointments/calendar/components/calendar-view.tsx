@@ -10,7 +10,7 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuthStore } from '@/stores/auth.store';
-import { DateSelectArg, EventClickArg, EventDropArg, EventInput } from '@fullcalendar/core';
+import { DateSelectArg, EventClickArg, EventDropArg, EventResizeDoneArg, EventInput } from '@fullcalendar/core';
 import { CalendarSkeleton } from './calendar-skeleton';
 import { AppointmentDetailModal } from './appointment-detail-modal';
 import { Button } from '@/components/ui/button';
@@ -229,7 +229,8 @@ export function CalendarView({ branchId }: CalendarViewProps) {
 
     try {
       await api.patch(`/appointments/${id}/reschedule`, {
-        startTime: start,
+        startTime: start.toISOString(),
+        endTime: end.toISOString(),
         staffId: staffId,
       });
       toast({
@@ -244,6 +245,42 @@ export function CalendarView({ branchId }: CalendarViewProps) {
         variant: 'destructive',
       });
       dropInfo.revert();
+    }
+  };
+
+  const handleEventResize = async (resizeInfo: EventResizeDoneArg) => {
+    const { event } = resizeInfo;
+    const { id, start, end } = event;
+    const staffId = event.getResources()?.[0]?.id;
+
+    if (!start || !end || !staffId) {
+      toast({
+        title: 'Hata',
+        description: 'Randevu süresi güncellenemedi. Gerekli bilgiler eksik.',
+        variant: 'destructive',
+      });
+      resizeInfo.revert();
+      return;
+    }
+
+    try {
+      await api.patch(`/appointments/${id}/reschedule`, {
+        startTime: start.toISOString(),
+        endTime: end.toISOString(),
+        staffId: staffId,
+      });
+      toast({
+        title: 'Başarılı',
+        description: 'Randevu süresi başarıyla güncellendi.',
+      });
+      refetch();
+    } catch (error) {
+      toast({
+        title: 'Hata',
+        description: 'Randevu süresi güncellenirken bir hata oluştu.',
+        variant: 'destructive',
+      });
+      resizeInfo.revert();
     }
   };
 
@@ -462,6 +499,7 @@ export function CalendarView({ branchId }: CalendarViewProps) {
             eventClick={handleEventClick}
             editable={true}
             eventDrop={handleEventDrop}
+            eventResize={handleEventResize}
             locale="tr"
             datesSet={(arg) => {
               setViewDates({ start: arg.start, end: arg.end });

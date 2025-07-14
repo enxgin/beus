@@ -52,9 +52,10 @@ interface Invoice {
 interface InvoiceListProps {
   invoices: Invoice[];
   isLoading: boolean;
+  onOpenPaymentDialog: (invoiceId: string) => void;
 }
 
-export function InvoiceList({ invoices, isLoading }: InvoiceListProps) {
+export function InvoiceList({ invoices, isLoading, onOpenPaymentDialog }: InvoiceListProps) {
   const router = useRouter();
 
   const getStatusBadge = (status: string) => {
@@ -162,7 +163,7 @@ export function InvoiceList({ invoices, isLoading }: InvoiceListProps) {
                     <Button 
                       variant="ghost" 
                       size="icon"
-                      onClick={() => router.push(`/dashboard/finance/invoices/${invoice.id}/payment`)}
+                      onClick={() => onOpenPaymentDialog(invoice.id)}
                     >
                       <CreditCard className="h-4 w-4" />
                     </Button>
