@@ -1,6 +1,6 @@
 #
-# FINAL VENDORIZED DOCKERFILE FOR OFFLINE BUILDS
-# Strategy: All node_modules are copied directly into the image. No network needed during build or runtime install.
+# FINAL VENDORIZED DOCKERFILE (v2) - EXPLICIT COPY
+# Strategy: Explicitly copy node_modules to bypass any .dockerignore issues.
 #
 
 # ----------------- BUILDER STAGE -----------------
@@ -9,17 +9,17 @@ FROM node:20-alpine AS builder
 
 WORKDIR /usr/src/app
 
-# Copy ALL files from local, including the pre-installed node_modules
+# Explicitly copy package files, then node_modules, then the rest of the code.
+# This ensures node_modules is included regardless of .dockerignore caching.
+COPY package*.json ./
+COPY apps/backend/package.json ./apps/backend/
+COPY node_modules ./node_modules
 COPY . .
 
 # Generate Prisma Client and Build Application using the copied node_modules
 RUN echo "=== Starting Offline Build ===" && \
-    echo "--- Listing root directory ---" && \
-    ls -la /usr/src/app && \
-    echo "--- Listing node_modules directory ---" && \
-    ls -la /usr/src/app/node_modules/.bin && \
     cd apps/backend && \
-    echo "--- Running Prisma Generate from $(pwd) ---" && \
+    echo "--- Running Prisma Generate ---" && \
     ../../node_modules/.bin/prisma generate --schema=./prisma/schema.prisma || (echo "Prisma Generate FAILED"; exit 1) && \
     echo "--- Prisma Generate Successful ---" && \
     echo "--- Running NestJS Build ---" && \
@@ -40,7 +40,7 @@ RUN apk add --no-cache curl openssl
 # Copy production-necessary files from the builder stage
 COPY --from=builder /usr/src/app/node_modules ./node_modules
 COPY --from=builder /usr/src/app/apps/backend/dist ./apps/backend/dist
-COPY --from=builder /usr/src/app/apps/backend/prisma ./apps/backend/prisma
+COPY --from=builder /usr/src/app/apps/backend/prisma/schema.prisma ./apps/backend/prisma/schema.prisma
 COPY --from=builder /usr/src/app/package.json ./
 COPY --from=builder /usr/src/app/apps/backend/package.json ./apps/backend/
 
