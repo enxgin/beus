@@ -1,38 +1,64 @@
 #
-# FINAL DOCKERFILE - SINGLE STAGE OFFLINE BUILD
-# This is the most robust solution, bypassing all potential ignore/cache issues.
+# FINAL DOCKERFILE - PROPER MULTI-STAGE VENDORIZED BUILD
+# Strategy: Isolate dependency installation in its own stage to leverage Docker caching
+# and copy the result into the builder, avoiding context/ignore issues.
 #
 
-FROM node:20-alpine
+# ----------------- DEPENDENCY STAGE -----------------
+# This stage's only job is to install node_modules based on package.json files.
+# It will be cached by Docker as long as package.json doesn't change.
+FROM node:20-alpine AS deps
 
 WORKDIR /usr/src/app
 
-# Install OS packages needed for Prisma (binary) and Healthcheck (curl)
-RUN apk add --no-cache curl openssl
+# Copy package files
+COPY package.json package-lock.json* ./
+COPY apps/backend/package.json ./apps/backend/
 
-# Copy ALL project files. .dockerignore is disabled, so node_modules will be included.
+# Install all dependencies. This is the only network-dependent step.
+# We are betting on Docker's layer caching to avoid running this often.
+RUN npm install --legacy-peer-deps
+
+# ----------------- BUILDER STAGE -----------------
+# This stage builds the application using the pre-installed dependencies.
+FROM node:20-alpine AS builder
+
+WORKDIR /usr/src/app
+
+# Copy dependencies from the 'deps' stage
+COPY --from=deps /usr/src/app/node_modules ./node_modules
+
+# Copy the rest of the source code
 COPY . .
 
-# Build the application inside the container using the copied node_modules
-RUN echo "=== Starting Final Offline Build ===" && \
-    cd apps/backend && \
-    echo "--- Running Prisma Generate ---" && \
-    ../../node_modules/.bin/prisma generate --schema=./prisma/schema.prisma || (echo "Prisma Generate FAILED"; exit 1) && \
-    echo "--- Prisma Generate Successful ---" && \
-    echo "--- Running NestJS Build ---" && \
-    ../../node_modules/.bin/nest build || (echo "NestJS Build FAILED"; exit 1) && \
-    echo "--- NestJS Build Successful ---" && \
-    cd /usr/src/app && \
-    echo "=== Final Offline Build Completed Successfully ==="
+# Generate Prisma Client and Build Application
+RUN cd apps/backend && \
+    ../../node_modules/.bin/prisma generate --schema=./prisma/schema.prisma && \
+    ../../node_modules/.bin/nest build
 
-# Prune development dependencies for a smaller final image
+# ----------------- PRODUCTION STAGE -----------------
+# This is the final, lean image.
+FROM node:20-alpine AS production
+
+WORKDIR /usr/src/app
+
+# Install only necessary OS packages
+RUN apk add --no-cache curl openssl
+
+# Prune dev dependencies from the builder's node_modules before copying
+COPY --from=builder /usr/src/app/node_modules ./node_modules
 RUN npm prune --production
 
-# Create a non-root user for security
+# Copy the built application and other necessary files from the builder stage
+COPY --from=builder /usr/src/app/apps/backend/dist ./apps/backend/dist
+COPY --from=builder /usr/src/app/apps/backend/prisma/schema.prisma ./apps/backend/prisma/schema.prisma
+COPY --from=builder /usr/src/app/package.json ./
+COPY --from=builder /usr/src/app/apps/backend/package.json ./apps/backend/
+
+# Create and switch to a non-root user
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S appuser -u 1001 -G nodejs && \
     chown -R appuser:nodejs /usr/src/app
-
 USER appuser
 
 # Set environment variables
