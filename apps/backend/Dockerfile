@@ -1,6 +1,9 @@
 # Build stage
 FROM node:20-alpine AS builder
 
+# Install system dependencies
+RUN apk add --no-cache python3 make g++ openssl ca-certificates
+
 WORKDIR /usr/src/app
 
 # Copy package files
@@ -10,7 +13,6 @@ COPY apps/frontend/package*.json ./apps/frontend/
 
 # Configure npm for better network handling
 RUN npm config set registry https://registry.npmjs.org/ && \
-    npm config set timeout 300000 && \
     npm config set fetch-timeout 300000 && \
     npm config set fetch-retry-mintimeout 20000 && \
     npm config set fetch-retry-maxtimeout 120000 && \
@@ -46,7 +48,6 @@ COPY apps/backend/package*.json ./apps/backend/
 
 # Configure npm for production
 RUN npm config set registry https://registry.npmjs.org/ && \
-    npm config set timeout 300000 && \
     npm config set fetch-timeout 300000 && \
     npm config set fetch-retry-mintimeout 20000 && \
     npm config set fetch-retry-maxtimeout 120000 && \
