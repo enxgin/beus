@@ -1,103 +1,75 @@
-# Build stage
+# 1. Base Image for dependencies
+FROM node:20-alpine AS deps
+
+# Set working directory
+WORKDIR /usr/src/app
+
+# Copy root package files
+COPY package.json package-lock.json* ./
+
+# Copy backend package.json
+COPY apps/backend/package.json ./apps/backend/
+
+# Install dependencies (including Prisma for production)
+RUN npm install --only=production && npm install prisma @prisma/client
+
+# 2. Builder Image
 FROM node:20-alpine AS builder
 
-# Install system dependencies
-RUN apk add --no-cache python3 make g++ openssl ca-certificates
-
 WORKDIR /usr/src/app
 
-# Copy package files
-COPY package*.json ./
-COPY apps/backend/package*.json ./apps/backend/
-COPY apps/frontend/package*.json ./apps/frontend/
+# Copy all package files again for building
+COPY package.json package-lock.json* ./
+COPY apps/backend/package.json ./apps/backend/
 
-# Configure npm for better network handling
-RUN npm config set registry https://registry.npmjs.org/ && \
-    npm config set fetch-timeout 300000 && \
-    npm config set fetch-retry-mintimeout 20000 && \
-    npm config set fetch-retry-maxtimeout 120000 && \
-    npm config set fetch-retries 5
+# Install all dependencies (including devDependencies)
+RUN npm install
 
-# Install dependencies with multiple fallbacks
-RUN npm install --legacy-peer-deps --no-audit --no-fund --verbose || \
-    (sleep 10 && npm install --legacy-peer-deps --no-audit --no-fund --force) || \
-    (sleep 20 && npm install --no-audit --no-fund) || \
-    echo "Dependencies installation completed with warnings"
+# Copy source code and config files
+COPY apps/backend/src ./apps/backend/src
+COPY apps/backend/prisma ./apps/backend/prisma
+COPY apps/backend/tsconfig.json ./apps/backend/
+COPY apps/backend/nest-cli.json ./apps/backend/
 
-# Copy source code
-COPY . .
+# Force install the correct prisma version to override any conflicts
+RUN npm install -g prisma@6.11.1
 
-# Build with fallbacks - create dist directory if build fails
-RUN npm run build --workspace=backend || \
-    (cd apps/backend && npm run build) || \
-    (cd apps/backend && npx nest build) || \
-    (mkdir -p dist/apps/backend/src && echo 'console.log("Fallback main");' > dist/apps/backend/src/main.js) || \
-    echo "Build completed"
+# Generate Prisma Client (using the globally installed correct version)
+RUN prisma generate --schema=./apps/backend/prisma/schema.prisma
 
-# Production stage
+# Build the application
+RUN npm run build --workspace=backend
+
+# 3. Production Image
 FROM node:20-alpine AS production
 
-# Install runtime dependencies
-RUN apk add --no-cache openssl ca-certificates
+# Install OpenSSL for Prisma native engine
+RUN apk add --no-cache openssl
+
+# Set environment variables
+ENV NODE_ENV=production
 
 WORKDIR /usr/src/app
 
-# Copy package files
-COPY package*.json ./
-COPY apps/backend/package*.json ./apps/backend/
-
-# Configure npm for production
-RUN npm config set registry https://registry.npmjs.org/ && \
-    npm config set fetch-timeout 300000 && \
-    npm config set fetch-retry-mintimeout 20000 && \
-    npm config set fetch-retry-maxtimeout 120000 && \
-    npm config set fetch-retries 5
-
-# Install production dependencies with fallbacks
-RUN npm install --omit=dev --legacy-peer-deps --no-audit --no-fund --verbose || \
-    (sleep 10 && npm install --omit=dev --legacy-peer-deps --no-audit --no-fund --force) || \
-    (sleep 20 && npm install --omit=dev --no-audit --no-fund) || \
-    echo "Production dependencies installed with warnings"
+# Copy production dependencies from deps stage
+COPY --from=deps /usr/src/app/node_modules ./node_modules
+COPY --from=deps /usr/src/app/package.json ./
+COPY --from=deps /usr/src/app/apps/backend/package.json ./apps/backend/
 
 # Copy built application from builder stage
-COPY --from=builder /usr/src/app/dist ./dist
+COPY --from=builder /usr/src/app/apps/backend/dist ./dist
 
-# Copy source code as fallback
-COPY --from=builder /usr/src/app/apps/backend/src ./apps/backend/src
-
-# Copy prisma schema for runtime generation
+# Copy Prisma schema for generation
 COPY --from=builder /usr/src/app/apps/backend/prisma ./apps/backend/prisma
 
-# Create startup script before switching to non-root user
-RUN echo '#!/bin/sh' > /usr/src/app/start.sh && \
-    echo 'echo "Starting application..."' >> /usr/src/app/start.sh && \
-    echo 'cd /usr/src/app/apps/backend' >> /usr/src/app/start.sh && \
-    echo 'echo "Generating Prisma client..."' >> /usr/src/app/start.sh && \
-    echo 'npx prisma generate 2>/dev/null || echo "Prisma generate skipped"' >> /usr/src/app/start.sh && \
-    echo 'cd /usr/src/app' >> /usr/src/app/start.sh && \
-    echo 'if [ -f "dist/apps/backend/src/main.js" ] && [ -s "dist/apps/backend/src/main.js" ]; then' >> /usr/src/app/start.sh && \
-    echo '  echo "Starting built application..."' >> /usr/src/app/start.sh && \
-    echo '  exec node dist/apps/backend/src/main.js' >> /usr/src/app/start.sh && \
-    echo 'else' >> /usr/src/app/start.sh && \
-    echo '  echo "Starting with ts-node..."' >> /usr/src/app/start.sh && \
-    echo '  cd apps/backend' >> /usr/src/app/start.sh && \
-    echo '  exec npx ts-node src/main.ts' >> /usr/src/app/start.sh && \
-    echo 'fi' >> /usr/src/app/start.sh && \
-    chmod +x /usr/src/app/start.sh
+# Copy Prisma client from builder
+COPY --from=builder /usr/src/app/node_modules/.prisma ./node_modules/.prisma
 
-# Set production environment
-ENV NODE_ENV=production
+# Generate Prisma client in production (fallback)
+RUN npx prisma generate --schema=./apps/backend/prisma/schema.prisma || echo "Prisma client already exists"
 
-# Create non-root user
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S appuser -u 1001 -G nodejs
+# Expose port (DÜZELTİLMİŞ SATIR)
+EXPOSE 3001
 
-# Change ownership
-RUN chown -R appuser:nodejs /usr/src/app
-USER appuser
-
-# Expose port
-EXPOSE 3000
-
-# Start application
-CMD ["/bin/sh", "/usr/src/app/start.sh"]
+# Command to run the application
+CMD ["node", "dist/src/main.js"]
