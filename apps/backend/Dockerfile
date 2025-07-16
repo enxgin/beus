@@ -76,7 +76,7 @@ COPY --from=builder /usr/src/app/dist ./dist
 COPY apps/backend/prisma/schema.prisma ./apps/backend/prisma/schema.prisma
 
 # Expose the port the application will run on
-EXPOSE 3000
+EXPOSE 3001
 
 # The command to start the application in production mode
 CMD ["node", "dist/apps/backend/src/main.js"]
