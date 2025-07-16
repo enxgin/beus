@@ -90,8 +90,8 @@ COPY --from=deps /usr/src/app/node_modules ./node_modules
 COPY --from=deps /usr/src/app/package.json ./
 COPY --from=deps /usr/src/app/apps/backend/package.json ./apps/backend/
 
-# Copy built application from builder stage (if exists)
-COPY --from=builder /usr/src/app/apps/backend/dist ./dist 2>/dev/null || echo "No dist folder found"
+# Copy built application from builder stage
+COPY --from=builder /usr/src/app/apps/backend/dist ./dist
 
 # Copy source code as fallback
 COPY --from=builder /usr/src/app/apps/backend/src ./apps/backend/src
@@ -103,8 +103,8 @@ COPY --from=builder /usr/src/app/apps/backend/prisma ./apps/backend/prisma
 COPY --from=builder /usr/src/app/apps/backend/tsconfig.json ./apps/backend/
 COPY --from=builder /usr/src/app/apps/backend/nest-cli.json ./apps/backend/
 
-# Copy Prisma client from builder (if exists)
-COPY --from=builder /usr/src/app/node_modules/.prisma ./node_modules/.prisma 2>/dev/null || echo "No Prisma client found"
+# Copy Prisma client from builder
+COPY --from=builder /usr/src/app/node_modules/.prisma ./node_modules/.prisma
 
 # Create startup script with comprehensive fallbacks
 RUN echo '#!/bin/sh' > /usr/src/app/start.sh && \
