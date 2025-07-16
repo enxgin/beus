@@ -17,24 +17,25 @@ RUN npm config set registry https://registry.npmjs.org/ && \
     npm config set fetch-retry-maxtimeout 30000 && \
     npm config set fetch-retries 2
 
-# Try to install dependencies but don't fail the build
-RUN echo "=== Attempting dependency installation ===" && \
-    (timeout 120 npm install --legacy-peer-deps --no-audit --no-fund 2>/dev/null || echo "npm install failed") && \
-    echo "=== Dependency installation completed ==="
+# Install dependencies with retries
+RUN echo "=== Installing dependencies with retries ===" && \
+    for i in 1 2 3; do \
+      npm install --legacy-peer-deps --no-audit --no-fund && break; \
+      echo "npm install failed, retrying..."; \
+      sleep 5; \
+    done || (echo "npm install failed after 3 retries"; exit 1)
 
 # Copy source code after dependency installation
 COPY . .
 
-# Generate Prisma Client and Build Application with detailed logging
+# Generate Prisma Client and Build Application using local binaries
 RUN echo "=== Starting Build-Time Optimizations ===" && \
     cd apps/backend && \
     echo "--- Running Prisma Generate ---" && \
-    npx prisma generate --schema=./prisma/schema.prisma || (echo "Prisma Generate FAILED"; exit 1) && \
+    ../../node_modules/.bin/prisma generate --schema=./prisma/schema.prisma || (echo "Prisma Generate FAILED"; exit 1) && \
     echo "--- Prisma Generate Successful ---" && \
-    echo "--- Verifying node_modules content ---" && \
-    ls -la ../../node_modules/.bin/ && \
     echo "--- Running NestJS Build ---" && \
-    npx nest build || (echo "NestJS Build FAILED"; exit 1) && \
+    ../../node_modules/.bin/nest build || (echo "NestJS Build FAILED"; exit 1) && \
     echo "--- NestJS Build Successful ---" && \
     cd /usr/src/app && \
     echo "=== Build-Time Optimizations Completed Successfully ==="
