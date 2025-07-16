@@ -25,13 +25,19 @@ RUN echo "=== Attempting dependency installation ===" && \
 # Copy source code after dependency installation
 COPY . .
 
-# Try to generate Prisma client and build at build time
-RUN echo "=== Build-time optimizations ===" && \
+# Generate Prisma Client and Build Application with detailed logging
+RUN echo "=== Starting Build-Time Optimizations ===" && \
     cd apps/backend && \
-    (npx prisma generate --schema=./prisma/schema.prisma 2>/dev/null || echo "Prisma generate failed") && \
-    (npx nest build 2>/dev/null || npx tsc 2>/dev/null || echo "Build failed") && \
+    echo "--- Running Prisma Generate ---" && \
+    npx prisma generate --schema=./prisma/schema.prisma || (echo "Prisma Generate FAILED"; exit 1) && \
+    echo "--- Prisma Generate Successful ---" && \
+    echo "--- Verifying node_modules content ---" && \
+    ls -la ../../node_modules/.bin/ && \
+    echo "--- Running NestJS Build ---" && \
+    npx nest build || (echo "NestJS Build FAILED"; exit 1) && \
+    echo "--- NestJS Build Successful ---" && \
     cd /usr/src/app && \
-    echo "=== Build-time optimizations completed ==="
+    echo "=== Build-Time Optimizations Completed Successfully ==="
 
 # Production stage
 FROM node:20-alpine AS production

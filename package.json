@@ -25,10 +25,9 @@
     "husky": "^8.0.3",
     "lint-staged": "^15.2.0",
     "prettier": "^3.2.5",
-    "prisma": "^5.12.1"
+    "prisma": "6.11.1"
   },
   "dependencies": {
-    "@prisma/client": "^5.22.0",
     "@radix-ui/react-dialog": "^1.1.14",
     "@radix-ui/react-popover": "^1.1.14",
     "@radix-ui/react-progress": "^1.1.7",
@@ -41,7 +40,6 @@
     "@tanstack/react-table": "^8.21.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "prisma": "6.11.0",
     "react-hot-toast": "^2.5.2",
     "tailwind-merge": "^3.3.1",
     "use-debounce": "^10.0.5"
