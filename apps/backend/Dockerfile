@@ -14,8 +14,12 @@ COPY . .
 
 # Generate Prisma Client and Build Application using the copied node_modules
 RUN echo "=== Starting Offline Build ===" && \
+    echo "--- Listing root directory ---" && \
+    ls -la /usr/src/app && \
+    echo "--- Listing node_modules directory ---" && \
+    ls -la /usr/src/app/node_modules/.bin && \
     cd apps/backend && \
-    echo "--- Running Prisma Generate ---" && \
+    echo "--- Running Prisma Generate from $(pwd) ---" && \
     ../../node_modules/.bin/prisma generate --schema=./prisma/schema.prisma || (echo "Prisma Generate FAILED"; exit 1) && \
     echo "--- Prisma Generate Successful ---" && \
     echo "--- Running NestJS Build ---" && \
