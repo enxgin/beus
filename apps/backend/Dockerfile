@@ -1,4 +1,4 @@
-# Simple and robust Dockerfile for Coolify deployment
+# Optimized Dockerfile for Coolify deployment with network resilience
 FROM node:20-alpine AS base
 
 # Install system dependencies
@@ -6,10 +6,11 @@ RUN apk add --no-cache python3 make g++ openssl ca-certificates
 
 WORKDIR /usr/src/app
 
-# Copy all files
-COPY . .
+# Copy package files first for better caching
+COPY package*.json ./
+COPY apps/backend/package*.json ./apps/backend/
 
-# Configure npm with shorter timeouts for faster failure
+# Configure npm with optimized settings for Coolify
 RUN npm config set registry https://registry.npmjs.org/ && \
     npm config set fetch-timeout 30000 && \
     npm config set fetch-retry-mintimeout 5000 && \
@@ -20,6 +21,9 @@ RUN npm config set registry https://registry.npmjs.org/ && \
 RUN echo "=== Attempting dependency installation ===" && \
     (timeout 120 npm install --legacy-peer-deps --no-audit --no-fund 2>/dev/null || echo "npm install failed") && \
     echo "=== Dependency installation completed ==="
+
+# Copy source code after dependency installation
+COPY . .
 
 # Production stage
 FROM node:20-alpine AS production
