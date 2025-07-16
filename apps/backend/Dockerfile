@@ -5,6 +5,10 @@ FROM node:20-alpine AS dependencies
 
 WORKDIR /usr/src/app
 
+# Configure npm for more robust network operations in CI environments
+RUN npm config set fetch-retries 5
+RUN npm config set fetch-timeout 120000
+
 # Copy all package.json and lock files to leverage cache
 COPY package.json ./
 COPY package-lock.json* ./
@@ -14,12 +18,12 @@ COPY apps/frontend/package.json ./apps/frontend/
 # Copy the Prisma schema, which is required for generating the client
 COPY apps/backend/prisma/ ./apps/backend/prisma/
 
-# Install all dependencies for the entire monorepo
-RUN npm install
+# Use 'npm ci' for faster, more reliable builds in CI environments
+RUN npm ci
 
 # Generate the Prisma Client based on the schema
 # This ensures the client is tailored to your database structure
-RUN npx prisma generate --schema=./apps/backend/prisma/schema.prisma
+RUN npm exec prisma -- generate --schema=./apps/backend/prisma/schema.prisma
 
 
 # Stage 2: Build the application
@@ -47,6 +51,10 @@ WORKDIR /usr/src/app
 
 ENV NODE_ENV=production
 
+# Configure npm for more robust network operations in CI environments
+RUN npm config set fetch-retries 5
+RUN npm config set fetch-timeout 120000
+
 # Copy package files to install only production dependencies
 COPY package.json ./
 COPY package-lock.json* ./
@@ -57,6 +65,7 @@ RUN npm ci --omit=dev
 
 # Copy the generated Prisma client and query engine from the 'dependencies' stage.
 # This is the key step to avoid running 'prisma generate' at runtime.
+# Note: We copy both .prisma/client and @prisma/client to be safe.
 COPY --from=dependencies /usr/src/app/node_modules/.prisma/client ./node_modules/.prisma/client
 COPY --from=dependencies /usr/src/app/node_modules/@prisma/client ./node_modules/@prisma/client
 
