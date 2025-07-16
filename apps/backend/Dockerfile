@@ -1,54 +1,51 @@
-# Stage 1: Build the application and all its dependencies
-# This stage installs ALL dependencies (dev included) to be able to build the project
-# and generate the prisma client artifacts.
-FROM node:20-slim AS builder
+FROM node:20-slim
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    python3 \
+    make \
+    g++ \
+    openssl \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /usr/src/app
 
-# Copy all necessary package and lock files
-COPY package.json package-lock.json* ./
-COPY apps/backend/package.json ./apps/backend/
-COPY apps/frontend/package.json ./apps/frontend/
+# Copy all package.json files first for better caching
+COPY package*.json ./
+COPY apps/backend/package*.json ./apps/backend/
+COPY apps/frontend/package*.json ./apps/frontend/
 
-# Copy prisma schema
+# Set npm configuration
+RUN npm config set registry https://registry.npmjs.org/
+RUN npm config set fetch-retry-mintimeout 20000
+RUN npm config set fetch-retry-maxtimeout 120000
+
+# Install all dependencies (including dev for build)
+RUN npm install --legacy-peer-deps --no-audit --no-fund
+
+# Copy prisma schema and generate client
 COPY apps/backend/prisma ./apps/backend/prisma
+RUN cd apps/backend && npx prisma generate
 
-# Install ALL dependencies. This is necessary for the build step and for prisma client generation.
-RUN npm ci
-
-# Copy the rest of the source code
+# Copy all source code
 COPY . .
 
-# Build the backend application
+# Build the application
 RUN npm run build --workspace=backend
 
+# Clean up dev dependencies
+RUN npm prune --production
 
-# Stage 2: Create the final, lean production image
-# This stage creates a minimal image with only production dependencies and built artifacts.
-FROM node:20-slim AS production
-
-WORKDIR /usr/src/app
-
+# Set production environment
 ENV NODE_ENV=production
 
-# Copy only the necessary package and lock files for production
-COPY package.json package-lock.json* ./
-COPY apps/backend/package.json ./apps/backend/
+# Expose port
+EXPOSE 3001
 
-# Install ONLY production dependencies to keep the image small
-RUN npm ci --omit=dev
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD node --version || exit 1
 
-# Copy the built application from the 'builder' stage
-COPY --from=builder /usr/src/app/dist ./dist
-
-# Copy the pre-generated Prisma client and its engine from the 'builder' stage.
-# This is the key step to completely avoid running 'prisma generate' in production.
-COPY --from=builder /usr/src/app/node_modules/.prisma/client ./node_modules/.prisma/client
-COPY --from=builder /usr/src/app/node_modules/@prisma/client ./node_modules/@prisma/client
-COPY --from=builder /usr/src/app/apps/backend/prisma/schema.prisma ./apps/backend/prisma/schema.prisma
-
-# Expose the port the application will run on
-EXPOSE 3000
-
-# The command to start the application
+# Start the application
 CMD ["node", "dist/apps/backend/src/main.js"]
