@@ -1,7 +1,7 @@
 # Stage 1: Install dependencies and generate Prisma Client
 # This stage is responsible for installing all dependencies and generating the Prisma client.
 # It is kept separate to leverage Docker's layer caching effectively.
-FROM node:20-alpine AS dependencies
+FROM node:20-slim AS dependencies
 
 WORKDIR /usr/src/app
 
@@ -28,7 +28,7 @@ RUN npm exec prisma -- generate --schema=./apps/backend/prisma/schema.prisma
 
 # Stage 2: Build the application
 # This stage takes the source code and the installed dependencies to build the production-ready application.
-FROM node:20-alpine AS builder
+FROM node:20-slim AS builder
 
 WORKDIR /usr/src/app
 
@@ -45,7 +45,7 @@ RUN npm run build --workspace=backend
 
 # Stage 3: Create the final production image
 # This stage creates a lean production image with only the necessary files to run the application.
-FROM node:20-alpine AS production
+FROM node:20-slim AS production
 
 WORKDIR /usr/src/app
 
