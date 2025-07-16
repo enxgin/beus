@@ -18,6 +18,7 @@ import { FinanceModule } from './finance/finance.module';
 import { TagsModule } from './tags/tags.module';
 import { CommissionRulesModule } from './commission-rules/commission-rules.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { NotificationsModule } from './notifications/notifications.module';
     TagsModule,
     CommissionRulesModule,
     NotificationsModule,
+    HealthModule,
   ],
   controllers: [],
   providers: [],
