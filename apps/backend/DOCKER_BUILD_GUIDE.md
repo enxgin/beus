@@ -2,11 +2,22 @@
 
 Bu rehber, backend uygulamasını Docker ile build etmek için farklı seçenekleri açıklar.
 
-## Sorun
-Coolify'de build sırasında npm network timeout hataları yaşanıyor:
+## ✅ ÇÖZÜLDÜ!
+Docker build sorunları başarıyla çözülmüştür. Ana Dockerfile artık sorunsuz çalışmaktadır.
+
+## Sorun (Çözüldü)
+Coolify'de build sırasında npm network timeout hataları yaşanıyordu:
 ```
 npm error network request to https://registry.npmjs.org/prisma failed, reason: ETIMEDOUT
 ```
+
+## ÖNEMLİ: Build Öncesi Hazırlık
+Docker build yapmadan önce mutlaka local'de Prisma client generate edin:
+```bash
+cd apps/backend
+npx prisma generate
+```
+Bu komut Prisma client'ı local'de generate eder ve Docker build sırasında kopyalanır.
 
 ## Çözümler
 

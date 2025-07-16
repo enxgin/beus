@@ -39,12 +39,30 @@ COPY apps/backend/prisma ./apps/backend/prisma
 COPY apps/backend/tsconfig.json ./apps/backend/
 COPY apps/backend/nest-cli.json ./apps/backend/
 
-# Generate Prisma Client using local installation with retry mechanism
-RUN npm config set registry https://registry.npmjs.org/ && \
-    npm config set fetch-timeout 300000 && \
-    npm config set fetch-retry-mintimeout 20000 && \
-    npm config set fetch-retry-maxtimeout 120000 && \
-    npx prisma generate --schema=./apps/backend/prisma/schema.prisma
+# Copy pre-generated Prisma client from local build context
+COPY apps/backend/node_modules/@prisma/client ./apps/backend/node_modules/@prisma/client
+COPY apps/backend/node_modules/.prisma ./apps/backend/node_modules/.prisma
+
+# Verify Prisma client exists, generate only if missing
+RUN if [ ! -d "./node_modules/@prisma/client" ]; then \
+        echo "Pre-generated Prisma client not found, generating..."; \
+        if [ -f "./node_modules/.bin/prisma" ]; then \
+            echo "Using local prisma binary"; \
+            ./node_modules/.bin/prisma generate --schema=./apps/backend/prisma/schema.prisma; \
+        else \
+            echo "Trying npx with retries"; \
+            for i in 1 2 3; do \
+                npm config set registry https://registry.npmjs.org/ && \
+                npm config set fetch-timeout 300000 && \
+                npm config set fetch-retry-mintimeout 20000 && \
+                npm config set fetch-retry-maxtimeout 120000 && \
+                npx prisma generate --schema=./apps/backend/prisma/schema.prisma && break || \
+                (echo "Attempt $i failed, retrying..." && sleep 10); \
+            done; \
+        fi; \
+    else \
+        echo "Using pre-generated Prisma client"; \
+    fi
 
 # Build the application
 RUN npm run build --workspace=backend
@@ -71,15 +89,30 @@ COPY --from=builder /usr/src/app/apps/backend/dist ./dist
 # Copy Prisma schema for generation
 COPY --from=builder /usr/src/app/apps/backend/prisma ./apps/backend/prisma
 
-# Copy Prisma client from builder
+# Copy Prisma client from builder (both .prisma and @prisma directories)
 COPY --from=builder /usr/src/app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /usr/src/app/node_modules/@prisma ./node_modules/@prisma
 
-# Generate Prisma client in production (fallback) with network optimizations
-RUN npm config set registry https://registry.npmjs.org/ && \
-    npm config set fetch-timeout 300000 && \
-    npm config set fetch-retry-mintimeout 20000 && \
-    npm config set fetch-retry-maxtimeout 120000 && \
-    npx prisma generate --schema=./apps/backend/prisma/schema.prisma || echo "Prisma client already exists"
+# Verify Prisma client exists in production, generate only if absolutely necessary
+RUN if [ ! -d "./node_modules/@prisma/client" ] && [ ! -d "./node_modules/.prisma" ]; then \
+        echo "No Prisma client found in production, attempting generation..."; \
+        if [ -f "./node_modules/.bin/prisma" ]; then \
+            echo "Using local prisma binary for production"; \
+            ./node_modules/.bin/prisma generate --schema=./apps/backend/prisma/schema.prisma || echo "Prisma client generation failed"; \
+        else \
+            echo "Trying npx prisma with retries in production"; \
+            for i in 1 2 3; do \
+                npm config set registry https://registry.npmjs.org/ && \
+                npm config set fetch-timeout 300000 && \
+                npm config set fetch-retry-mintimeout 20000 && \
+                npm config set fetch-retry-maxtimeout 120000 && \
+                npx prisma generate --schema=./apps/backend/prisma/schema.prisma && break || \
+                (echo "Production attempt $i failed, retrying..." && sleep 10); \
+            done || echo "Prisma client generation failed, using existing client"; \
+        fi; \
+    else \
+        echo "Using existing Prisma client in production"; \
+    fi
 
 # Expose port (DÜZELTİLMİŞ SATIR)
 EXPOSE 3001
