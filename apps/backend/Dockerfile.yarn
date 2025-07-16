@@ -1,0 +1,91 @@
+# Alternative Dockerfile using Yarn for better network reliability
+# 1. Base Image for dependencies
+FROM node:20-alpine AS deps
+
+# Install yarn globally
+RUN npm install -g yarn
+
+# Set working directory
+WORKDIR /usr/src/app
+
+# Copy root package files
+COPY package.json yarn.lock* ./
+
+# Copy backend package.json
+COPY apps/backend/package.json ./apps/backend/
+
+# Configure yarn for better network handling
+RUN yarn config set network-timeout 300000 && \
+    yarn config set registry https://registry.npmjs.org/
+
+# Install dependencies (including Prisma for production)
+RUN yarn install --production --frozen-lockfile && yarn add prisma @prisma/client
+
+# 2. Builder Image
+FROM node:20-alpine AS builder
+
+# Install yarn globally
+RUN npm install -g yarn
+
+WORKDIR /usr/src/app
+
+# Copy all package files again for building
+COPY package.json yarn.lock* ./
+COPY apps/backend/package.json ./apps/backend/
+
+# Configure yarn for better network handling
+RUN yarn config set network-timeout 300000 && \
+    yarn config set registry https://registry.npmjs.org/
+
+# Install all dependencies (including devDependencies)
+RUN yarn install --frozen-lockfile
+
+# Copy source code and config files
+COPY apps/backend/src ./apps/backend/src
+COPY apps/backend/prisma ./apps/backend/prisma
+COPY apps/backend/tsconfig.json ./apps/backend/
+COPY apps/backend/nest-cli.json ./apps/backend/
+
+# Generate Prisma Client using yarn
+RUN yarn prisma generate --schema=./apps/backend/prisma/schema.prisma
+
+# Build the application
+RUN yarn workspace backend build
+
+# 3. Production Image
+FROM node:20-alpine AS production
+
+# Install OpenSSL for Prisma native engine
+RUN apk add --no-cache openssl
+
+# Install yarn globally
+RUN npm install -g yarn
+
+# Set environment variables
+ENV NODE_ENV=production
+
+WORKDIR /usr/src/app
+
+# Copy production dependencies from deps stage
+COPY --from=deps /usr/src/app/node_modules ./node_modules
+COPY --from=deps /usr/src/app/package.json ./
+COPY --from=deps /usr/src/app/apps/backend/package.json ./apps/backend/
+
+# Copy built application from builder stage
+COPY --from=builder /usr/src/app/apps/backend/dist ./dist
+
+# Copy Prisma schema for generation
+COPY --from=builder /usr/src/app/apps/backend/prisma ./apps/backend/prisma
+
+# Copy Prisma client from builder
+COPY --from=builder /usr/src/app/node_modules/.prisma ./node_modules/.prisma
+
+# Generate Prisma client in production (fallback) using yarn
+RUN yarn config set network-timeout 300000 && \
+    yarn prisma generate --schema=./apps/backend/prisma/schema.prisma || echo "Prisma client already exists"
+
+# Expose port
+EXPOSE 3001
+
+# Command to run the application
+CMD ["node", "dist/src/main.js"]
