@@ -1,0 +1,150 @@
+# Coolify-optimized Dockerfile
+# This version is specifically designed for Coolify's network constraints
+
+# 1. Base Image for dependencies
+FROM node:20-alpine AS deps
+
+# Set working directory
+WORKDIR /usr/src/app
+
+# Copy root package files
+COPY package.json package-lock.json* ./
+
+# Copy backend package.json
+COPY apps/backend/package.json ./apps/backend/
+
+# Install dependencies with aggressive network optimizations for Coolify
+RUN apk add --no-cache curl && \
+    npm config set registry https://registry.npmjs.org/ && \
+    npm config set fetch-timeout 900000 && \
+    npm config set fetch-retry-mintimeout 60000 && \
+    npm config set fetch-retry-maxtimeout 300000 && \
+    npm config set fetch-retry-factor 3 && \
+    npm config set fetch-retries 10 && \
+    npm config set maxsockets 1 && \
+    npm config set prefer-offline true && \
+    for i in 1 2 3 4 5; do \
+        echo "Dependencies install attempt $i/5..."; \
+        timeout 1200 npm install --only=production --no-audit --no-fund && break || \
+        (echo "Attempt $i failed, cleaning cache and retrying..." && \
+         npm cache clean --force && \
+         rm -rf node_modules && \
+         sleep 30); \
+    done && \
+    for i in 1 2 3; do \
+        echo "Prisma install attempt $i/3..."; \
+        timeout 600 npm install prisma@6.11.1 @prisma/client@6.11.1 --no-audit --no-fund && break || \
+        (echo "Prisma install attempt $i failed, retrying..." && sleep 20); \
+    done
+
+# 2. Builder Image
+FROM node:20-alpine AS builder
+
+WORKDIR /usr/src/app
+
+# Copy all package files again for building
+COPY package.json package-lock.json* ./
+COPY apps/backend/package.json ./apps/backend/
+
+# Install all dependencies with aggressive network optimizations
+RUN apk add --no-cache curl && \
+    npm config set registry https://registry.npmjs.org/ && \
+    npm config set fetch-timeout 900000 && \
+    npm config set fetch-retry-mintimeout 60000 && \
+    npm config set fetch-retry-maxtimeout 300000 && \
+    npm config set fetch-retry-factor 3 && \
+    npm config set fetch-retries 10 && \
+    npm config set maxsockets 1 && \
+    npm config set prefer-offline true && \
+    for i in 1 2 3 4 5; do \
+        echo "Builder dependencies install attempt $i/5..."; \
+        timeout 1200 npm install --no-audit --no-fund && break || \
+        (echo "Attempt $i failed, cleaning cache and retrying..." && \
+         npm cache clean --force && \
+         rm -rf node_modules && \
+         sleep 30); \
+    done
+
+# Copy source code and config files
+COPY apps/backend/src ./apps/backend/src
+COPY apps/backend/prisma ./apps/backend/prisma
+COPY apps/backend/tsconfig.json ./apps/backend/
+COPY apps/backend/nest-cli.json ./apps/backend/
+
+# Generate Prisma client with maximum retries for Coolify
+RUN echo "Generating Prisma client for Coolify..." && \
+    for i in 1 2 3 4 5 6 7 8 9 10; do \
+        echo "Prisma generate attempt $i/10..."; \
+        if [ -f "./node_modules/.bin/prisma" ]; then \
+            timeout 600 ./node_modules/.bin/prisma generate --schema=./apps/backend/prisma/schema.prisma && break; \
+        else \
+            npm config set registry https://registry.npmjs.org/ && \
+            npm config set fetch-timeout 900000 && \
+            npm config set fetch-retry-mintimeout 60000 && \
+            npm config set fetch-retry-maxtimeout 300000 && \
+            npm config set fetch-retry-factor 3 && \
+            npm config set fetch-retries 10 && \
+            timeout 600 npx prisma@6.11.1 generate --schema=./apps/backend/prisma/schema.prisma && break; \
+        fi || \
+        (echo "Attempt $i failed, waiting 30 seconds..." && sleep 30); \
+    done || \
+    (echo "All npx attempts failed, trying global install..." && \
+     for i in 1 2 3; do \
+         timeout 600 npm install -g prisma@6.11.1 --registry=https://registry.npmjs.org/ && \
+         timeout 300 prisma generate --schema=./apps/backend/prisma/schema.prisma && break || \
+         (echo "Global install attempt $i failed, retrying..." && sleep 30); \
+     done)
+
+# Verify Prisma client was generated
+RUN ls -la ./node_modules/@prisma/client/ || (echo "ERROR: Prisma client not found!" && exit 1)
+
+# Build the application
+RUN npm run build --workspace=backend
+
+# 3. Production Image
+FROM node:20-alpine AS production
+
+# Install OpenSSL for Prisma native engine
+RUN apk add --no-cache openssl
+
+# Set environment variables
+ENV NODE_ENV=production
+
+WORKDIR /usr/src/app
+
+# Copy production dependencies from deps stage
+COPY --from=deps /usr/src/app/node_modules ./node_modules
+COPY --from=deps /usr/src/app/package.json ./
+COPY --from=deps /usr/src/app/apps/backend/package.json ./apps/backend/
+
+# Copy built application from builder stage
+COPY --from=builder /usr/src/app/apps/backend/dist ./dist
+
+# Copy Prisma schema for generation
+COPY --from=builder /usr/src/app/apps/backend/prisma ./apps/backend/prisma
+
+# Copy Prisma client from builder (both .prisma and @prisma directories)
+COPY --from=builder /usr/src/app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /usr/src/app/node_modules/@prisma ./node_modules/@prisma
+
+# Verify Prisma client exists in production
+RUN if [ ! -d "./node_modules/@prisma/client" ] && [ ! -d "./node_modules/.prisma" ]; then \
+        echo "No Prisma client found in production, attempting generation..."; \
+        for i in 1 2 3; do \
+            echo "Production Prisma generate attempt $i/3..."; \
+            if [ -f "./node_modules/.bin/prisma" ]; then \
+                timeout 300 ./node_modules/.bin/prisma generate --schema=./apps/backend/prisma/schema.prisma && break; \
+            else \
+                timeout 300 npx prisma@6.11.1 generate --schema=./apps/backend/prisma/schema.prisma && break; \
+            fi || \
+            (echo "Production attempt $i failed, retrying..." && sleep 20); \
+        done || echo "Production Prisma generation failed, using existing client"; \
+    else \
+        echo "Using existing Prisma client in production"; \
+    fi
+
+# Expose port
+EXPOSE 3001
+
+# Command to run the application
+CMD ["node", "dist/src/main.js"]

@@ -1,121 +1,73 @@
-# 1. Base Image for dependencies
-FROM node:20-alpine AS deps
+# Stage 1: Install dependencies and generate Prisma Client
+# This stage is responsible for installing all dependencies and generating the Prisma client.
+# It is kept separate to leverage Docker's layer caching effectively.
+FROM node:20-alpine AS dependencies
 
-# Set working directory
 WORKDIR /usr/src/app
 
-# Copy root package files
-COPY package.json package-lock.json* ./
-
-# Copy backend package.json
+# Copy all package.json and lock files to leverage cache
+COPY package.json ./
+COPY package-lock.json* ./
 COPY apps/backend/package.json ./apps/backend/
+COPY apps/frontend/package.json ./apps/frontend/
 
-# Install dependencies (including Prisma for production) with network optimizations
-RUN npm config set registry https://registry.npmjs.org/ && \
-    npm config set fetch-timeout 300000 && \
-    npm config set fetch-retry-mintimeout 20000 && \
-    npm config set fetch-retry-maxtimeout 120000 && \
-    npm install --only=production && npm install prisma @prisma/client
+# Copy the Prisma schema, which is required for generating the client
+COPY apps/backend/prisma/ ./apps/backend/prisma/
 
-# 2. Builder Image
+# Install all dependencies for the entire monorepo
+RUN npm install
+
+# Generate the Prisma Client based on the schema
+# This ensures the client is tailored to your database structure
+RUN npx prisma generate --schema=./apps/backend/prisma/schema.prisma
+
+
+# Stage 2: Build the application
+# This stage takes the source code and the installed dependencies to build the production-ready application.
 FROM node:20-alpine AS builder
 
 WORKDIR /usr/src/app
 
-# Copy all package files again for building
-COPY package.json package-lock.json* ./
-COPY apps/backend/package.json ./apps/backend/
+# Copy all source code into the builder
+COPY . .
 
-# Install all dependencies (including devDependencies) with network optimizations
-RUN npm config set registry https://registry.npmjs.org/ && \
-    npm config set fetch-timeout 300000 && \
-    npm config set fetch-retry-mintimeout 20000 && \
-    npm config set fetch-retry-maxtimeout 120000 && \
-    npm install
+# Copy the pre-installed node_modules from the 'dependencies' stage
+COPY --from=dependencies /usr/src/app/node_modules ./node_modules
 
-# Copy source code and config files
-COPY apps/backend/src ./apps/backend/src
-COPY apps/backend/prisma ./apps/backend/prisma
-COPY apps/backend/tsconfig.json ./apps/backend/
-COPY apps/backend/nest-cli.json ./apps/backend/
-
-# Copy pre-generated Prisma client from local build context
-COPY apps/backend/node_modules/@prisma/client ./apps/backend/node_modules/@prisma/client
-COPY apps/backend/node_modules/.prisma ./apps/backend/node_modules/.prisma
-
-# Verify Prisma client exists, generate only if missing
-RUN if [ ! -d "./node_modules/@prisma/client" ]; then \
-        echo "Pre-generated Prisma client not found, generating..."; \
-        if [ -f "./node_modules/.bin/prisma" ]; then \
-            echo "Using local prisma binary"; \
-            ./node_modules/.bin/prisma generate --schema=./apps/backend/prisma/schema.prisma; \
-        else \
-            echo "Trying npx with retries"; \
-            for i in 1 2 3; do \
-                npm config set registry https://registry.npmjs.org/ && \
-                npm config set fetch-timeout 300000 && \
-                npm config set fetch-retry-mintimeout 20000 && \
-                npm config set fetch-retry-maxtimeout 120000 && \
-                npx prisma generate --schema=./apps/backend/prisma/schema.prisma && break || \
-                (echo "Attempt $i failed, retrying..." && sleep 10); \
-            done; \
-        fi; \
-    else \
-        echo "Using pre-generated Prisma client"; \
-    fi
-
-# Build the application
+# Build the backend application using npm workspaces
+# This command compiles the TypeScript code into JavaScript.
 RUN npm run build --workspace=backend
 
-# 3. Production Image
+
+# Stage 3: Create the final production image
+# This stage creates a lean production image with only the necessary files to run the application.
 FROM node:20-alpine AS production
-
-# Install OpenSSL for Prisma native engine
-RUN apk add --no-cache openssl
-
-# Set environment variables
-ENV NODE_ENV=production
 
 WORKDIR /usr/src/app
 
-# Copy production dependencies from deps stage
-COPY --from=deps /usr/src/app/node_modules ./node_modules
-COPY --from=deps /usr/src/app/package.json ./
-COPY --from=deps /usr/src/app/apps/backend/package.json ./apps/backend/
+ENV NODE_ENV=production
 
-# Copy built application from builder stage
-COPY --from=builder /usr/src/app/apps/backend/dist ./dist
+# Copy package files to install only production dependencies
+COPY package.json ./
+COPY package-lock.json* ./
+COPY apps/backend/package.json ./apps/backend/
 
-# Copy Prisma schema for generation
-COPY --from=builder /usr/src/app/apps/backend/prisma ./apps/backend/prisma
+# Install only production dependencies to keep the image size small
+RUN npm ci --omit=dev
 
-# Copy Prisma client from builder (both .prisma and @prisma directories)
-COPY --from=builder /usr/src/app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /usr/src/app/node_modules/@prisma ./node_modules/@prisma
+# Copy the generated Prisma client and query engine from the 'dependencies' stage.
+# This is the key step to avoid running 'prisma generate' at runtime.
+COPY --from=dependencies /usr/src/app/node_modules/.prisma/client ./node_modules/.prisma/client
+COPY --from=dependencies /usr/src/app/node_modules/@prisma/client ./node_modules/@prisma/client
 
-# Verify Prisma client exists in production, generate only if absolutely necessary
-RUN if [ ! -d "./node_modules/@prisma/client" ] && [ ! -d "./node_modules/.prisma" ]; then \
-        echo "No Prisma client found in production, attempting generation..."; \
-        if [ -f "./node_modules/.bin/prisma" ]; then \
-            echo "Using local prisma binary for production"; \
-            ./node_modules/.bin/prisma generate --schema=./apps/backend/prisma/schema.prisma || echo "Prisma client generation failed"; \
-        else \
-            echo "Trying npx prisma with retries in production"; \
-            for i in 1 2 3; do \
-                npm config set registry https://registry.npmjs.org/ && \
-                npm config set fetch-timeout 300000 && \
-                npm config set fetch-retry-mintimeout 20000 && \
-                npm config set fetch-retry-maxtimeout 120000 && \
-                npx prisma generate --schema=./apps/backend/prisma/schema.prisma && break || \
-                (echo "Production attempt $i failed, retrying..." && sleep 10); \
-            done || echo "Prisma client generation failed, using existing client"; \
-        fi; \
-    else \
-        echo "Using existing Prisma client in production"; \
-    fi
+# Copy the built application from the 'builder' stage
+COPY --from=builder /usr/src/app/dist ./dist
 
-# Expose port (DÜZELTİLMİŞ SATIR)
-EXPOSE 3001
+# Copy the prisma schema file. The Prisma client needs it at runtime to locate the query engine.
+COPY apps/backend/prisma/schema.prisma ./apps/backend/prisma/schema.prisma
 
-# Command to run the application
-CMD ["node", "dist/src/main.js"]
+# Expose the port the application will run on
+EXPOSE 3000
+
+# The command to start the application in production mode
+CMD ["node", "dist/apps/backend/src/main.js"]
