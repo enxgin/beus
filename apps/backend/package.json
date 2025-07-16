@@ -4,7 +4,6 @@
   "private": true,
   "scripts": {
     "dev": "nest start --watch",
-    "prebuild": "prisma generate",
     "build": "nest build",
     "start": "node dist/src/main.js",
     "test": "jest",
