@@ -4,8 +4,9 @@ FROM node:20-alpine AS deps
 WORKDIR /usr/src/app
 
 # Install pnpm and other dependencies
-RUN apk add --no-cache libc6-compat
-RUN npm install -g pnpm
+RUN apk add --no-cache libc6-compat wget
+RUN wget -qO- https://get.pnpm.io/install.sh | ENV="$HOME/.shrc" SHELL="$(which sh)" sh -
+ENV PATH="$HOME/.local/share/pnpm:$PATH"
 
 # Copy package files
 COPY package.json pnpm-workspace.yaml ./
