@@ -7,7 +7,7 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   experimental: {
-    serverComponentsExternalPackages: [],
+      serverExternalPackages: [],
   },
   images: {
     domains: [],
