@@ -14,7 +14,8 @@ COPY .npmrc package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 COPY apps/frontend/package.json ./apps/frontend/
 COPY apps/frontend/next.config.js ./apps/frontend/
 
-# Install dependencies using the lockfile for fast and reliable builds
+# Set a reliable DNS server to prevent network timeouts, then install dependencies
+RUN echo "nameserver 8.8.8.8" > /etc/resolv.conf
 RUN pnpm install --frozen-lockfile
 
 # 2. Builder Image
