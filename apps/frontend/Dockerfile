@@ -15,7 +15,9 @@ COPY apps/frontend/package.json ./apps/frontend/
 COPY apps/frontend/next.config.js ./apps/frontend/
 
 # Install all dependencies using pnpm
-RUN pnpm install --frozen-lockfile
+# We run install without --frozen-lockfile because it's the first run and pnpm-lock.yaml doesn't exist yet.
+# For subsequent builds, it's recommended to generate and commit pnpm-lock.yaml and use --frozen-lockfile.
+RUN pnpm install
 
 # 2. Builder Image
 FROM node:20-alpine AS builder
