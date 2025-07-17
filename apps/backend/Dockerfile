@@ -50,9 +50,9 @@ WORKDIR /usr/src/app
 # Install only necessary OS packages
 RUN apk add --no-cache curl openssl
 
-# Prune dev dependencies from the builder's node_modules before copying
+# Copy production dependencies from the builder's node_modules
 COPY --from=builder /usr/src/app/node_modules ./node_modules
-RUN npm prune --production
+# Note: npm prune --production removed, as it was deleting required NestJS modules
 
 # Copy the built application and other necessary files from the builder stage
 COPY --from=builder /usr/src/app/apps/backend/dist ./apps/backend/dist
