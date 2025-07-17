@@ -15,9 +15,14 @@ WORKDIR /usr/src/app
 COPY package.json package-lock.json* ./
 COPY apps/backend/package.json ./apps/backend/
 
-# Install all dependencies. This is the only network-dependent step.
-# We are betting on Docker's layer caching to avoid running this often.
-RUN npm install --legacy-peer-deps
+# Install yarn first, then use it for more stable dependency installation
+# Fallback to npm if yarn fails
+RUN npm install -g yarn --no-audit --no-fund && \
+    yarn config set network-timeout 300000 && \
+    yarn config set network-concurrency 1 && \
+    yarn install --frozen-lockfile --network-timeout 300000 || \
+    yarn install --network-timeout 300000 || \
+    npm install --legacy-peer-deps --no-audit --no-fund --maxsockets=1 --network-timeout=300000
 
 # ----------------- BUILDER STAGE -----------------
 # This stage builds the application using the pre-installed dependencies.
