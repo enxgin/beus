@@ -9,8 +9,8 @@ RUN wget -qO- https://get.pnpm.io/install.sh | ENV="/root/.shrc" SHELL="$(which 
 # Add pnpm to the PATH for subsequent RUN instructions
 ENV PATH=/root/.local/share/pnpm:$PATH
 
-# Copy package files and the lockfile
-COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+# Copy package files, the lockfile, and the npmrc configuration
+COPY .npmrc package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 COPY apps/frontend/package.json ./apps/frontend/
 COPY apps/frontend/next.config.js ./apps/frontend/
 
