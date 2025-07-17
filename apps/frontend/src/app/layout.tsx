@@ -6,9 +6,14 @@ import { Toaster } from "@/components/ui/sonner";
 import { Providers } from "@/components/providers";
 
 const inter = localFont({
-  src: "../assets/fonts/Inter-Variable.woff2",
+  src: [
+    {
+      path: "../assets/fonts/Inter-Variable.woff2",
+      style: "normal"
+    }
+  ],
   display: "swap",
-  variable: "--font-inter",
+  variable: "--font-inter"
 });
 
 export const metadata: Metadata = {
