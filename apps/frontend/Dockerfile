@@ -65,6 +65,9 @@ COPY --from=builder /usr/src/app/apps/frontend/.next/standalone ./
 # Copy the static assets
 COPY --from=builder /usr/src/app/apps/frontend/public ./apps/frontend/public
 
+# Copy the font assets
+COPY --from=builder /usr/src/app/apps/frontend/src/assets ./apps/frontend/src/assets
+
 # Copy the cached images (optional, but good for performance)
 COPY --from=builder /usr/src/app/apps/frontend/.next/static ./apps/frontend/.next/static
 
