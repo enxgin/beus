@@ -9,15 +9,13 @@ RUN wget -qO- https://get.pnpm.io/install.sh | ENV="/root/.shrc" SHELL="$(which 
 # Add pnpm to the PATH for subsequent RUN instructions
 ENV PATH=/root/.local/share/pnpm:$PATH
 
-# Copy package files
-COPY package.json pnpm-workspace.yaml ./
+# Copy package files and the lockfile
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 COPY apps/frontend/package.json ./apps/frontend/
 COPY apps/frontend/next.config.js ./apps/frontend/
 
-# Install all dependencies using pnpm
-# We run install without --frozen-lockfile because it's the first run and pnpm-lock.yaml doesn't exist yet.
-# For subsequent builds, it's recommended to generate and commit pnpm-lock.yaml and use --frozen-lockfile.
-RUN pnpm install
+# Install dependencies using the lockfile for fast and reliable builds
+RUN pnpm install --frozen-lockfile
 
 # 2. Builder Image
 FROM node:20-alpine AS builder
