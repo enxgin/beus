@@ -14,7 +14,10 @@ COPY .npmrc package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 COPY apps/frontend/package.json ./apps/frontend/
 COPY apps/frontend/next.config.js ./apps/frontend/
 
-# Install dependencies using the lockfile for fast and reliable builds
+# Disable IPv6 to prevent network timeouts in broken IPv6 environments, then install dependencies
+RUN echo "net.ipv6.conf.all.disable_ipv6 = 1" >> /etc/sysctl.conf
+RUN echo "net.ipv6.conf.default.disable_ipv6 = 1" >> /etc/sysctl.conf
+RUN sysctl -p
 RUN pnpm install --frozen-lockfile
 
 # 2. Builder Image
