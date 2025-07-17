@@ -39,9 +39,6 @@ RUN wget -qO- https://get.pnpm.io/install.sh | ENV="/root/.shrc" SHELL="$(which 
 ENV PATH=/root/.local/share/pnpm:$PATH
 
 
-RUN ls -R /usr/src/app/apps/frontend/src/assets/fonts && \
-node -p "require('next/package').version"
-
 # Build the frontend application using pnpm
 RUN pnpm --filter frontend build
 
