@@ -14,10 +14,10 @@ COPY .npmrc package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 COPY apps/frontend/package.json ./apps/frontend/
 COPY apps/frontend/next.config.js ./apps/frontend/
 
-# Disable IPv6 to prevent network timeouts in broken IPv6 environments, then install dependencies
-RUN echo "net.ipv6.conf.all.disable_ipv6 = 1" >> /etc/sysctl.conf
-RUN echo "net.ipv6.conf.default.disable_ipv6 = 1" >> /etc/sysctl.conf
-RUN sysctl -p
+# Force Node.js to prefer IPv4 to prevent timeouts in broken IPv6 environments
+ENV NODE_OPTIONS=--dns-result-order=ipv4first
+
+# Install dependencies using the lockfile for fast and reliable builds
 RUN pnpm install --frozen-lockfile
 
 # 2. Builder Image
