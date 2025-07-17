@@ -33,8 +33,8 @@ COPY --from=deps /usr/src/app/apps/frontend/next.config.js ./apps/frontend/
 # Copy source code
 COPY . .
 
-# Build the frontend application directly via npm exec to ensure the correct workspace context
-RUN npm exec --workspace apps/frontend next build
+# Build the frontend application using the already-installed binary to avoid any registry call
+RUN ./node_modules/.bin/next build apps/frontend
 
 # 3. Production Image
 FROM node:20-alpine AS production
