@@ -33,9 +33,8 @@ COPY --from=deps /usr/src/app/apps/frontend/next.config.js ./apps/frontend/
 # Copy source code
 COPY . .
 
-# Build the frontend application using the workspace script
-# We stay at /usr/src/app because root node_modules already contains Next.js
-RUN npm run build:frontend
+# Build the frontend application directly via npm exec to ensure the correct workspace context
+RUN npm exec --workspace apps/frontend next build
 
 # 3. Production Image
 FROM node:20-alpine AS production
