@@ -5,8 +5,9 @@ WORKDIR /usr/src/app
 
 # Install pnpm and other dependencies
 RUN apk add --no-cache libc6-compat wget
-RUN wget -qO- https://get.pnpm.io/install.sh | ENV="$HOME/.shrc" SHELL="$(which sh)" sh -
-ENV PATH="$HOME/.local/share/pnpm:$PATH"
+RUN wget -qO- https://get.pnpm.io/install.sh | ENV="/root/.shrc" SHELL="$(which sh)" sh -
+# Add pnpm to the PATH for subsequent RUN instructions
+ENV PATH=/root/.local/share/pnpm:$PATH
 
 # Copy package files
 COPY package.json pnpm-workspace.yaml ./
