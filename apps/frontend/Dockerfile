@@ -35,7 +35,7 @@ COPY . .
 
 # Build the frontend application directly in the frontend directory
 WORKDIR /usr/src/app/apps/frontend
-RUN npx next build
+RUN ./node_modules/.bin/next build
 
 # 3. Production Image
 FROM node:20-alpine AS production
