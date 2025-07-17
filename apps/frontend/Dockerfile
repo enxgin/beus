@@ -27,19 +27,16 @@ ENV NEXT_PUBLIC_API_URL=https://api.rezervgo.com
 
 WORKDIR /usr/src/app
 
-# Install pnpm and other dependencies for the builder stage
+# Copy the entire dependency structure from the deps stage
+COPY --from=deps /usr/src/app .
+
+# Copy the rest of the source code
+COPY . .
+
+# Re-install pnpm in the builder stage and set the PATH
 RUN apk add --no-cache libc6-compat wget
 RUN wget -qO- https://get.pnpm.io/install.sh | ENV="/root/.shrc" SHELL="$(which sh)" sh -
 ENV PATH=/root/.local/share/pnpm:$PATH
-
-# Copy installed dependencies
-COPY --from=deps /usr/src/app/node_modules ./node_modules
-COPY --from=deps /usr/src/app/package.json ./
-COPY --from=deps /usr/src/app/apps/frontend/package.json ./apps/frontend/
-COPY --from=deps /usr/src/app/apps/frontend/next.config.js ./apps/frontend/
-
-# Copy source code
-COPY . .
 
 # Build the frontend application using pnpm
 RUN pnpm --filter frontend build
