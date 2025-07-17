@@ -8,7 +8,7 @@ import { Providers } from "@/components/providers";
 const inter = localFont({
   src: [
     {
-      path: "../assets/fonts/Inter-Variable.woff2",
+      path: "./fonts/Inter-Variable.woff2",
       weight: "100 900",
       style: "normal"
     }
