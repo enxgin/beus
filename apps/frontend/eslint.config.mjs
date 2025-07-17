@@ -19,7 +19,12 @@ const eslintConfig = [
     },
   },
   {
-    ignores: ["src/lib/prisma-client/**/*", "node_modules/**/*", ".next/**/*"],
+    ignores: [
+      "src/lib/prisma-client/**/*",
+      "src/lib/prismadb.ts",
+      "node_modules/**/*",
+      ".next/**/*"
+    ],
   },
 ];
 
