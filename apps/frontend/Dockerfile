@@ -27,8 +27,10 @@ ENV NEXT_PUBLIC_API_URL=https://api.rezervgo.com
 
 WORKDIR /usr/src/app
 
-# Install dependencies for better caching
-RUN apk add --no-cache libc6-compat
+# Install pnpm and other dependencies for the builder stage
+RUN apk add --no-cache libc6-compat wget
+RUN wget -qO- https://get.pnpm.io/install.sh | ENV="/root/.shrc" SHELL="$(which sh)" sh -
+ENV PATH=/root/.local/share/pnpm:$PATH
 
 # Copy installed dependencies
 COPY --from=deps /usr/src/app/node_modules ./node_modules
