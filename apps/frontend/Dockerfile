@@ -11,8 +11,8 @@ COPY package.json package-lock.json* ./
 COPY apps/frontend/package.json ./apps/frontend/
 COPY apps/frontend/next.config.js ./apps/frontend/
 
-# Install all workspace dependencies (root + apps/frontend) in one go
-RUN npm install --workspaces --include-workspace-root
+# Install only the frontend workspace dependencies to avoid npm workspace instability
+RUN npm install --prefix apps/frontend
 
 # 2. Builder Image
 FROM node:20-alpine AS builder
@@ -33,8 +33,9 @@ COPY --from=deps /usr/src/app/apps/frontend/next.config.js ./apps/frontend/
 # Copy source code
 COPY . .
 
-# Build the frontend application using the already-installed binary to avoid any registry call
-RUN ./node_modules/.bin/next build apps/frontend
+# Build the frontend application from inside its workspace using its local binary
+WORKDIR /usr/src/app/apps/frontend
+RUN ../../apps/frontend/node_modules/.bin/next build
 
 # 3. Production Image
 FROM node:20-alpine AS production
