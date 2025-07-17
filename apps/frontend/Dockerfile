@@ -47,6 +47,8 @@ FROM node:20-alpine AS production
 
 ENV NODE_ENV=production
 ENV NEXT_PUBLIC_API_URL=https://api.rezervgo.com
+ENV HOSTNAME=0.0.0.0
+ENV PORT=3000
 
 WORKDIR /usr/src/app
 
