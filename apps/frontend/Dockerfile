@@ -53,6 +53,9 @@ ENV NEXT_PUBLIC_API_URL=https://api.rezervgo.com
 
 WORKDIR /usr/src/app
 
+# Install curl and wget for healthcheck probes
+RUN apk add --no-cache curl wget
+
 # Create a non-root user for security
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
