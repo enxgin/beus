@@ -3,18 +3,17 @@ FROM node:20-alpine AS deps
 
 WORKDIR /usr/src/app
 
-# Install dependencies for better caching
+# Install pnpm and other dependencies
 RUN apk add --no-cache libc6-compat
+RUN npm install -g pnpm
 
 # Copy package files
-COPY package.json package-lock.json* ./
+COPY package.json pnpm-workspace.yaml ./
 COPY apps/frontend/package.json ./apps/frontend/
 COPY apps/frontend/next.config.js ./apps/frontend/
 
-# Configure npm for unreliable networks and install frontend dependencies with minimal network usage
-RUN npm config set fetch-retries 5 \
-    && npm config set fetch-timeout 120000 \
-    && npm install --prefer-offline --no-audit --no-fund --progress=false --prefix apps/frontend
+# Install all dependencies using pnpm
+RUN pnpm install --frozen-lockfile
 
 # 2. Builder Image
 FROM node:20-alpine AS builder
@@ -35,9 +34,8 @@ COPY --from=deps /usr/src/app/apps/frontend/next.config.js ./apps/frontend/
 # Copy source code
 COPY . .
 
-# Build the frontend application from inside its workspace using its local binary
-WORKDIR /usr/src/app/apps/frontend
-RUN ../../apps/frontend/node_modules/.bin/next build
+# Build the frontend application using pnpm
+RUN pnpm --filter frontend build
 
 # 3. Production Image
 FROM node:20-alpine AS production
