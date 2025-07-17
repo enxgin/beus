@@ -11,8 +11,8 @@ COPY package.json package-lock.json* ./
 COPY apps/frontend/package.json ./apps/frontend/
 COPY apps/frontend/next.config.js ./apps/frontend/
 
-# Install all dependencies
-RUN npm install
+# Install all workspace dependencies (root + apps/frontend) in one go
+RUN npm install --workspaces --include-workspace-root
 
 # 2. Builder Image
 FROM node:20-alpine AS builder
