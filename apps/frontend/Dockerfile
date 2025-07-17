@@ -17,8 +17,14 @@ COPY apps/frontend/next.config.js ./apps/frontend/
 # Force Node.js to prefer IPv4 to prevent timeouts in broken IPv6 environments
 ENV NODE_OPTIONS=--dns-result-order=ipv4first
 
+# Set network timeout configurations
+RUN pnpm config set network-timeout 600000
+RUN pnpm config set fetch-timeout 600000
+RUN pnpm config set fetch-retry-mintimeout 20000
+RUN pnpm config set fetch-retry-maxtimeout 120000
+
 # Install dependencies using the lockfile for fast and reliable builds
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile --network-timeout 600000
 
 # 2. Builder Image
 FROM node:20-alpine AS builder
@@ -38,6 +44,11 @@ RUN apk add --no-cache libc6-compat wget
 RUN wget -qO- https://get.pnpm.io/install.sh | ENV="/root/.shrc" SHELL="$(which sh)" sh -
 ENV PATH=/root/.local/share/pnpm:$PATH
 
+# Set network timeout configurations for builder stage
+RUN pnpm config set network-timeout 600000
+RUN pnpm config set fetch-timeout 600000
+RUN pnpm config set fetch-retry-mintimeout 20000
+RUN pnpm config set fetch-retry-maxtimeout 120000
 
 # Build the frontend application using pnpm
 RUN pnpm --filter frontend build
