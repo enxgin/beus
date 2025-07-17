@@ -6,7 +6,9 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  serverExternalPackages: [],
+  experimental: {
+    serverComponentsExternalPackages: [],
+  },
   images: {
     domains: [],
   },
