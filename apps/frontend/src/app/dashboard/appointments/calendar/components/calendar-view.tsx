@@ -10,7 +10,7 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuthStore } from '@/stores/auth.store';
-import { DateSelectArg, EventClickArg, EventDropArg, EventResizeDoneArg, EventInput } from '@fullcalendar/core';
+import { DateSelectArg, EventClickArg, EventDropArg, EventInput } from '@fullcalendar/core';
 import { CalendarSkeleton } from './calendar-skeleton';
 import { AppointmentDetailModal } from './appointment-detail-modal';
 import { Button } from '@/components/ui/button';
@@ -248,7 +248,7 @@ export function CalendarView({ branchId }: CalendarViewProps) {
     }
   };
 
-  const handleEventResize = async (resizeInfo: EventResizeDoneArg) => {
+  const handleEventResize = async (resizeInfo: any) => {
     const { event } = resizeInfo;
     const { id, start, end } = event;
     const staffId = event.getResources()?.[0]?.id;

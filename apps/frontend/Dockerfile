@@ -6,17 +6,13 @@ WORKDIR /usr/src/app
 # Install dependencies for better caching
 RUN apk add --no-cache libc6-compat
 
-# Copy root package files first for workspace setup
-COPY package.json ./
-COPY package-lock.json* ./
-
-# Copy frontend specific files
+# Copy package files
+COPY package.json package-lock.json* ./
 COPY apps/frontend/package.json ./apps/frontend/
 COPY apps/frontend/next.config.js ./apps/frontend/
 
-# Clean npm cache and install dependencies
-RUN npm cache clean --force
-RUN npm install --frozen-lockfile --workspace=frontend
+# Install all dependencies (including workspaces)
+RUN npm ci
 
 # 2. Builder Image
 FROM node:20-alpine AS builder
@@ -28,17 +24,17 @@ WORKDIR /usr/src/app
 # Install dependencies for better caching
 RUN apk add --no-cache libc6-compat
 
-# Copy dependency installation files from deps stage
+# Copy installed dependencies
 COPY --from=deps /usr/src/app/node_modules ./node_modules
 COPY --from=deps /usr/src/app/package.json ./
 COPY --from=deps /usr/src/app/apps/frontend/package.json ./apps/frontend/
 COPY --from=deps /usr/src/app/apps/frontend/next.config.js ./apps/frontend/
 
-# Copy all source code and config files
+# Copy source code
 COPY . .
 
-# Build the frontend application
-RUN cd apps/frontend && npm run build
+# Build the frontend application from root with workspace
+RUN npm run build --workspace=frontend
 
 # 3. Production Image
 FROM node:20-alpine AS production
