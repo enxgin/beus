@@ -11,6 +11,16 @@ const compat = new FlatCompat({
 
 const eslintConfig = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
+  {
+    rules: {
+      // ESLint 9 ile uyumsuz olan kuralları devre dışı bırak
+      "@typescript-eslint/no-unsafe-declaration-merging": "off",
+      "@typescript-eslint/no-var-requires": "off",
+    },
+  },
+  {
+    ignores: ["src/lib/prisma-client/**/*", "node_modules/**/*", ".next/**/*"],
+  },
 ];
 
 export default eslintConfig;
